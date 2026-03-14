@@ -1,0 +1,46 @@
+.swipe-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  touch-action: pan-y;
+  z-index: 1;
+}
+
+.swipe-card {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 2 / 3;
+  cursor: grab;
+  will-change: transform;
+  transform-origin: center bottom;
+  z-index: 1;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.peek-card {
+  position: absolute;
+  height: 92%;
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+  filter: brightness(0.6);
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.peek-left {
+  transform: translateX(-85%) rotate(-4deg);
+}
+
+.peek-right {
+  transform: translateX(85%) rotate(4deg);
+}

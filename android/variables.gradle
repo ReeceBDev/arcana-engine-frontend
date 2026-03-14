@@ -1,4 +1,5 @@
 ext {
+	jdkVersion = 21
     minSdkVersion = 24
     compileSdkVersion = 36
     targetSdkVersion = 36
