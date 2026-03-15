@@ -27,149 +27,252 @@ const CardCarouselSwipeable = forwardRef<CarouselDraggableSnapHandle, CardCarous
     const indexRef = useRef(0);
     const isAnimating = useRef(false);
     const onIndexChangeRef = useRef(onIndexChange);
+    const exitDirectionRef = useRef<1 | -1>(1);
+    const wrap = gsap.utils.wrap(0, cardIds.length);
+    const pendingIndexRef = useRef<number | null>(null);
+
     onIndexChangeRef.current = onIndexChange;
 
-    const wrap = gsap.utils.wrap(0, cardIds.length);
+    const animateSwitch = useCallback((targetIndex: number) => {
+        if (isAnimating.current) {
+            pendingIndexRef.current = targetIndex;
+            return;
+        }
 
-    const animateSwitch = useCallback((direction: 1 | -1) => {
+        const target = wrap(targetIndex);
+        if (target === indexRef.current) {
+            onIndexChangeRef.current?.(target);
+            return;
+        }
         if (isAnimating.current) return;
         isAnimating.current = true;
         const card = cardRef.current;
         if (!card) return;
 
+        let diff = targetIndex - indexRef.current;
+        if (Math.abs(diff) > cardIds.length / 2) {
+            diff -= Math.sign(diff) * cardIds.length;
+        }
+        const direction = diff > 0 ? 1 : -1;
         const exitX = -direction * window.innerWidth;
         const exitRotation = -direction * MAX_ROTATION;
 
-        // Animate card off-screen
         gsap.to(card, {
             x: exitX,
             rotation: exitRotation,
             duration: 0.3,
             ease: 'power2.in',
             onComplete: () => {
-                // Update index
-                const newIndex = wrap(indexRef.current + direction);
-                indexRef.current = newIndex;
-                setCurIndex(newIndex);
-                onIndexChangeRef.current?.(newIndex);
+                indexRef.current = target;
+                setCurIndex(target);
+                onIndexChangeRef.current?.(target);
 
-                // Reset position to opposite side (off-screen) instantly
                 gsap.set(card, { x: direction * window.innerWidth * 0.5, rotation: direction * MAX_ROTATION * 0.5 });
 
-                // Animate new card in from the other side
                 gsap.to(card, {
                     x: 0,
                     rotation: 0,
                     duration: 0.35,
                     ease: 'power2.out',
-                    onComplete: () => { isAnimating.current = false; }
-                });
-            }
-        });
-    }, [wrap]);
-
-    const next = useCallback(() => animateSwitch(1), [animateSwitch]);
-    const previous = useCallback(() => animateSwitch(-1), [animateSwitch]);
-    const toggleOverflow = useCallback(() => {}, []);
-
-    const toIndex = useCallback((index: number) => {
-        const target = wrap(index);
-        indexRef.current = target;
-        setCurIndex(target);
-        //onIndexChangeRef.current?.(target);
-        if (cardRef.current) {
-            gsap.set(cardRef.current, { x: 0, rotation: 0 });
-        }
-    }, [wrap]);
-
-    const current = useCallback(() => indexRef.current, []);
-
-    useImperativeHandle(ref, () => ({
-        next,
-        previous,
-        toggleOverflow,
-        toIndex,
-        current,
-    }), [next, previous, toggleOverflow, toIndex, current]);
-
-    useGSAP(() => {
-        const card = cardRef.current;
-        const container = containerRef.current;
-        if (!card || !container) return;
-
-        Draggable.create(card, {
-            type: 'x',
-            trigger: container.parentElement,
-            edgeResistance: 0.5,
-            onDrag() {
-                const x = this.x;
-                const progress = Math.min(Math.abs(x) / SWIPE_THRESHOLD, 1);
-                const direction = x > 0 ? 1 : -1;
-                gsap.set(card, { rotation: direction * progress * MAX_ROTATION });
-            },
-            onRelease() {
-                const x = this.x;
-                if (Math.abs(x) >= SWIPE_THRESHOLD && !isAnimating.current) {
-                    // Passed threshold — trigger switch
-                    const direction = x > 0 ? -1 : 1; // swipe right = previous, swipe left = next
-                    const exitDirection = x > 0 ? 1 : -1;
-                    isAnimating.current = true;
-
-                    gsap.to(card, {
-                        x: exitDirection * window.innerWidth,
-                        rotation: exitDirection * MAX_ROTATION,
-                        duration: 0.25,
-                        ease: 'power2.in',
-                        onComplete: () => {
-                            const newIndex = wrap(indexRef.current + direction);
-                            indexRef.current = newIndex;
-                            setCurIndex(newIndex);
-                            onIndexChangeRef.current?.(newIndex);
-
-                            gsap.set(card, {
-                                x: -exitDirection * window.innerWidth * 0.5,
-                                rotation: -exitDirection * MAX_ROTATION * 0.5
-                            });
-
-                            gsap.to(card, {
-                                x: 0,
-                                rotation: 0,
-                                duration: 0.35,
-                                ease: 'power2.out',
-                                onComplete: () => { isAnimating.current = false; }
-                            });
+                    onComplete: () => {
+                        isAnimating.current = false;
+                        if (pendingIndexRef.current !== null) {
+                            const pending = pendingIndexRef.current;
+                            pendingIndexRef.current = null;
+                            animateSwitch(pending);
                         }
-                    });
-                } else {
-                    // Snap back to center
+
+                                    /*
+                    indexRef.current = target;
+                    setCurIndex(target);
+                    onIndexChangeRef.current?.(target);
+    
+                    gsap.set(card, { x: direction * window.innerWidth * 0.5, rotation: direction * MAX_ROTATION * 0.5 });
+    
                     gsap.to(card, {
                         x: 0,
                         rotation: 0,
-                        duration: 0.4,
-                        ease: 'elastic.out(1, 0.5)'
+                        duration: 0.35,
+                        ease: 'power2.out',
+                        onComplete: () => { isAnimating.current = false; }
                     });
-                }
+                            */
+                    }
+                });
             }
         });
-    }, { scope: containerRef });
 
-    const cardId = cardIds[curIndex];
-    const prevId = cardIds[wrap(curIndex - 1)];
-    const nextId = cardIds[wrap(curIndex + 1)];
+}, [wrap]);
 
-    return (
-        <div ref={containerRef} className="swipe-container">
-            <div className="swipe-card peek-card peek-left">
-                <CardFace cardId={ArcanaIdentities[prevId]} />
-            </div>
-            <div ref={cardRef} className="swipe-card">
-                <CardFace cardId={ArcanaIdentities[cardId]} />
-            </div>
-            <div className="swipe-card peek-card peek-right">
-                <CardFace cardId={ArcanaIdentities[nextId]} />
-            </div>
+const next = useCallback(() => animateSwitch(indexRef.current + 1), [animateSwitch]);
+const previous = useCallback(() => animateSwitch(indexRef.current - 1), [animateSwitch]);
+
+const toIndex = useCallback((index: number) => {
+    pendingIndexRef.current = null;
+    animateSwitch(index);
+}, [animateSwitch]);
+
+const toggleOverflow = useCallback(() => { }, []);
+const current = useCallback(() => indexRef.current, []);
+
+const beginExit = useCallback((direction: 1 | -1) => {
+    if (isAnimating.current) return;
+    const card = cardRef.current;
+    if (!card) return;
+
+    exitDirectionRef.current = direction;
+    gsap.to(card, {
+        x: -direction * window.innerWidth,
+        rotation: -direction * MAX_ROTATION * 0.5,
+        duration: 0.2,
+        ease: 'power2.in',
+    });
+}, []);
+
+const completeEntry = useCallback((targetIndex: number) => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const target = wrap(targetIndex);
+    //const direction = target > indexRef.current ? 1 : -1;
+    const direction = exitDirectionRef.current;
+
+    indexRef.current = target;
+    setCurIndex(target);
+
+    gsap.set(card, { x: direction * window.innerWidth * 0.5, rotation: direction * MAX_ROTATION * 0.5 });
+
+    gsap.to(card, {
+        x: 0,
+        rotation: 0,
+        duration: 0.2,
+        ease: 'power2.out',
+        onComplete: () => { isAnimating.current = false; }
+    });
+}, [wrap]);
+
+useImperativeHandle(ref, () => ({
+    next,
+    previous,
+    toggleOverflow,
+    toIndex,
+    current,
+    beginExit,
+    completeEntry,
+}), [next, previous, toggleOverflow, toIndex, current, beginExit, completeEntry]);
+
+useGSAP(() => {
+    const card = cardRef.current;
+    const container = containerRef.current;
+    if (!card || !container) return;
+
+    const proxy = document.createElement("div");
+
+    Draggable.create(proxy, {
+        type: 'x',
+        trigger: container.parentElement,
+        edgeResistance: 0.5,
+        onDrag() {
+            const x = this.x;
+            const progress = Math.min(Math.abs(x) / SWIPE_THRESHOLD, 1);
+            const direction = x > 0 ? 1 : -1;
+            gsap.set(card, { x: this.x, rotation: direction * progress * MAX_ROTATION });
+
+            const peekLeft = container.querySelector('.peek-left');
+            const peekRight = container.querySelector('.peek-right');
+            gsap.set(peekLeft, { opacity: 0 });
+            gsap.set(peekRight, { opacity: 0 });
+            gsap.set(peekLeft, { opacity: x > 0 ? 1 : 0 });
+            gsap.set(peekRight, { opacity: x < 0 ? 1 : 0 });
+        },
+        onRelease() {
+            const peekLeft = container.querySelector('.peek-left');
+            const peekRight = container.querySelector('.peek-right');
+
+            const x = this.x;
+            gsap.set(proxy, { x: 0 });
+            if (Math.abs(x) >= SWIPE_THRESHOLD && !isAnimating.current) {
+                const direction = x > 0 ? -1 : 1;
+                const exitDirection = x > 0 ? 1 : -1;
+                isAnimating.current = true;
+
+                const revealedPeek = exitDirection > 0 ? peekLeft : peekRight;
+                const hiddenPeek = exitDirection > 0 ? peekRight : peekLeft;
+                const clonedPeek = (revealedPeek as Element).cloneNode(true) as HTMLElement;
+                clonedPeek.classList.add('cloned-peek');
+                container.appendChild(clonedPeek);
+                gsap.set(clonedPeek, { filter: 'brightness(0.7)' });
+
+                gsap.set(hiddenPeek, { opacity: 0 });
+                const newIndex = wrap(indexRef.current + direction);
+
+                gsap.to(card, {
+                    x: exitDirection * window.innerWidth,
+                    rotation: exitDirection * MAX_ROTATION,
+                    duration: 0.2,
+                    ease: 'power2.in',
+                    onComplete: () => {
+                        gsap.set(card, { opacity: 0 });
+
+                        indexRef.current = newIndex;
+                        setCurIndex(newIndex);
+                        onIndexChangeRef.current?.(newIndex);
+
+                        isAnimating.current = false;
+
+                        // Clean up peeks. Note: The cloned peek will still be present until fade in is complete. (Don't worry)
+                        gsap.set(peekLeft, { opacity: 0 });
+                        gsap.set(peekRight, { opacity: 0 });
+
+                        gsap.to(clonedPeek, {
+                            filter: 'brightness(1)',
+                            duration: 0.1,
+                            onComplete: () => {
+                                gsap.to(card, {
+                                    opacity: 1, duration: 0, onComplete: () => {
+                                        gsap.set(card, { x: 0, rotation: 0 });
+                                        container.querySelectorAll('.cloned-peek').forEach(el => el.remove());
+                                    }
+                                });
+
+                            }
+                        });
+                    }
+                });
+            } else {
+                container.querySelectorAll('.cloned-peek').forEach(el => el.remove());
+
+                gsap.set(peekLeft, { opacity: 0 });
+                gsap.set(peekRight, { opacity: 0 });
+
+                gsap.to(card, {
+                    x: 0,
+                    rotation: 0,
+                    duration: 0.4,
+                    ease: 'elastic.out(1, 0.5)'
+                });
+            }
+        }
+    });
+}, { scope: containerRef });
+
+const cardId = cardIds[curIndex];
+const prevId = cardIds[wrap(curIndex - 1)];
+const nextId = cardIds[wrap(curIndex + 1)];
+
+return (
+    <div ref={containerRef} className="swipe-container">
+        <div className="swipe-card peek-card peek-left">
+            <CardFace cardId={ArcanaIdentities[prevId]} />
         </div>
-    );
+        <div ref={cardRef} className="swipe-card">
+            <CardFace cardId={ArcanaIdentities[cardId]} />
+        </div>
+        <div className="swipe-card peek-card peek-right">
+            <CardFace cardId={ArcanaIdentities[nextId]} />
+        </div>
+    </div>
+);
 });
 
 export default CardCarouselSwipeable;

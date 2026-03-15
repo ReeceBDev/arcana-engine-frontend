@@ -81,7 +81,7 @@ if not errorlevel 1 goto CONNECT_SUCCESS
 set /a CONNECT_ATTEMPTS+=1
 if !CONNECT_ATTEMPTS! gtr !MAX_CONNECT_ATTEMPTS! (
     echo Connection timeout after %ADB_CONNECT_TIMEOUT%ms. Retrying from scratch...
-    goto STARTUP
+    goto CHECK_ADB
 )
 goto WAIT_CONNECT
 
@@ -112,7 +112,7 @@ set /a BIND_ATTEMPTS+=1
 
 if !BIND_ATTEMPTS! gtr !MAX_BIND_ATTEMPTS! (
     echo Parcel failed to bind after %WEBSERVER_BIND_TIMEOUT%ms. Retrying...
-    goto STARTUP
+    goto CHECK_ADB
 )
 goto WAIT_SERVER_BIND
 
@@ -152,7 +152,7 @@ call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --po
 
 if errorlevel 1 (
     echo Deployment failed. Retrying...
-    goto STARTUP
+    goto CHECK_ADB
 )
 
 echo.

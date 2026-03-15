@@ -17,7 +17,6 @@
   max-height: 100%;
   aspect-ratio: 2 / 3;
   cursor: grab;
-  will-change: transform;
   transform-origin: center bottom;
   z-index: 1;
 
@@ -28,19 +27,9 @@
 
 .peek-card {
   position: absolute;
-  height: 92%;
-  opacity: 0.5;
+  opacity: 0;
   cursor: default;
   pointer-events: none;
-  filter: brightness(0.6);
-  transition: opacity 0.3s ease;
+  filter: brightness(0.7);
   z-index: 0;
-}
-
-.peek-left {
-  transform: translateX(-85%) rotate(-4deg);
-}
-
-.peek-right {
-  transform: translateX(85%) rotate(4deg);
 }

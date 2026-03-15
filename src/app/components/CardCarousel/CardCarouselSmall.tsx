@@ -17,14 +17,22 @@ interface CardCarouselSmallProps {
     onIndexChange?: (index: number) => void;
     cardWidth?: number;
     cardHeight?: number;
+    onDragStart?: (direction: 1 | -1) => void;
+    onDragComplete?: (index: number) => void;
 }
 
 const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSmallProps>(
-    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth }, ref) {
+    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, onDragStart, onDragComplete }, ref) {
         const wrapperRef = useRef<HTMLDivElement>(null);
         const loopRef = useRef<any>(null);
         const onIndexChangeRef = useRef(onIndexChange);
         onIndexChangeRef.current = onIndexChange;
+
+        const onDragStartRef = useRef(onDragStart);
+        onDragStartRef.current = onDragStart;
+
+        const onDragCompleteRef = useRef(onDragComplete);
+        onDragCompleteRef.current = onDragComplete;
 
         const next = useCallback(() => {
             loopRef.current?.next({ duration: 0.4, ease: "power1.inOut" });
@@ -76,6 +84,8 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
                 paddingRight: CARD_GAP_IN_PX,
                 startIndex: centreIndex,
                 onIndexChange: (idx: number) => onIndexChangeRef.current?.(idx),
+                onDragStart: (direction: 1 | -1) => onDragStartRef.current?.(direction),
+                onDragComplete: (idx: number) => onDragCompleteRef.current?.(idx),
             });
 
             const centreOffset = centreIndex / cards.length;
@@ -118,6 +128,7 @@ function setMiddle(boxes: HTMLElement[], mid: number) {
 function horizontalLoop(items: any, config: any) {
     items = gsap.utils.toArray(items);
     config = config || {};
+    let hasFiredDragStart = false;
     let tl: any = gsap.timeline({
         repeat: config.repeat,
         paused: config.paused,
@@ -195,21 +206,22 @@ function horizontalLoop(items: any, config: any) {
     }*/
 
     function toIndex(index: number, vars: any) {
-    vars = vars || {};
-    Math.abs(index - curIndex) > length / 2 &&
-        (index += index > curIndex ? -length : length);
-    let newIndex = gsap.utils.wrap(0, length, index),
-        time = times[newIndex];
-    if (newIndex === curIndex) return;
-    if (time > tl.time() !== index > curIndex) {
-        vars.modifiers = { time: gsap.utils.wrap(0, tl.duration()) };
-        time += tl.duration() * (index > curIndex ? 1 : -1);
+        vars = vars || {};
+        Math.abs(index - curIndex) > length / 2 &&
+            (index += index > curIndex ? -length : length);
+        let newIndex = gsap.utils.wrap(0, length, index),
+            time = times[newIndex];
+        if (newIndex === curIndex) return;
+        if (time > tl.time() !== index > curIndex) {
+            vars.modifiers = { time: gsap.utils.wrap(0, tl.duration()) };
+            time += tl.duration() * (index > curIndex ? 1 : -1);
+        }
+        curIndex = newIndex;
+        vars.overwrite = true;
+        vars.onComplete = () => config.onIndexChange?.(curIndex);
+        //config.onIndexChange?.(curIndex);
+        return tl.tweenTo(time, vars);
     }
-    curIndex = newIndex;
-    vars.overwrite = true;
-    vars.onComplete = () => config.onIndexChange?.(curIndex);
-    return tl.tweenTo(time, vars);
-}
 
     tl.next = (vars: any) => { toIndex(curIndex + 1, vars) && setMiddle(items, tl.current() + 2); };
     tl.previous = (vars: any) => { toIndex(curIndex - 1, vars) && setMiddle(items, tl.current() + 2); };
@@ -242,16 +254,25 @@ function horizontalLoop(items: any, config: any) {
             trigger: items[0].parentNode,
             type: "x",
             onPress() {
+                hasFiredDragStart = false;
+                tl.pause()
                 startProgress = tl.progress();
-                tl.progress(0);
-                populateWidths();
+                //tl.progress(0);
+                //populateWidths();
                 totalWidth = getTotalWidth();
                 ratio = 1 / totalWidth;
                 dragSnap = totalWidth / items.length;
                 roundFactor = Math.pow(10, ((dragSnap + "").split(".")[1] || "").length);
-                tl.progress(startProgress);
+                //tl.progress(startProgress);
             },
-            onDrag: align,
+            onDrag() {
+                if (!hasFiredDragStart) {
+                    hasFiredDragStart = true;
+                    const direction = draggable.deltaX < 0 ? 1 : -1;
+                    config.onDragStart?.(direction);
+                }
+                align();
+            },
             onThrowUpdate: align,
             inertia: true,
             /*snap: (value: number) => {
@@ -268,7 +289,7 @@ function horizontalLoop(items: any, config: any) {
                 gsap.set(proxy, { x: 0 });
                 syncIndex();
                 setMiddle(items, tl.current() + 2);
-                config.onIndexChange?.(tl.current());
+                config.onDragComplete?.(tl.current());
             }
         })[0];
 

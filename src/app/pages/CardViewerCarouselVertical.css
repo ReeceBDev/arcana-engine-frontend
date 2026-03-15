@@ -2,14 +2,14 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden;
+  overflow: show;
   position: relative;
 }
 
 .background-image {
   position: absolute;
   object-fit: cover;
-  object-position: center;
+  object-position: 30%;
   width: 100%;
   height: 100%;
   top: 0;
@@ -26,7 +26,9 @@
     color: purple;
     background: none;
     border: none;
-    padding: 0;
+    padding: 0px;
+    margin-bottom: 0px;
+    padding-left: 6px;
   }
 }
 
@@ -39,8 +41,10 @@
   & .card-display-banner {
     margin-block: 1%;
     margin-top: 0%;
+    margin-bottom: 8px;
     text-align: center;
-    font-size: 24px;
+    font-size: 26px;
+    line-height: 25px;
   }
 
   & .card-display-container {
@@ -50,13 +54,20 @@
     flex: 1;
     min-height: 0;
   }
+
+  & .vertical-tab-line {
+    margin: 2px;
+  }
 }
 
 .minimap-carousel-region {
-  margin-bottom: 0;
+  margin-bottom: -2px;
 
   & .minimap-carousel-banner {
     text-align: center;
+    font-size: 24px;
+    margin: 10px;
+    margin-bottom: 8px;
   }
 
   & .minimap-carousel-container {
@@ -64,16 +75,22 @@
     justify-content: center;
     width: 100%;
     margin-inline: auto;
+    padding-bottom: 10px;
   }
 }
 
 .curved-line {
   display: flex;
   align-items: center;
-  margin-top: -10px;
-  margin-bottom: -20px;
+  margin-top: -20px;
+  margin-bottom: -14px;
   width: 100%;
   position: relative;
+}
+
+.straight-line {
+    margin-top: -22px;
+    margin-bottom: -18px;
 }
 
 .carousel-controls {
@@ -85,11 +102,13 @@
 
   & .switch-to-arcana-text-container {
     line-height: 20px;
+    margin-top: 0px;
+    padding-top: 4px;
   }
 
-  & h3 {
+  & p  {
     margin-block: 2px;
-    font-size: 24px;
+    margin-top: 0px;
     letter-spacing: -0.04em;
     font-weight: 500;
     text-align: center;
@@ -106,6 +125,8 @@
 
   & .nav-bar-instruction,
   & .switch-arcana {
-    color: hsl(0, 0%, 74%);
+    font-size: 26px;
+    color: hsl(0, 0%, 85%);
+    text-align: center;
   }
 }
