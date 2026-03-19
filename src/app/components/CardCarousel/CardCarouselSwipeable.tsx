@@ -30,6 +30,7 @@ const CardCarouselSwipeable = forwardRef<CarouselDraggableSnapHandle, CardCarous
     const exitDirectionRef = useRef<1 | -1>(1);
     const wrap = gsap.utils.wrap(0, cardIds.length);
     const pendingIndexRef = useRef<number | null>(null);
+    const intendedIndexRef = useRef(0); // tracks where we're heading
 
     onIndexChangeRef.current = onIndexChange;
 
@@ -64,6 +65,8 @@ const CardCarouselSwipeable = forwardRef<CarouselDraggableSnapHandle, CardCarous
             ease: 'power2.in',
             onComplete: () => {
                 indexRef.current = target;
+                console.log(`intendedIndexRef set to ${intendedIndexRef.current} (onComplete)`);
+
                 setCurIndex(target);
                 onIndexChangeRef.current?.(target);
 
@@ -104,10 +107,28 @@ const CardCarouselSwipeable = forwardRef<CarouselDraggableSnapHandle, CardCarous
 
 }, [wrap]);
 
+
+const next = useCallback(() => {
+    console.log(`Next pressed (next) - intendedIndex: ${intendedIndexRef.current} → ${intendedIndexRef.current + 1}`);
+    intendedIndexRef.current = intendedIndexRef.current + 1;
+    console.log(`intendedIndexRef set to ${intendedIndexRef.current} (next)`);
+    animateSwitch(intendedIndexRef.current);
+}, [animateSwitch]);
+
+const previous = useCallback(() => {
+    console.log(`Previous pressed (previous) - intendedIndex: ${intendedIndexRef.current} → ${intendedIndexRef.current - 1}`);
+    intendedIndexRef.current = intendedIndexRef.current - 1;
+    console.log(`intendedIndexRef set to ${intendedIndexRef.current} (previous)`);
+    animateSwitch(intendedIndexRef.current);
+}, [animateSwitch]);
+
+/* OG
 const next = useCallback(() => animateSwitch(indexRef.current + 1), [animateSwitch]);
 const previous = useCallback(() => animateSwitch(indexRef.current - 1), [animateSwitch]);
+*/
 
 const toIndex = useCallback((index: number) => {
+    intendedIndexRef.current = index;
     pendingIndexRef.current = null;
     animateSwitch(index);
 }, [animateSwitch]);

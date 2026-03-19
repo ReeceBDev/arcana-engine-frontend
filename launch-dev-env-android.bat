@@ -24,8 +24,6 @@ echo Arcana Engine Android - Resilient Dev Environment
 echo ====================================
 echo.
 
-goto CHECK_ADB
-
 :STARTUP
 :: Kill any existing Parcel processes
 echo Cleaning up existing processes...
@@ -39,18 +37,75 @@ if not errorlevel 1 (
     goto WAIT_PORT_FREE
 )
 echo Port %WEBSERVER_PORT% is now free.
+goto CHECK_WEBSERVER
 
-:CHECK_ADB
-set SYSTEMS_OK=0
+:: ENSURE WEBSERVER IS RUNNING
+:CHECK_WEBSERVER
+echo Checking Parcel server
+netstat -ano | findstr /R ":%WEBSERVER_PORT%[^0-9]" >nul
+if errorlevel 1 (
+    echo Starting a Parcel WebServer
+    start "Parcel Server" cmd /c "cd /d %~dp0 && npm run dev"
+    echo Waiting for Parcel to bind to port
+    
+    set /a MAX_BIND_ATTEMPTS=%WEBSERVER_BIND_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
+    set BIND_ATTEMPTS=0
+    goto WAIT_SERVER_BIND
+) else (
+    echo Parcel Webserver: Port is already bound - skipping
+)
+goto WEBSERVER_ALREADY_RUNNING
+
+:WAIT_SERVER_BIND
+powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
+netstat -ano | findstr /R ":%WEBSERVER_PORT%[^0-9]" >nul
+if not errorlevel 1 goto SERVER_DEPLOYED
+set /a BIND_ATTEMPTS+=1
+
+if !BIND_ATTEMPTS! gtr !MAX_BIND_ATTEMPTS! (
+    echo Parcel failed to bind after %WEBSERVER_BIND_TIMEOUT%ms. Retrying...
+    goto STARTUP
+)
+goto WAIT_SERVER_BIND
+
+:SERVER_DEPLOYED
+echo Server deployed and Port bound! Waiting for Parcel to be ready...
+
+set /a MAX_READY_ATTEMPTS=%WEBSERVER_READY_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
+set READY_ATTEMPTS=0
+goto CHECK_WEBSERVER_READY
+
+:CHECK_WEBSERVER_READY
+powershell -command "$timeout = %CONNECTION_RETRY_INTERVAL% / 1000; try { Invoke-WebRequest -Uri 'http://localhost:%WEBSERVER_PORT%' -TimeoutSec $timeout -UseBasicParsing -ErrorAction Stop | Out-Null; exit 0 } catch { exit 1 }"
+if not errorlevel 1 goto WEBSERVER_READY
+
+set /a READY_ATTEMPTS+=1
+if !READY_ATTEMPTS! gtr !MAX_READY_ATTEMPTS! (
+    echo Parcel failed to respond after %WEBSERVER_READY_TIMEOUT%ms. Retrying...
+    goto STARTUP
+)
+goto CHECK_WEBSERVER_READY
+
+:WEBSERVER_ALREADY_RUNNING
+echo Parcel server already running!
+goto WEBSERVER_READY
+
+:WEBSERVER_READY
+echo Parcel is ready!
+goto CHECK_DEVICE_CONNECTION
+
 
 :: Check ADB Wired Connection
+:CHECK_DEVICE_CONNECTION
+
+set SYSTEMS_OK=0
 if /I "%USEUSB%"=="TRUE" (
     echo Checking USB ADB connection...
     adb devices | findstr /v "List of devices" | findstr "device" >nul
     if errorlevel 1 (
         echo No USB device found. Please connect your device via USB and press any key...
         pause >nul
-        goto CHECK_ADB
+        goto CHECK_DEVICE_CONNECTION
     )
     for /f "tokens=1" %%d in ('adb devices ^| findstr /v "List of devices" ^| findstr "device"') do set USB_SERIAL=%%d
     set ADB_TARGET=!USB_SERIAL!
@@ -81,65 +136,13 @@ if not errorlevel 1 goto CONNECT_SUCCESS
 set /a CONNECT_ATTEMPTS+=1
 if !CONNECT_ATTEMPTS! gtr !MAX_CONNECT_ATTEMPTS! (
     echo Connection timeout after %ADB_CONNECT_TIMEOUT%ms. Retrying from scratch...
-    goto CHECK_ADB
+    goto CHECK_DEVICE_CONNECTION
 )
 goto WAIT_CONNECT
 
 :CONNECT_SUCCESS
 echo Device connected!
-
-:CHECK_WEBSERVER
-echo Checking Parcel server
-netstat -ano | findstr /R ":%WEBSERVER_PORT%[^0-9]" >nul
-if errorlevel 1 (
-    echo Starting a Parcel WebServer
-    start "Parcel Server" cmd /c "cd /d %~dp0 && npm run dev"
-    echo Waiting for Parcel to bind to port
-    
-    set /a MAX_BIND_ATTEMPTS=%WEBSERVER_BIND_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-    set BIND_ATTEMPTS=0
-    goto WAIT_SERVER_BIND
-) else (
-    echo Parcel Webserver: Port is already bound - skipping
-)
-goto WEBSERVER_ALREADY_RUNNING
-
-:WAIT_SERVER_BIND
-powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
-netstat -ano | findstr /R ":%WEBSERVER_PORT%[^0-9]" >nul
-if not errorlevel 1 goto SERVER_DEPLOYED
-set /a BIND_ATTEMPTS+=1
-
-if !BIND_ATTEMPTS! gtr !MAX_BIND_ATTEMPTS! (
-    echo Parcel failed to bind after %WEBSERVER_BIND_TIMEOUT%ms. Retrying...
-    goto CHECK_ADB
-)
-goto WAIT_SERVER_BIND
-
-:SERVER_DEPLOYED
-echo Server deployed and Port bound! Waiting for Parcel to be ready...
-
-set /a MAX_READY_ATTEMPTS=%WEBSERVER_READY_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-set READY_ATTEMPTS=0
-goto CHECK_WEBSERVER_READY
-
-:CHECK_WEBSERVER_READY
-powershell -command "$timeout = %CONNECTION_RETRY_INTERVAL% / 1000; try { Invoke-WebRequest -Uri 'http://localhost:%WEBSERVER_PORT%' -TimeoutSec $timeout -UseBasicParsing -ErrorAction Stop | Out-Null; exit 0 } catch { exit 1 }"
-if not errorlevel 1 goto WEBSERVER_READY
-
-set /a READY_ATTEMPTS+=1
-if !READY_ATTEMPTS! gtr !MAX_READY_ATTEMPTS! (
-    echo Parcel failed to respond after %WEBSERVER_READY_TIMEOUT%ms. Retrying...
-    goto STARTUP
-)
-goto CHECK_WEBSERVER_READY
-
-:WEBSERVER_ALREADY_RUNNING
-echo Parcel server already running!
-goto WEBSERVER_READY
-
-:WEBSERVER_READY
-echo Parcel is ready!
+goto DEPLOY
 
 :DEPLOY
 :: Build and deploy
@@ -152,7 +155,7 @@ call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --po
 
 if errorlevel 1 (
     echo Deployment failed. Retrying...
-    goto CHECK_ADB
+    goto CHECK_DEVICE_CONNECTION
 )
 
 echo.
@@ -232,7 +235,7 @@ adb devices | findstr /C:"!ADB_TARGET!" >nul
 if errorlevel 1 (
     set SYSTEMS_OK=0
     echo !time! - Device disconnected! Reconnecting...
-    goto CHECK_ADB
+    goto CHECK_DEVICE_CONNECTION
 )
 
 :: Check Parcel server

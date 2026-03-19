@@ -8,24 +8,47 @@ import SmallVerticalTabLine from '../components/SmallVerticalTabLine';
 export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => void }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
+  const isSyncing = useRef(false);
 
   const onSwipeIndexChange = useCallback((index: number) => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    console.log(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
+    smallRef.current?.toIndex(index);
+    isSyncing.current = false;
+}, []);
+
+  /* OG
+  const onSwipeIndexChange = useCallback((index: number) => {
+    console.log(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
     smallRef.current?.toIndex(index);
   }, []);
+*/
 
 const onSmallIndexChange = useCallback((index: number) => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    console.log(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
     swipeRef.current?.toIndex(index);
+    isSyncing.current = false;
 }, []);
 
-const onSmallDragStart = useCallback(() => {
-//  const onSmallDragStart = useCallback((direction: 1 | -1) => {
-//    swipeRef.current?.beginExit?.(direction);
-}, []);
+  /* OG
+  const onSmallIndexChange = useCallback((index: number) => {
+    console.log(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
+    swipeRef.current?.toIndex(index);
+  }, []);
+*/
+  const onSmallDragStart = useCallback(() => {
+    //  const onSmallDragStart = useCallback((direction: 1 | -1) => {
+    //    swipeRef.current?.beginExit?.(direction);
+  }, []);
 
-const onSmallDragComplete = useCallback((index: number) => {
+  const onSmallDragComplete = useCallback((index: number) => {
+    console.log(`Carousel drag complete (onSmallDragComplete) - syncing swipeable to index ${index}`);
     //swipeRef.current?.completeEntry?.(index);
     swipeRef.current?.toIndex(index);
-}, []);
+  }, []);
 
   return (
     <div className="page-vertical">
@@ -62,18 +85,32 @@ function CardDisplayRegion({ swipeRef, onIndexChange }: { swipeRef: React.RefObj
   );
 }
 
-function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDragComplete }: { 
-    carouselRef: React.RefObject<CarouselDraggableSnapHandle>, 
-    onIndexChange: (index: number) => void,
-    onDragStart: (direction: 1 | -1) => void,
-    onDragComplete: (index: number) => void
+function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDragComplete }: {
+  carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
+  onIndexChange: (index: number) => void,
+  onDragStart: (direction: 1 | -1) => void,
+  onDragComplete: (index: number) => void
 }) {
+  const CARD_GAP_IN_PX = 10;
+
   return (
     <div className="minimap-carousel-region">
       <p className="minimap-carousel-banner">Swipe left and right to change cards</p>
       <StraightLine widthPercent={45} />
       <div className="minimap-carousel-container">
-        <CardCarouselSmall ref={carouselRef} cardHeight={150} cardWidth={100} onIndexChange={onIndexChange} onDragStart={onDragStart} onDragComplete={onDragComplete} />
+        <CardCarouselSmall
+          ref={carouselRef}
+          cardHeight={150}
+          cardWidth={100}
+          cardGapInPx={CARD_GAP_IN_PX}
+          onIndexChange={onIndexChange}
+          onDragStart={onDragStart}
+          onDragComplete={onDragComplete}
+          animations={[
+            { property: 'scale', peak: 1, trough: 0.2, ease: 'power2.in' },
+            { property: 'y', peak: 0, trough: -60, ease: 'power2.in' },
+          ]}
+        />
       </div>
       <StraightLine widthPercent={45} />
       <CurvedLine />

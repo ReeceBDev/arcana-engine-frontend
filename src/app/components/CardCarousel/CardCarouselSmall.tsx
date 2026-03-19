@@ -11,18 +11,19 @@ import type { CarouselDraggableSnapHandle } from './CardCarouselDraggableSnapHan
 gsap.registerPlugin(useGSAP, Draggable, InertiaPlugin);
 
 const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
-const CARD_GAP_IN_PX = 10;
 
 interface CardCarouselSmallProps {
     onIndexChange?: (index: number) => void;
-    cardWidth?: number;
-    cardHeight?: number;
+    cardWidth: number;
+    cardHeight: number;
+    cardGapInPx: number;
     onDragStart?: (direction: 1 | -1) => void;
     onDragComplete?: (index: number) => void;
+    animations?: { property: string; peak: number; trough: number, ease?: string }[];
 }
 
 const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSmallProps>(
-    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, onDragStart, onDragComplete }, ref) {
+    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, animations = [] }, ref) {
         const wrapperRef = useRef<HTMLDivElement>(null);
         const loopRef = useRef<any>(null);
         const onIndexChangeRef = useRef(onIndexChange);
@@ -74,42 +75,87 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
 
             const middleCard = cards[Math.floor(cards.length / 2)] as HTMLElement;
             const offset = middleCard.offsetLeft + middleCard.offsetWidth / 2;
+
             wrapperRef.current!.style.transform = `translateX(calc(50vw - ${offset}px))`;
 
             const centreIndex = Math.floor(cards.length / 2);
-
+            const centreOffset = centreIndex / cards.length;
             const loop = horizontalLoop(cards, {
                 paused: true,
                 draggable: true,
-                paddingRight: CARD_GAP_IN_PX,
+                paddingRight: cardGapInPx,
                 startIndex: centreIndex,
                 onIndexChange: (idx: number) => onIndexChangeRef.current?.(idx),
                 onDragStart: (direction: 1 | -1) => onDragStartRef.current?.(direction),
                 onDragComplete: (idx: number) => onDragCompleteRef.current?.(idx),
             });
+            // Animate each card as it moves across its own relative centre point of the screen.
+            const totalDuration = loop.duration();
 
-            const centreOffset = centreIndex / cards.length;
+            // Capture BEFORE mutation
+            const peakProgresses = cards.map((_: HTMLElement, i: number) => loop.times[i] / totalDuration);
 
             loop.times.forEach((_: number, i: number) => {
                 loop.times[i] = gsap.utils.wrap(0, loop.duration(), loop.times[i] + centreOffset * loop.duration());
             });
             loop.progress(centreOffset, true);
 
+            // After building the loop, build a separate scale timeline
+            const cardTls: { tl: gsap.core.Timeline; peakProgress: number }[] = [];
+
+            const reverseEase = (e: string) => {
+                if (e.endsWith('.out')) return e.replace('.out', '.in');
+                if (e.endsWith('.in')) return e.replace('.in', '.out');
+                return e;
+            };
+
+            cards.forEach((card: HTMLElement, i: number) => {
+                const peakProgress = loop.times[i] / totalDuration;
+                const cardTl = gsap.timeline({ paused: true });
+
+                animations.forEach(({ property, peak, trough, ease = 'none' }: { property: string; peak: number; trough: number; ease?: string }) => {
+                    cardTl.to(card, {
+                        keyframes: {
+                            "0%": { [property]: trough },
+                            "50%": { [property]: peak, ease },
+                            "100%": { [property]: trough, ease: reverseEase(ease) },
+                        },
+                        duration: 1,
+                        ease: 'none',
+                        immediateRender: false,
+                    }, 0);
+                });
+
+                cardTls.push({ tl: cardTl, peakProgress });
+            });
+
+            const syncScales = () => {
+                const p = loop.progress();
+                cardTls.forEach(({ tl }, i) => {
+                    tl.progress(gsap.utils.wrap(0, 1, p - centreOffset - peakProgresses[i] + 0.5));
+                });
+            };
+
+            loop.eventCallback("onUpdate", syncScales);
+            syncScales();
+
+            loop.progress(centreOffset, true);
             loopRef.current = loop;
 
             cards.forEach((card, i) =>
                 card.addEventListener("click", () => {
-                    loop.toIndex(i, { duration: 0.8, ease: "power1.inOut" });
-                    //onIndexChangeRef.current?.(i);
+                    console.log(`Carousel was Clicked by user - Heading to card ${i}`);
+                    loop.toIndex(i, { duration: 3, ease: 'none'}); //0.8, ease: "power1.inOut" });
                 })
             );
+
 
         }, { scope: wrapperRef });
 
         return (
             <div ref={wrapperRef} className="wrapper">
                 {cardIds.map((cardId, index) => (
-                    <div key={index} className="card" style={{ marginRight: CARD_GAP_IN_PX }}>
+                    <div key={index} className="card" style={{ marginRight: cardGapInPx }}>
                         <CardFace cardId={ArcanaIdentities[cardId]} cardWidth={cardWidth} cardHeight={cardHeight} />
                     </div>
                 ))}
@@ -126,6 +172,7 @@ function setMiddle(boxes: HTMLElement[], mid: number) {
 }
 
 function horizontalLoop(items: any, config: any) {
+    let externalNavActive = false;
     items = gsap.utils.toArray(items);
     config = config || {};
     let hasFiredDragStart = false;
@@ -180,7 +227,7 @@ function horizontalLoop(items: any, config: any) {
             duration: distanceToLoop / pixelsPerSecond
         }, 0)
             .fromTo(item, {
-                xPercent: snap(((curX - distanceToLoop + totalWidth) / widths[i]) * 100)
+                xPercent: snap(((curX - distanceToLoop + totalWidth) / widths[i]) * 100),
             }, {
                 xPercent: xPercents[i],
                 duration: (curX - distanceToLoop + totalWidth - curX) / pixelsPerSecond,
@@ -190,20 +237,7 @@ function horizontalLoop(items: any, config: any) {
         times[i] = distanceToStart / pixelsPerSecond;
     }
 
-    /*function toIndex(index: number, vars: any) {
-        vars = vars || {};
-        Math.abs(index - curIndex) > length / 2 &&
-            (index += index > curIndex ? -length : length);
-        let newIndex = gsap.utils.wrap(0, length, index),
-            time = times[newIndex];
-        if (time > tl.time() !== index > curIndex) {
-            vars.modifiers = { time: gsap.utils.wrap(0, tl.duration()) };
-            time += tl.duration() * (index > curIndex ? 1 : -1);
-        }
-        curIndex = newIndex;
-        vars.overwrite = true;
-        return tl.tweenTo(time, vars);
-    }*/
+    let navGeneration = 0;
 
     function toIndex(index: number, vars: any) {
         vars = vars || {};
@@ -211,15 +245,21 @@ function horizontalLoop(items: any, config: any) {
             (index += index > curIndex ? -length : length);
         let newIndex = gsap.utils.wrap(0, length, index),
             time = times[newIndex];
-        if (newIndex === curIndex) return;
+        if (newIndex === curIndex) return; // guard first
+        externalNavActive = true;         // only set if we're actually navigating
         if (time > tl.time() !== index > curIndex) {
             vars.modifiers = { time: gsap.utils.wrap(0, tl.duration()) };
             time += tl.duration() * (index > curIndex ? 1 : -1);
         }
         curIndex = newIndex;
         vars.overwrite = true;
-        vars.onComplete = () => config.onIndexChange?.(curIndex);
-        //config.onIndexChange?.(curIndex);
+        const generation = ++navGeneration;
+        vars.onComplete = () => {
+        if (navGeneration !== generation) return;
+        if (externalNavActive) return; // a click has taken over
+            console.log(`Carousel movement complete (toIndex.onComplete). Landed on index ${curIndex}`);
+            config.onIndexChange?.(curIndex);
+        };
         return tl.tweenTo(time, vars);
     }
 
@@ -244,7 +284,10 @@ function horizontalLoop(items: any, config: any) {
             draggable: any,
             dragSnap: number,
             roundFactor: number,
-            align = () => tl.progress(wrap(startProgress + (draggable.startX - draggable.x) * ratio)),
+            align = () => {
+                if (externalNavActive) return;
+                tl.progress(wrap(startProgress + (draggable.startX - draggable.x) * ratio));
+            },
             syncIndex = () => tl.updateIndex();
 
         typeof InertiaPlugin === "undefined" &&
@@ -254,16 +297,14 @@ function horizontalLoop(items: any, config: any) {
             trigger: items[0].parentNode,
             type: "x",
             onPress() {
+                externalNavActive = false;
                 hasFiredDragStart = false;
                 tl.pause()
                 startProgress = tl.progress();
-                //tl.progress(0);
-                //populateWidths();
                 totalWidth = getTotalWidth();
                 ratio = 1 / totalWidth;
                 dragSnap = totalWidth / items.length;
                 roundFactor = Math.pow(10, ((dragSnap + "").split(".")[1] || "").length);
-                //tl.progress(startProgress);
             },
             onDrag() {
                 if (!hasFiredDragStart) {
@@ -275,10 +316,6 @@ function horizontalLoop(items: any, config: any) {
             },
             onThrowUpdate: align,
             inertia: true,
-            /*snap: (value: number) => {
-                let n = Math.round(parseFloat(value as any) / dragSnap) * dragSnap * roundFactor;
-                return (n - (n % 1)) / roundFactor;
-            },*/
             snap: (value: number) => {
                 const startOffset = ((config.startIndex || 0) / length) * totalWidth;
                 let n = Math.round((parseFloat(value as any) - startOffset) / dragSnap) * dragSnap * roundFactor;
@@ -286,7 +323,11 @@ function horizontalLoop(items: any, config: any) {
             },
             onRelease: syncIndex,
             onThrowComplete: () => {
+                console.log(`Carousel stopped moving towards a destination. (onThrowComplete has fired) - externalNavActive: ${externalNavActive}`);
                 gsap.set(proxy, { x: 0 });
+                const wasExternal = externalNavActive;
+                externalNavActive = false;
+                if (wasExternal) return;
                 syncIndex();
                 setMiddle(items, tl.current() + 2);
                 config.onDragComplete?.(tl.current());
