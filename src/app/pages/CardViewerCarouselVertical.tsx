@@ -5,11 +5,12 @@ import { useRef, useCallback } from 'react';
 import arrow from 'url:../../assets/images/arrow.webp';
 import type { CarouselDraggableSnapHandle } from '../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import SmallVerticalTabLine from '../components/SmallVerticalTabLine';
-  
+import { gsap } from 'gsap';
+
 export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => void }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
-const lastSyncedIndex = useRef(-1);
+  const lastSyncedIndex = useRef(-1);
 
   const onSwipeIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
@@ -34,7 +35,7 @@ const lastSyncedIndex = useRef(-1);
   }, []);
 
   console.log(arrow)
-  
+
   return (
     <div className="page-vertical">
       <img
@@ -121,17 +122,27 @@ function CurvedLine() {
 }
 
 function CarouselControls({ swipeRef }: { swipeRef: React.RefObject<CarouselDraggableSnapHandle> }) {
+  const leftArrowRef = useRef(null);
+  const rightArrowRef = useRef(null);
+
+  const pulse = (ref: any) => {
+    gsap.fromTo(ref.current,
+      { scale: 1 },
+      { scale: 0.85, duration: 0.08, yoyo: true, repeat: 1, ease: "none" }
+    );
+  };
+
   return (
     <div className="carousel-controls">
-      <button className="left-button" onClick={() => swipeRef.current?.previous()}>
-        <img src={arrow} alt="Left" />
+      <button className="left-button" onClick={() => { pulse(leftArrowRef); swipeRef.current?.previous() }}>
+        <img ref={leftArrowRef} src={arrow} alt="Left" />
       </button>
       <button className="switch-to-arcana-text-container">
         <p className="nav-bar-instruction">Tap here to Switch</p>
         <p className="switch-arcana">to Minor arcana</p>
       </button>
-      <button className="right-button" onClick={() => swipeRef.current?.next()}>
-        <img src={arrow} alt="Right" />
+      <button className="right-button" onClick={() => { pulse(rightArrowRef); swipeRef.current?.next() }}>
+        <img ref={rightArrowRef} src={arrow} alt="Right" />
       </button>
     </div>
   );
