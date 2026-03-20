@@ -1,10 +1,11 @@
 import './CardViewerCarouselVertical.css'
-import CardCarouselSmall from '../components/CardCarousel/CardCarouselSmall';
-import CardCarouselSwipeable from '../components/CardCarousel/CardCarouselSwipeable';
+import CardCarousel from '../components/CardCarousel/CardCarousel';
+import CardSwipeable from '../components/CardCarousel/CardSwipeable';
 import { useRef, useCallback } from 'react';
+import arrow from 'url:../../assets/images/arrow.webp';
 import type { CarouselDraggableSnapHandle } from '../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import SmallVerticalTabLine from '../components/SmallVerticalTabLine';
-
+  
 export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => void }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
@@ -17,13 +18,6 @@ const lastSyncedIndex = useRef(-1);
     smallRef.current?.toIndex(index);
   }, []);
 
-  /* OG
-  const onSwipeIndexChange = useCallback((index: number) => {
-    console.log(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
-    smallRef.current?.toIndex(index);
-  }, []);
-*/
-
   const onSmallIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
     console.log(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
@@ -31,23 +25,16 @@ const lastSyncedIndex = useRef(-1);
     swipeRef.current?.toIndex(index);
   }, []);
 
-  /* OG
-  const onSmallIndexChange = useCallback((index: number) => {
-    console.log(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
-    swipeRef.current?.toIndex(index);
-  }, []);
-*/
   const onSmallDragStart = useCallback(() => {
-    //  const onSmallDragStart = useCallback((direction: 1 | -1) => {
-    //    swipeRef.current?.beginExit?.(direction);
   }, []);
 
   const onSmallDragComplete = useCallback((index: number) => {
     console.log(`Carousel drag complete (onSmallDragComplete) - syncing swipeable to index ${index}`);
-    //swipeRef.current?.completeEntry?.(index);
     swipeRef.current?.toIndex(index);
   }, []);
 
+  console.log(arrow)
+  
   return (
     <div className="page-vertical">
       <img
@@ -65,7 +52,9 @@ const lastSyncedIndex = useRef(-1);
 function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
   return (
     <div className="top-nav-bar-region">
-      <button className="back-button" onClick={onBack}>Back</button>
+      <button className="back-button" onClick={onBack}>
+        <img src={arrow} alt="Back" />
+      </button>
     </div>
   );
 }
@@ -77,7 +66,7 @@ function CardDisplayRegion({ swipeRef, onIndexChange }: { swipeRef: React.RefObj
         <p className="card-display-banner">Tap the card to Inspect it...</p>
         <div className="card-display-container">
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
-          <CardCarouselSwipeable ref={swipeRef} onIndexChange={onIndexChange} />
+          <CardSwipeable ref={swipeRef} onIndexChange={onIndexChange} />
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
         </div>
       </div>
@@ -97,7 +86,7 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
     <div className="minimap-carousel-region">
       <p className="minimap-carousel-banner">Swipe left and right to change cards</p>
       <div className="minimap-carousel-container">
-        <CardCarouselSmall
+        <CardCarousel
           ref={carouselRef}
           cardHeight={150}
           cardWidth={100}
@@ -112,18 +101,6 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
         />
       </div>
       <CurvedLine />
-    </div>
-  );
-}
-
-function StraightLine({ widthPercent = 100 }: { widthPercent?: number }) {
-  const x1 = (100 - widthPercent) / 2;
-  const x2 = 100 - x1;
-  return (
-    <div className="straight-line">
-      <svg height="40" width="100%" viewBox="0 0 100 40" preserveAspectRatio="none">
-        <line x1={x1} y1="20" x2={x2} y2="20" stroke="white" strokeWidth="`" />
-      </svg>
     </div>
   );
 }
@@ -146,12 +123,16 @@ function CurvedLine() {
 function CarouselControls({ swipeRef }: { swipeRef: React.RefObject<CarouselDraggableSnapHandle> }) {
   return (
     <div className="carousel-controls">
-      <button className="left-button" onClick={() => swipeRef.current?.previous()}>Left</button>
+      <button className="left-button" onClick={() => swipeRef.current?.previous()}>
+        <img src={arrow} alt="Left" />
+      </button>
       <button className="switch-to-arcana-text-container">
         <p className="nav-bar-instruction">Tap here to Switch</p>
         <p className="switch-arcana">to Minor arcana</p>
       </button>
-      <button className="right-button" onClick={() => swipeRef.current?.next()}>Right</button>
+      <button className="right-button" onClick={() => swipeRef.current?.next()}>
+        <img src={arrow} alt="Right" />
+      </button>
     </div>
   );
 }

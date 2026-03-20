@@ -14,7 +14,7 @@ gsap.registerPlugin(Draggable, InertiaPlugin, CustomEase);
 
 const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
 
-interface CardCarouselSmallProps {
+interface CardCarouselProps {
     onIndexChange?: (index: number) => void;
     cardWidth: number;
     cardHeight: number;
@@ -24,7 +24,7 @@ interface CardCarouselSmallProps {
     animations?: { property: string; peak: number; trough: number, ease?: string }[];
 }
 
-const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSmallProps>(
+const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
     function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, animations = [] }, ref) {
         const wrapperRef = useRef<HTMLDivElement>(null);
         const loopRef = useRef<any>(null);
@@ -152,7 +152,7 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
             cards.forEach((card, i) =>
                 card.addEventListener("click", () => {
                     console.log(`Carousel was Clicked by user - Heading to card ${i}`);
-                    loop.toIndex(i, { duration: 0.4, ease: 'none' }); //0.8, ease: "power1.inOut" });
+                    loop.toIndex(i, { duration: 0.8, ease: 'power1.inOut' });
                 })
             );
 
@@ -170,7 +170,7 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
         );
     });
 
-export default CardCarouselSmall;
+export default CardCarousel;
 
 function setMiddle(boxes: HTMLElement[], mid: number) {
     boxes.forEach((box) => box.classList.remove("middle-item"));
@@ -336,6 +336,7 @@ function horizontalLoop(items: any, config: any) {
                 externalNavActive = false;
                 if (wasExternal) return;
                 syncIndex();
+                tl.progress(gsap.utils.wrap(0, 1, times[curIndex] / tl.duration()), true);
                 setMiddle(items, tl.current() + 2);
                 config.onDragComplete?.(tl.current());
             }

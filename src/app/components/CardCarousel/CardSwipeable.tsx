@@ -11,16 +11,14 @@ gsap.registerPlugin(useGSAP, Draggable);
 
 const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
 
-/** Swipe threshold in pixels — drag past this to trigger card switch */
-const SWIPE_THRESHOLD = 80;
-/** Max rotation in degrees at full drag */
-const MAX_ROTATION = 15;
+const SWIPE_THRESHOLD = 80; // Swipe threshold in pixels. Drags past this point will trigger card switch in that direction.
+const MAX_ROTATION = 15; // Max rotation in degrees at full drag
 
-interface CardCarouselSwipeableProps {
+interface CardSwipeableProps {
     onIndexChange?: (index: number) => void;
 }
 
-const CardCarouselSwipeable = forwardRef<CarouselDraggableSnapHandle, CardCarouselSwipeableProps>(function CardCarouselSwipeable({ onIndexChange }, ref) {
+const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ onIndexChange }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [curIndex, setCurIndex] = useState(0);
@@ -84,22 +82,6 @@ const CardCarouselSwipeable = forwardRef<CarouselDraggableSnapHandle, CardCarous
                             pendingIndexRef.current = null;
                             animateSwitch(pending);
                         }
-
-                                    /*
-                    indexRef.current = target;
-                    setCurIndex(target);
-                    onIndexChangeRef.current?.(target);
-    
-                    gsap.set(card, { x: direction * window.innerWidth * 0.5, rotation: direction * MAX_ROTATION * 0.5 });
-    
-                    gsap.to(card, {
-                        x: 0,
-                        rotation: 0,
-                        duration: 0.35,
-                        ease: 'power2.out',
-                        onComplete: () => { isAnimating.current = false; }
-                    });
-                            */
                     }
                 });
             }
@@ -121,11 +103,6 @@ const previous = useCallback(() => {
     console.log(`intendedIndexRef set to ${intendedIndexRef.current} (previous)`);
     animateSwitch(intendedIndexRef.current);
 }, [animateSwitch]);
-
-/* OG
-const next = useCallback(() => animateSwitch(indexRef.current + 1), [animateSwitch]);
-const previous = useCallback(() => animateSwitch(indexRef.current - 1), [animateSwitch]);
-*/
 
 const toIndex = useCallback((index: number) => {
     intendedIndexRef.current = index;
@@ -155,7 +132,6 @@ const completeEntry = useCallback((targetIndex: number) => {
     if (!card) return;
 
     const target = wrap(targetIndex);
-    //const direction = target > indexRef.current ? 1 : -1;
     const direction = exitDirectionRef.current;
 
     indexRef.current = target;
@@ -296,4 +272,4 @@ return (
 );
 });
 
-export default CardCarouselSwipeable;
+export default CardSwipeable;

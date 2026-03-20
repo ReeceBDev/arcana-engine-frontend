@@ -1,6 +1,6 @@
 import './App.css'
 import { useState } from 'react';
-import CardCarouselSmall from '../components/CardCarousel/CardCarouselSmall';
+import CardCarousel from '../components/CardCarousel/CardCarousel';
 import CardViewerCarouselVertical from './CardViewerCarouselVertical';
 import { Fullscreen } from '@boengli/capacitor-fullscreen';
 
@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <div>
-        <CardCarouselSmall cardHeight={150} cardWidth={100} />
+        <CardCarousel cardHeight={150} cardWidth={100} />
         <button onClick={() => setPage('vertical')}>Card Viewer — Vertical</button>
       </div>
     </>
