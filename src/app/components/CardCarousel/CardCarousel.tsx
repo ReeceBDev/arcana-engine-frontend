@@ -5,7 +5,7 @@ import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { useGSAP } from '@gsap/react';
 import CardFace from '../ArcanaCard/CardFace';
 import { ArcanaIdentities, type ArcanaIdentity } from '../../constants/arcana-identities';
-import './CardCarouselSmall.css';
+import './CardCarousel.css';
 import type { CarouselDraggableSnapHandle } from './CardCarouselDraggableSnapHandle';
 import { reverseCustomEasePath } from '../../utilities/reverse-ease';
 import { CustomEase } from 'gsap/CustomEase';

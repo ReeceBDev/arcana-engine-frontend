@@ -4,7 +4,7 @@ import { Draggable } from 'gsap/Draggable';
 import { useGSAP } from '@gsap/react';
 import CardFace from '../ArcanaCard/CardFace';
 import { ArcanaIdentities, type ArcanaIdentity } from '../../constants/arcana-identities';
-import './CardCarouselSwipeable.css';
+import './CardSwipeable.css';
 import type { CarouselDraggableSnapHandle } from './CardCarouselDraggableSnapHandle';
 
 gsap.registerPlugin(useGSAP, Draggable);

@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <div>
-        <CardCarousel cardHeight={150} cardWidth={100} />
+        <CardCarousel cardHeight={150} cardWidth={100} cardGapInPx={0} />
         <button onClick={() => setPage('vertical')}>Card Viewer — Vertical</button>
       </div>
     </>
