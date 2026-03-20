@@ -8,15 +8,14 @@ import SmallVerticalTabLine from '../components/SmallVerticalTabLine';
 export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => void }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
-  const isSyncing = useRef(false);
+const lastSyncedIndex = useRef(-1);
 
   const onSwipeIndexChange = useCallback((index: number) => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
+    if (lastSyncedIndex.current === index) return;
     console.log(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
+    lastSyncedIndex.current = index;
     smallRef.current?.toIndex(index);
-    isSyncing.current = false;
-}, []);
+  }, []);
 
   /* OG
   const onSwipeIndexChange = useCallback((index: number) => {
@@ -25,13 +24,12 @@ export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => 
   }, []);
 */
 
-const onSmallIndexChange = useCallback((index: number) => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
+  const onSmallIndexChange = useCallback((index: number) => {
+    if (lastSyncedIndex.current === index) return;
     console.log(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
+    lastSyncedIndex.current = index;
     swipeRef.current?.toIndex(index);
-    isSyncing.current = false;
-}, []);
+  }, []);
 
   /* OG
   const onSmallIndexChange = useCallback((index: number) => {
@@ -75,11 +73,13 @@ function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
 function CardDisplayRegion({ swipeRef, onIndexChange }: { swipeRef: React.RefObject<CarouselDraggableSnapHandle>, onIndexChange: (index: number) => void }) {
   return (
     <div className="card-display-region">
-      <p className="card-display-banner">Tap the card to Inspect it...</p>
-      <div className="card-display-container">
-        <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
-        <CardCarouselSwipeable ref={swipeRef} onIndexChange={onIndexChange} />
-        <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
+      <div className="container-banner-bundle">
+        <p className="card-display-banner">Tap the card to Inspect it...</p>
+        <div className="card-display-container">
+          <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
+          <CardCarouselSwipeable ref={swipeRef} onIndexChange={onIndexChange} />
+          <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
+        </div>
       </div>
     </div>
   );
@@ -96,7 +96,6 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
   return (
     <div className="minimap-carousel-region">
       <p className="minimap-carousel-banner">Swipe left and right to change cards</p>
-      <StraightLine widthPercent={45} />
       <div className="minimap-carousel-container">
         <CardCarouselSmall
           ref={carouselRef}
@@ -107,12 +106,11 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
           onDragStart={onDragStart}
           onDragComplete={onDragComplete}
           animations={[
-            { property: 'scale', peak: 1, trough: 0.2, ease: 'power2.in' },
-            { property: 'y', peak: 0, trough: -60, ease: 'power2.in' },
+            { property: 'scale', peak: 1.1, trough: 0.86, ease: "M0,0 C0.078,0.153 0.668,0.128 0.887,0.469 1,0.647 0.979,0.9 1,0.9 " },
+            { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
           ]}
         />
       </div>
-      <StraightLine widthPercent={45} />
       <CurvedLine />
     </div>
   );
@@ -131,7 +129,6 @@ function StraightLine({ widthPercent = 100 }: { widthPercent?: number }) {
 }
 
 function CurvedLine() {
-  return (true); // Early return to disable curved line for now, as it looks a bit off with the current flat smallcarousel layout. Can re-enable later if desired.
   return (
     <div className="curved-line">
       <svg height="40" width="100%" viewBox="0 0 400 40">

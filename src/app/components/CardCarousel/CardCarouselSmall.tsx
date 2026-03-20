@@ -7,8 +7,10 @@ import CardFace from '../ArcanaCard/CardFace';
 import { ArcanaIdentities, type ArcanaIdentity } from '../../constants/arcana-identities';
 import './CardCarouselSmall.css';
 import type { CarouselDraggableSnapHandle } from './CardCarouselDraggableSnapHandle';
+import { reverseCustomEasePath } from '../../utilities/reverse-ease';
+import { CustomEase } from 'gsap/CustomEase';
 
-gsap.registerPlugin(useGSAP, Draggable, InertiaPlugin);
+gsap.registerPlugin(Draggable, InertiaPlugin, CustomEase);
 
 const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
 
@@ -52,7 +54,7 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
         }, []);
 
         const toIndex = useCallback((index: number) => {
-            loopRef.current?.toIndex(index, { duration: 0.8, ease: "power1.inOut" });
+            loopRef.current?.toIndex(index, { duration: 0.4, ease: "power1.inOut" });
         }, []);
 
         const current = useCallback(() => {
@@ -103,10 +105,12 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
             // After building the loop, build a separate scale timeline
             const cardTls: { tl: gsap.core.Timeline; peakProgress: number }[] = [];
 
-            const reverseEase = (e: string) => {
+            const reverseEase = (e: string): string => {
+                if (e === 'none') return 'none';
                 if (e.endsWith('.out')) return e.replace('.out', '.in');
                 if (e.endsWith('.in')) return e.replace('.in', '.out');
-                return e;
+                if (e.startsWith('M')) return reverseCustomEasePath(e);
+                throw new Error(`Invalid ease: "${e}". Must end in '.in' or '.out' (e.g. 'power2.in') or be a CustomEase SVG path as a string starting with 'M'.`);
             };
 
             cards.forEach((card: HTMLElement, i: number) => {
@@ -114,11 +118,14 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
                 const cardTl = gsap.timeline({ paused: true });
 
                 animations.forEach(({ property, peak, trough, ease = 'none' }: { property: string; peak: number; trough: number; ease?: string }) => {
+                    const forwardEase = ease.startsWith('M') ? CustomEase.create(`ease_fwd_${i}`, ease) : ease;
+                    const reversedEase = ease.startsWith('M') ? CustomEase.create(`ease_rev_${i}`, reverseCustomEasePath(ease)) : reverseEase(ease);
+
                     cardTl.to(card, {
                         keyframes: {
                             "0%": { [property]: trough },
-                            "50%": { [property]: peak, ease },
-                            "100%": { [property]: trough, ease: reverseEase(ease) },
+                            "50%": { [property]: peak, ease: forwardEase },
+                            "100%": { [property]: trough, ease: reversedEase },
                         },
                         duration: 1,
                         ease: 'none',
@@ -145,7 +152,7 @@ const CardCarouselSmall = forwardRef<CarouselDraggableSnapHandle, CardCarouselSm
             cards.forEach((card, i) =>
                 card.addEventListener("click", () => {
                     console.log(`Carousel was Clicked by user - Heading to card ${i}`);
-                    loop.toIndex(i, { duration: 3, ease: 'none'}); //0.8, ease: "power1.inOut" });
+                    loop.toIndex(i, { duration: 0.4, ease: 'none' }); //0.8, ease: "power1.inOut" });
                 })
             );
 
@@ -255,8 +262,7 @@ function horizontalLoop(items: any, config: any) {
         vars.overwrite = true;
         const generation = ++navGeneration;
         vars.onComplete = () => {
-        if (navGeneration !== generation) return;
-        if (externalNavActive) return; // a click has taken over
+            if (navGeneration !== generation) return;
             console.log(`Carousel movement complete (toIndex.onComplete). Landed on index ${curIndex}`);
             config.onIndexChange?.(curIndex);
         };
@@ -297,6 +303,7 @@ function horizontalLoop(items: any, config: any) {
             trigger: items[0].parentNode,
             type: "x",
             onPress() {
+                if (draggable.isThrowing) draggable.endDrag();
                 externalNavActive = false;
                 hasFiredDragStart = false;
                 tl.pause()
