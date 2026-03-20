@@ -71,6 +71,9 @@ export const ARCANA_IMAGE_URI: ArcanaImageConfig = {
         {
             uri: 'https://www.esotericmeanings.com/wp-content/uploads/2016/07/fortune-tarot-crowley-thoth.jpg',
         },
+        {
+            uri: 'https://custom-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_9000,w_1200,f_auto,q_auto/867803/856105_786763.png',
+        }
     ],
     [ArcanaIdentities.LUST]: [
         {

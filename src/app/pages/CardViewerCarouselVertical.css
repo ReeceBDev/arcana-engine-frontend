@@ -118,6 +118,7 @@
     line-height: 20px;
     margin-top: 0px;
     padding-top: 4px;
+    margin-inline: -10px;
   }
 
   & p  {
@@ -144,8 +145,12 @@
     transform: rotateZ(-5deg);
   }
 
+  & .right-button img {
+    margin-right: -18px;
+  }
   & .left-button img {
     transform: rotateZ(185deg);
+    margin-left: -18px;
   }
 
   & .nav-bar-instruction,
@@ -155,5 +160,15 @@
     text-align: center;
 
     animation: white-pulsating-glow 3s ease-in-out infinite;
+  }
+
+  & .spacer {
+    flex: 1;
+    max-width: 5px;
+  }
+
+    & .text-spacer {
+    flex: 1;
+    max-width: 25px;
   }
 }

@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 :: User Configuration !! IMPORTANT - MAKE SURE YOU SET THIS EVERY TIME YOU TURN ON THE DEVICE!
 set USEUSB=FALSE
 set DEVICE_IP=192.168.0.106
-set DEVICE_PORT=41153
+set DEVICE_PORT=40939
 
 
 :: Variables
@@ -27,7 +27,15 @@ echo.
 :STARTUP
 :: Kill any existing Parcel processes
 echo Cleaning up existing processes...
+:: Kill any process holding the webserver port
+echo Releasing port %WEBSERVER_PORT%...
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R ":%WEBSERVER_PORT%[^0-9]" 2^>nul') do (
+    taskkill /F /PID %%a 2>nul
+)
+
+:: Also kill node.exe broadly as a sweep
 taskkill /F /IM node.exe 2>nul
+taskkill /F /IM npm.cmd 2>nul
 echo Waiting for port to be released...
 
 :WAIT_PORT_FREE

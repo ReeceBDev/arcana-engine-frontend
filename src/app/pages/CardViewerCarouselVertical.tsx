@@ -6,6 +6,13 @@ import arrow from 'url:../../assets/images/arrow.webp';
 import type { CarouselDraggableSnapHandle } from '../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import SmallVerticalTabLine from '../components/SmallVerticalTabLine';
 import { gsap } from 'gsap';
+import { proxyImageUrl } from '../utilities/proxy-image-url';
+
+const CARD_GAP_IN_PX = 10;
+const CAROUSEL_ANIMATIONS = [
+    { property: 'scale', peak: 1.1, trough: 0.86, ease: "M0,0 C0.078,0.153 0.668,0.128 0.887,0.469 1,0.647 0.979,0.9 1,0.9 " },
+    { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
+];
 
 export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => void }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
@@ -14,14 +21,14 @@ export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => 
 
   const onSwipeIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
-    console.log(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
+    console.debug(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
     lastSyncedIndex.current = index;
     smallRef.current?.toIndex(index);
   }, []);
 
   const onSmallIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
-    console.log(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
+    console.debug(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
     lastSyncedIndex.current = index;
     swipeRef.current?.toIndex(index);
   }, []);
@@ -30,16 +37,18 @@ export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => 
   }, []);
 
   const onSmallDragComplete = useCallback((index: number) => {
-    console.log(`Carousel drag complete (onSmallDragComplete) - syncing swipeable to index ${index}`);
+    console.debug(`Carousel drag complete (onSmallDragComplete) - syncing swipeable to index ${index}`);
     swipeRef.current?.toIndex(index);
   }, []);
-
-  console.log(arrow)
 
   return (
     <div className="page-vertical">
       <img
-        src="https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png"
+        src={proxyImageUrl(
+          'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
+          window.innerWidth,
+          window.innerHeight
+        )}
         className="background-image"
       />
       <TopNavBarRegion onBack={onBack} />
@@ -81,7 +90,6 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
   onDragStart: (direction: 1 | -1) => void,
   onDragComplete: (index: number) => void
 }) {
-  const CARD_GAP_IN_PX = 10;
 
   return (
     <div className="minimap-carousel-region">
@@ -95,10 +103,7 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
           onIndexChange={onIndexChange}
           onDragStart={onDragStart}
           onDragComplete={onDragComplete}
-          animations={[
-            { property: 'scale', peak: 1.1, trough: 0.86, ease: "M0,0 C0.078,0.153 0.668,0.128 0.887,0.469 1,0.647 0.979,0.9 1,0.9 " },
-            { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
-          ]}
+          animations={CAROUSEL_ANIMATIONS}
         />
       </div>
       <CurvedLine />
@@ -134,16 +139,20 @@ function CarouselControls({ swipeRef }: { swipeRef: React.RefObject<CarouselDrag
 
   return (
     <div className="carousel-controls">
+      <div className="spacer" />
       <button className="left-button" onClick={() => { pulse(leftArrowRef); swipeRef.current?.previous() }}>
         <img ref={leftArrowRef} src={arrow} alt="Left" />
       </button>
+      <div className="text-spacer" />
       <button className="switch-to-arcana-text-container">
         <p className="nav-bar-instruction">Tap here to Switch</p>
         <p className="switch-arcana">to Minor arcana</p>
       </button>
+      <div className="text-spacer" />
       <button className="right-button" onClick={() => { pulse(rightArrowRef); swipeRef.current?.next() }}>
         <img ref={rightArrowRef} src={arrow} alt="Right" />
       </button>
+      <div className="spacer" />
     </div>
   );
 }
