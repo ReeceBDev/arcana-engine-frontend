@@ -14,10 +14,10 @@ const CAROUSEL_ANIMATIONS = [
     { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
 ];
 
-export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => void }) {
+export default function CardViewerCarouselVertical({ onBack, startingIndex = 0 }: { onBack?: () => void, startingIndex?: number }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
-  const lastSyncedIndex = useRef(-1);
+  const lastSyncedIndex = useRef(startingIndex);
 
   const onSwipeIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
@@ -42,7 +42,7 @@ export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => 
   }, []);
 
   return (
-    <div className="page-vertical">
+    <div className="vertical-carousel-page">
       <img
         src={proxyImageUrl(
           'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
@@ -53,7 +53,7 @@ export default function CardViewerCarouselVertical({ onBack }: { onBack?: () => 
       />
       <TopNavBarRegion onBack={onBack} />
       <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} />
-      <MinimapCarouselRegion carouselRef={smallRef} onIndexChange={onSmallIndexChange} onDragStart={onSmallDragStart} onDragComplete={onSmallDragComplete} />
+      <MinimapCarouselRegion carouselRef={smallRef} onIndexChange={onSmallIndexChange} onDragStart={onSmallDragStart} onDragComplete={onSmallDragComplete} startingIndex={startingIndex} />
       <CarouselControls swipeRef={swipeRef} />
     </div>
   )
@@ -84,11 +84,12 @@ function CardDisplayRegion({ swipeRef, onIndexChange }: { swipeRef: React.RefObj
   );
 }
 
-function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDragComplete }: {
+function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDragComplete, startingIndex }: {
   carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
   onIndexChange: (index: number) => void,
   onDragStart: (direction: 1 | -1) => void,
-  onDragComplete: (index: number) => void
+  onDragComplete: (index: number) => void,
+  startingIndex: number
 }) {
 
   return (
@@ -97,6 +98,7 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
       <div className="minimap-carousel-container">
         <CardCarousel
           ref={carouselRef}
+          startingIndex={startingIndex}
           cardHeight={150}
           cardWidth={100}
           cardGapInPx={CARD_GAP_IN_PX}
@@ -104,6 +106,8 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
           onDragStart={onDragStart}
           onDragComplete={onDragComplete}
           animations={CAROUSEL_ANIMATIONS}
+          compressImages={true}
+          disable3d={true}
         />
       </div>
       <CurvedLine />

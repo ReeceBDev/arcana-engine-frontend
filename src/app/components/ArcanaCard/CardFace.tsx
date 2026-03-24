@@ -7,12 +7,26 @@ export default function CardFace({ cardId, cardWidth, cardHeight, isOptimised = 
     const [index, setIndex] = useState(0);
     const config = ARCANA_IMAGE_URI[cardId][index];
     if (!config) {
-    console.error('CardFace: no config found for cardId:', cardId);
+    console.error('CardFace: no config found for cardId:', cardId, ' and URI: ', ARCANA_IMAGE_URI[cardId], ' at index:', index);
     return null;
 }
 
-    const isFluid = cardWidth === undefined && cardHeight === undefined;
-    const src = (!isOptimised && isFluid) ? config.uri : proxyImageUrl(config.uri, cardWidth! * 2, cardHeight! * 2, 90);
+    let isFluid = cardWidth === undefined && cardHeight === undefined;
+    let src = config.uri;
+
+    // Optimise when required. At least one dimension must be provided in order to optimise.
+    if (isOptimised && !isFluid)
+    {
+        // Resolve both dimensions
+        cardWidth ??= Math.round(cardHeight! / 1.5);
+        cardHeight ??= Math.round(cardWidth * 1.5);
+
+        src = proxyImageUrl(config.uri, cardWidth * 2, cardHeight * 2, 90);
+    }
+    else if (isOptimised && isFluid) {
+        console.warn('CardFace: isOptimised is true but both cardWidth and cardHeight are undefined. Cannot optimise image without at least one dimension. Rendering non-optimised image for cardId:', cardId);
+    }
+
     return (
         <div style={{
             width: isFluid ? 'auto' : cardWidth,
@@ -35,7 +49,7 @@ export default function CardFace({ cardId, cardWidth, cardHeight, isOptimised = 
                     marginTop: config.offsetY ?? 0,
                     transform: `scaleX(${config.scaleX ?? 1}) scaleY(${config.scaleY ?? 1})`,
                 }}
-                onError={() => {console.warn('CardFace: uri failure on cardId', cardId, ' and index:', index);setIndex(index + 1);} }
+                onError={() => {console.warn('CardFace: uri failure on cardId', cardId, 'and URI: ', config.uri, ' and index:', index);setIndex(index + 1);} }
             />
         </div>
     );

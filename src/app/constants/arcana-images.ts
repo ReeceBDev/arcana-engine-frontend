@@ -61,6 +61,9 @@ export const ARCANA_IMAGE_URI: ArcanaImageConfig = {
         {
             uri: 'https://www.esotericmeanings.com/wp-content/uploads/2016/06/adjustment-thothtarotcard.jpg',    
         },
+        {
+            uri: 'https://www.esotericmeanings.com/wp-content/uploads/2016/06/adjustment-thothtarotcard.jpg',    
+        },
     ],
     [ArcanaIdentities.THE_HERMIT]: [
         {

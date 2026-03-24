@@ -4,7 +4,15 @@
   display: flex;
   align-items: center;
   overflow: show;
-      transform: translateX(-50%);
+  transform: translateX(-50%);
+  contain: layout style;
+}
+
+.wrapper[data-preserve-3d="true"] {
+  transform-style: preserve-3d;
+  contain: unset;
+  perspective: 800px;
+  perspective-origin: 50vw 50%;
 }
 
 .card {
@@ -20,6 +28,11 @@
   margin-right: 10px;
   will-change: transform;
   contain: layout style;
+}
+
+.wrapper[data-preserve-3d="true"] .card {
+  contain: unset;
+  transform-style: preserve-3d;
 }
 
 .show-overflow {

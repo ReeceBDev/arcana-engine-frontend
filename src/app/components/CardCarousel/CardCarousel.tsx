@@ -13,19 +13,35 @@ import { CustomEase } from 'gsap/CustomEase';
 gsap.registerPlugin(Draggable, InertiaPlugin, CustomEase);
 
 const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
+const CARD_SIZE_RATIO = 1.5; // height = width * 1.5
 
 interface CardCarouselProps {
-    onIndexChange?: (index: number) => void;
-    cardWidth: number;
-    cardHeight: number;
     cardGapInPx: number;
+    startingIndex?: number;
+    onIndexChange?: (index: number) => void;
+    cardWidth?: number;
+    cardHeight?: number;
     onDragStart?: (direction: 1 | -1) => void;
     onDragComplete?: (index: number) => void;
-    animations?: { property: string; peak: number; trough: number, ease?: string }[];
+    animations?: (
+        | { property: string; type?: 'bell'; peak: number; trough: number; ease?: string }
+        | { property: string; type: 'linear'; left: number; right: number; ease?: string }
+    )[];
+    disable3d?: boolean;
+    compressImages?: boolean;
+    deadzoneEnabled?: boolean;
 }
 
 const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
-    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, animations = [] }, ref) {
+    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete,
+        animations = [], disable3d = false, compressImages = false, deadzoneEnabled = true, startingIndex = 0 }, ref) {
+        if (cardWidth === undefined && cardHeight === undefined) {
+            throw new Error('CardCarousel: either cardWidth or cardHeight must be provided');
+        }
+
+        const resolvedCardHeight = cardHeight ?? Math.round(cardWidth! * CARD_SIZE_RATIO);
+        const resolvedCardWidth = cardWidth ?? Math.round(cardHeight! / CARD_SIZE_RATIO);
+
         const wrapperRef = useRef<HTMLDivElement>(null);
         const loopRef = useRef<any>(null);
         const onIndexChangeRef = useRef(onIndexChange);
@@ -73,14 +89,15 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
             const cards = gsap.utils.toArray<HTMLElement>(".card");
             if (!cards.length) return;
 
-            gsap.set(cards, { width: cardWidth, height: cardHeight });
+            gsap.set(cards, { width: resolvedCardWidth, height: resolvedCardHeight });
 
             const middleCard = cards[Math.floor(cards.length / 2)] as HTMLElement;
             const offset = middleCard.offsetLeft + middleCard.offsetWidth / 2;
 
             wrapperRef.current!.style.transform = `translateX(calc(50vw - ${offset}px))`;
+            wrapperRef.current!.style.perspectiveOrigin = `${offset}px 50%`;
 
-            const centreIndex = Math.floor(cards.length / 2);
+            const centreIndex = Math.floor(cards.length / 2) ?? 0;
             const centreOffset = centreIndex / cards.length;
             const loop = horizontalLoop(cards, {
                 paused: true,
@@ -103,7 +120,7 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
             loop.progress(centreOffset, true);
 
             // After building the loop, build a separate scale timeline
-            //console.log('Setting up CardCarousel animations with config:', { animations });
+            console.debug('Setting up CardCarousel animations with config:', { animations });
             const reverseEase = (e: string): string => {
                 if (e === 'none') return 'none';
                 if (e.endsWith('.out')) return e.replace('.out', '.in');
@@ -115,17 +132,20 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
             // Parse ease functions ONCE, outside the hot path
             let parsedAnimations: any[] = [];
             try {
-                parsedAnimations = animations.map(({ property, peak, trough, ease = 'none' }) => {
-                    const fwdId = `ease_fwd_global`;
-                    const revId = `ease_rev_global`;
-                    const fwdEaseFn = gsap.parseEase(
-                        ease.startsWith('M') ? CustomEase.create(fwdId, ease) : ease
-                    );
-                    const revEaseFn = gsap.parseEase(
-                        ease.startsWith('M') ? CustomEase.create(revId, reverseCustomEasePath(ease)) : reverseEase(ease)
-                    );
-                    return { property, peak, trough, fwdEaseFn, revEaseFn };
+                parsedAnimations = animations.map((anim) => {
+                    if (anim.type === 'linear') {
+                        const easeFn = gsap.parseEase(
+                            anim.ease?.startsWith('M') ? CustomEase.create('ease_linear', anim.ease) : (anim.ease ?? 'none')
+                        );
+                        return { type: 'linear', property: anim.property, left: anim.left, right: anim.right, easeFn };
+                    }
+                    // existing bell curve logic
+                    const { property, peak, trough, ease = 'none' } = anim;
+                    const fwdEaseFn = gsap.parseEase(ease.startsWith('M') ? CustomEase.create('ease_fwd_global', ease) : ease);
+                    const revEaseFn = gsap.parseEase(ease.startsWith('M') ? CustomEase.create('ease_rev_global', reverseCustomEasePath(ease)) : reverseEase(ease));
+                    return { type: 'bell', property, peak, trough, fwdEaseFn, revEaseFn };
                 });
+
             } catch (e) {
                 console.error('parsedAnimations setup threw:', e);
             }
@@ -139,40 +159,63 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
             }));
 
             const troughProps = Object.fromEntries(
-                parsedAnimations.map(({ property, trough }) => [property, trough])
+                parsedAnimations
+                    .filter(a => a.type !== 'linear')
+                    .map(({ property, trough }) => [property, trough])
             );
 
-            const approxTotalWidth = cards.length * (cardWidth + cardGapInPx);
-            const DEADZONE = Math.max(0, 0.5 - (window.innerWidth / 2 + cardWidth) / approxTotalWidth);
-            const upperDeadzone = 1 - DEADZONE; // hoist outside syncScales
+            const approxTotalWidth = cards.length * (resolvedCardWidth + cardGapInPx);
+            const DEADZONE = deadzoneEnabled ? Math.max(0, 0.5 - (window.innerWidth / 2 + resolvedCardWidth) / approxTotalWidth) : 0;
+            const upperDeadzone = 1 - DEADZONE;
 
             const syncScales = () => {
-                const base = loop.progress() - centreOffset + 0.5;
-                for (let i = 0; i < cardAnimators.length; i++) {
-                    const animator = cardAnimators[i];
-                    const tlProgress = (((base - animator.peakProgress) % 1) + 1) % 1;
-                    if (tlProgress < DEADZONE || tlProgress > upperDeadzone) {
-                        if (!animator.atTrough) {
-                            animator.cssSet(troughProps);
-                            animator.atTrough = true;
+                try {
+                    const base = loop.progress() - centreOffset + 0.5;
+                    for (let i = 0; i < cardAnimators.length; i++) {
+                        const animator = cardAnimators[i];
+                        const tlProgress = (((base - animator.peakProgress) % 1) + 1) % 1;
+
+                        if (tlProgress < DEADZONE || tlProgress > upperDeadzone) {
+                            if (!animator.atTrough) {
+                                animator.cssSet(troughProps);
+                                animator.atTrough = true;
+                            }
+
+                            let hasLinear = false;
+                            for (let j = 0; j < parsedAnimations.length; j++) {
+                                const anim = parsedAnimations[j];
+                                if (anim.type === 'linear') {
+                                    animator.props[anim.property] = anim.left + (anim.right - anim.left) * anim.easeFn(tlProgress);
+                                    hasLinear = true;
+                                }
+                            }
+                            if (hasLinear) animator.cssSet(animator.props);
+                            continue;
                         }
-                        continue;
+
+                        animator.atTrough = false;
+                        for (let j = 0; j < parsedAnimations.length; j++) {
+                            const anim = parsedAnimations[j];
+                            if (anim.type === 'linear') {
+                                animator.props[anim.property] = anim.left + (anim.right - anim.left) * anim.easeFn(tlProgress);
+                            } else {
+                                const t2 = tlProgress * 2;
+                                const t2s = (tlProgress - 0.5) * 2;
+                                animator.props[anim.property] = tlProgress <= 0.5
+                                    ? anim.trough + (anim.peak - anim.trough) * anim.fwdEaseFn(t2)
+                                    : anim.peak + (anim.trough - anim.peak) * anim.revEaseFn(t2s);
+                            }
+                        }
+                        animator.cssSet(animator.props);
                     }
-                    animator.atTrough = false;
-                    for (let j = 0; j < parsedAnimations.length; j++) {
-                        const { property, peak, trough, fwdEaseFn, revEaseFn } = parsedAnimations[j];
-                        const t2 = tlProgress * 2;
-                        const t2s = (tlProgress - 0.5) * 2;
-                        animator.props[property] = tlProgress <= 0.5
-                            ? trough + (peak - trough) * fwdEaseFn(t2)
-                            : peak + (trough - peak) * revEaseFn(t2s);
-                    }
-                    animator.cssSet(animator.props);
+                } catch (e) {
+                    console.error('syncScales setup threw:', e);
                 }
             };
-            //console.log('CardCarousel setup complete. Loop and animations are configured. calling syncScales for the first time to set initial states.');
+            console.debug('CardCarousel setup complete. Loop and animations are configured. calling syncScales for the first time to set initial states.');
             loop.eventCallback("onUpdate", syncScales);
             syncScales();
+            console.debug('parsedAnimations:', parsedAnimations);
 
             loop.progress(centreOffset, true);
             loopRef.current = loop;
@@ -199,14 +242,21 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
 
         }, { scope: wrapperRef });
 
-        //console.log('syncScales complete. Now Rendering CardCarousel with props:', { cardHeight, cardWidth, cardGapInPx, animations });
+        console.debug('syncScales complete. Now Rendering CardCarousel with props:', { resolvedCardHeight, resolvedCardWidth, cardGapInPx, animations });
         return (
-            <div ref={wrapperRef} className="wrapper">
-                {cardIds.map((cardId, index) => (
-                    <div key={index} className="card" style={{ marginRight: cardGapInPx }}>
-                        <CardFace cardId={ArcanaIdentities[cardId]} cardWidth={cardWidth} cardHeight={cardHeight} />
-                    </div>
-                ))}
+           <div style={{ perspective: '800px', perspectiveOrigin: '50vw 50%', width: '100%' }}>
+                <div ref={wrapperRef} className="wrapper" data-preserve-3d={!disable3d ? "true" : undefined}>
+                    {cardIds.map((cardId, index) => (
+                        <div key={index} className="card" style={{ marginRight: cardGapInPx }}>
+                            <CardFace
+                                cardId={ArcanaIdentities[cardId]}
+                                cardWidth={resolvedCardWidth}
+                                cardHeight={resolvedCardHeight}
+                                isOptimised={compressImages}
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     });
@@ -371,7 +421,7 @@ function horizontalLoop(items: any, config: any) {
             },
             onRelease: syncIndex,
             onThrowComplete: () => {
-                //console.log(`Carousel stopped moving towards a destination. (onThrowComplete has fired) - externalNavActive: ${externalNavActive}`);
+                console.debug(`Carousel stopped moving towards a destination. (onThrowComplete has fired) - externalNavActive: ${externalNavActive}`);
                 gsap.set(proxy, { x: 0 });
                 const wasExternal = externalNavActive;
                 externalNavActive = false;
