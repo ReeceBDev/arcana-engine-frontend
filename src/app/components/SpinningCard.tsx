@@ -18,24 +18,29 @@ export default function SpinningCard({ height, width }: { height?: number, width
 
     const randomCard = () => cardIds[Math.floor(Math.random() * cardIds.length)];
     const [selectedId, setSelectedId] = useState<ArcanaIdentity>(randomCard);
+const nextFrontIdRef = useRef<ArcanaIdentity>(randomCard());
 
-    useGSAP(() => {
-        gsap.timeline({ repeat: -1 })
-            .fromTo(".animated-card", { rotationY: -90 }, {
-                rotationY: 90,
-                duration: 2.6,
-                ease: "cardSpinDramatic",
-                onStart: () => setSelectedId(randomCard())
-            })
-
-            .fromTo(".animated-card", { rotationY: 90 }, {
-                rotationY: 270,
-                duration: 0.6,
-                ease: "sine.inOut",
-                onStart: () => setSelectedId('BACK' as ArcanaIdentity),
-            })
-    }, { scope: carouselRef });
-
+useGSAP(() => {
+    gsap.timeline({ repeat: -1 })
+        .fromTo(".animated-card", { rotationY: -90 }, {
+            rotationY: 90,
+            duration: 2.6,
+            ease: "cardSpinDramatic",
+            onStart: () => setSelectedId(nextFrontIdRef.current)
+        })
+        .fromTo(".animated-card", { rotationY: 90 }, {
+            rotationY: 270,
+            duration: 0.6,
+            ease: "sine.inOut",
+            onStart: () => {
+                setSelectedId('BACK' as ArcanaIdentity);
+                const nextId = randomCard();
+                new Image().src = String(ArcanaIdentities[nextId]);
+                nextFrontIdRef.current = nextId;
+                console.debug("SpinningCard: preloaded the next card image. Next id:", nextId, " with URI:", ArcanaIdentities[nextId]);
+            },
+        })
+}, { scope: carouselRef });
     return (
         <div ref={carouselRef} className="card-container">
             <div className="animated-card" style={{ width, height }}>
