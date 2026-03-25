@@ -4,6 +4,9 @@ import { ArcanaIdentities } from './arcana-identities';
 export const ARCANA_IMAGE_URI: ArcanaImageConfig = {
     [ArcanaIdentities.BACK]: [
         {
+            uri: 'https://i.pinimg.com/736x/7a/f5/8f/7af58f88d6f893ab99fbf9b2ee4c490a.jpg',
+        },
+        {
             uri: 'https://artisantarot.com/cdn/shop/files/Crowley-Thoth-Tarot-Deck-Small-Back-Design.jpg?v=1747565632',
             scale: 1.15,
             scaleX: 1.29,

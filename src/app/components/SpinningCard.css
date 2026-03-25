@@ -1,5 +1,18 @@
+.card-container {
+    perspective: 1000px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .animated-card {
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.card-face {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }

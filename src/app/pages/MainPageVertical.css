@@ -1,0 +1,103 @@
+.main-page-vertical {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+
+    & .background-image {
+        position: absolute;
+        object-fit: cover;
+        object-position: 30%;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 0;
+    }
+
+    & p {
+        font-size: 3vh;
+        line-height: 50%;
+        color: white;
+        margin: 0;
+        padding-block: 0.5vh;
+        letter-spacing: -0.02em;
+    }
+
+    & button {
+        font-size: 2.5vh;
+        line-height: 50%;
+        color: white;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    & .header-text-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+
+        & .text-crowley {
+            align-self: flex-start;
+            padding-block: 2%;
+            margin-left: 4vw;
+        }
+
+        & .text-title {
+            font-size: 4vh;
+        }
+
+        & .text-slogan {
+            color: purple;
+        }
+    }
+
+    & .spinning-card-constraint {
+        flex: 1;
+        padding-top: 1%;
+        padding-bottom: 1%;
+        min-height: 0;
+
+        & .spinning-card-container {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
+            height: 100%;
+        }
+    }
+
+    & .footer-segment {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-bottom: 2%;
+
+        & .nav-control-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+
+            & .begin-button {
+                font-size: 4vh;
+                animation: white-pulsating-glow 3s ease-in-out infinite;
+            }
+
+            & .coloured-split {
+                margin: 0;
+                font-size: 4vh;
+                line-height: 1;
+            }
+        }
+    }
+}
