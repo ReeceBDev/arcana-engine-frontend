@@ -37,7 +37,10 @@ export default function MainMenuVertical() {
                 className="background-image"
             />
             <div className="header-text-container">
-                <p className="text-crowley">Alastair Crowley's</p>
+                <div className="crowley-container">
+                    <p className="text-crowley">Alastair Crowley's</p>
+                    <div className="right-spacer" />
+                </div>
                 <p className="text-title">Thoth Tarot</p>
                 <p className="text-slogan">Find the colour of your soul...</p>
             </div>
@@ -65,6 +68,6 @@ export default function MainMenuVertical() {
 
 function ColouredSplit({ colour }: { colour: string }) {
     return (
-        <p className="coloured-split" style={{ color: colour }}>p-h</p>
+        <p className="coloured-split" style={{ color: colour }}>~</p>
     )
 }
