@@ -1,14 +1,14 @@
-import './MainPageVertical.css';
-import { proxyImageUrl } from '../utilities/proxy-image-url';
+import './MainPageHorizontal.css';
+import { proxyImageUrl } from '../utilities/proxy-image-url.ts';
 import { useEffect, useRef, useState } from 'react';
-import CardViewerCarouselVertical from './CardViewerCarouselVertical';
-import CardViewerCarouselHorizontal from './CardViewerCarouselHorizontal';
-import type { PageIdentity } from './../../types/page-identity.ts';
+import CardViewerCarouselVertical from './CardViewerCarouselVertical.tsx';
+import CardViewerCarouselHorizontal from './CardViewerCarouselHorizontal.tsx';
+import type { PageIdentity } from '../../types/page-identity.ts';
 import SpinningCard from '../components/SpinningCard.tsx'
 import Spacer from '../../assets/iconography/spacer.svg?react';
 
-export default function MainMenuVertical() {
-    const [page, setPage] = useState<PageIdentity>('main-menu-vertical');
+export default function MainMenuHorizontal() {
+    const [page, setPage] = useState<PageIdentity>('main-menu-horizontal');
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerHeight, setContainerHeight] = useState(300);
 
@@ -22,8 +22,8 @@ export default function MainMenuVertical() {
     }, []);
 
 
-    if (page === 'deck-viewer-vertical') return <CardViewerCarouselVertical startingIndex={1} onBack={() => setPage('main-menu-vertical')} />;
-    if (page === 'deck-viewer-horizontal') return <CardViewerCarouselHorizontal startingIndex={6} onBack={() => setPage('main-menu-vertical')} />;
+    if (page === 'deck-viewer-vertical') return <CardViewerCarouselVertical startingIndex={1} onBack={() => setPage('main-menu-horizontal')} />;
+    if (page === 'deck-viewer-horizontal') return <CardViewerCarouselHorizontal startingIndex={6} onBack={() => setPage('main-menu-horizontal')} />;
 
     return (
         <div className="main-page-vertical">
