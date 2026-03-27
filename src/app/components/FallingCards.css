@@ -1,0 +1,15 @@
+.falling-cards-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.falling-card {
+    position: absolute;
+    top: -100px;
+    width: 60px;
+    height: 90px;
+    pointer-events: none;
+    background-size: cover;
+    border-radius: 4px;
+}

@@ -1,4 +1,4 @@
-.main-page-vertical {
+.main-page-horizontal {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -17,7 +17,7 @@
     }
 
     & p {
-        font-size: 3vh;
+        font-size: 5vh;
         line-height: 50%;
         color: white;
         margin: 0;
@@ -26,16 +26,16 @@
     }
 
     & button {
-        font-size: 2.5vh;
+        font-size: 5.2vh;
         line-height: 50%;
         color: white;
         margin: 0;
         letter-spacing: -0.02em;
+        z-index: 2;
     }
 
     & .header-text-container {
         position: relative;
-        z-index: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -50,6 +50,7 @@
             min-width: 0;
             align-items: center;
             justify-content: flex-end;
+            z-index: 0;
 
             & .right-spacer {
                 flex: 3 1 0;
@@ -61,7 +62,7 @@
                 flex: 0 0 auto;
                 flex-shrink: 0;
                 white-space: nowrap;
-                margin-top: 0.5vh;
+                margin-top: 4vh;
                 padding-block: 0.7vh;
                 padding-left: 1.2vh;
 
@@ -80,7 +81,8 @@
         }
 
         & .text-title {
-            font-size: 4vh;
+            font-size: 12vh;
+            line-height: 70%;
             background: linear-gradient(90deg,
                     #e8c97a 0%,
                     #f5e6b8 44%,
@@ -92,12 +94,14 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: gold-wave 6s linear infinite;
+            z-index: 1;
         }
 
         & .text-slogan {
             color: purple;
-            padding-top: 1vh;
-            margin-bottom: 2vh;
+            font-size: 6vh;
+            padding-top: 2.2vh;
+            margin-bottom: 5vh;
             letter-spacing: -0.04em;
 
             background: linear-gradient(90deg,
@@ -116,24 +120,6 @@
         }
     }
 
-    & .spinning-card-constraint {
-        flex: 1;
-        padding-top: 1%;
-        padding-bottom: 1%;
-        min-height: 0;
-
-        & .spinning-card-container {
-            flex: 1;
-            position: relative;
-            z-index: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 0;
-            height: 100%;
-        }
-    }
-
     & .footer-segment {
         position: relative;
         z-index: 1;
@@ -141,7 +127,7 @@
         flex-direction: column;
         align-items: center;
         padding-bottom: 5%;
-        margin-top: 4vh;
+        margin-top: 1vh;
         margin-bottom: 1vh;
 
         & .nav-control-container {
@@ -151,14 +137,14 @@
             gap: 0;
 
             & .begin-button {
-                font-size: 4vh;
+                font-size: 8vh;
                 animation: white-pulsating-glow 3s ease-in-out infinite;
             }
 
             & .coloured-split {
-                margin: -0.5vh;
+                margin: -2vh;
                 vertical-align: middle;
-                width: 20vh;
+                width: 18vw;
             }
         }
     }

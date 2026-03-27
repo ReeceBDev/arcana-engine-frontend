@@ -5,6 +5,7 @@ import { Fullscreen } from '@boengli/capacitor-fullscreen';
 import CardViewerCarouselHorizontal from './CardViewerCarouselHorizontal';
 import MainPageVertical from './MainPageVertical';
 import { Capacitor } from '@capacitor/core';
+import MainPageHorizontal from './MainPageHorizontal';
 
 type Page = 'home' | 'vertical' | 'horizontal';
 
@@ -21,7 +22,7 @@ useEffect(() => {
   if (page === 'horizontal') return <CardViewerCarouselHorizontal startingIndex={6} onBack={() => setPage('home')} />;
 
   return (
-    <MainPageVertical />
+    <MainPageHorizontal />
   )
 }
 
