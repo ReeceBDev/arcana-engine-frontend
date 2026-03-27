@@ -62,12 +62,39 @@
                  flex-direction: column;
                  align-items: center;
              }
+
              & .text .first-child {
                  transform: rotate(2deg) translateX(0.2svh);
+                padding-bottom: +1vh;
+
+                 background: linear-gradient(90deg,
+                         #e8c97a 0%,
+                         #f5e6b8 44%,
+                         #fdf3d0 50%,
+                         #f5e6b8 56%,
+                         #e8c97a 100%);
+                 background-size: 200% 100%;
+                 -webkit-background-clip: text;
+                 background-clip: text;
+                 -webkit-text-fill-color: transparent;
+                 animation: gold-wave 6s linear infinite;
              }
 
-             & .text .second-child {                
+             & .text .second-child {
+                 padding-bottom: +1vh;
                  transform: rotate(2deg);
+                 
+                 background: linear-gradient(90deg,
+                         #e8c97a 0%,
+                         #f5e6b8 44%,
+                         #fdf3d0 50%,
+                         #f5e6b8 56%,
+                         #e8c97a 100%);
+                 background-size: 200% 100%;
+                 -webkit-background-clip: text;
+                 background-clip: text;
+                 -webkit-text-fill-color: transparent;
+                 animation: gold-wave 6s linear infinite;
              }
 
              & .centre-spacer {
