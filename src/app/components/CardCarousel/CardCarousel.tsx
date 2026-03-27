@@ -17,7 +17,7 @@ const CARD_SIZE_RATIO = 1.5; // height = width * 1.5
 
 interface CardCarouselProps {
     cardGapInPx: number;
-    startingIndex?: number;
+    startingIndex: number;
     onIndexChange?: (index: number) => void;
     cardWidth?: number;
     cardHeight?: number;
@@ -33,8 +33,9 @@ interface CardCarouselProps {
 }
 
 const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
-    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete,
-        animations = [], disable3d = false, compressImages = false, deadzoneEnabled = true, startingIndex = 0 }, ref) {
+    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, startingIndex, 
+        animations = [], disable3d = false, compressImages = false, deadzoneEnabled = true}, ref) {
+
         if (cardWidth === undefined && cardHeight === undefined) {
             throw new Error('CardCarousel: either cardWidth or cardHeight must be provided');
         }
@@ -220,6 +221,11 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
             loop.progress(centreOffset, true);
             loopRef.current = loop;
 
+            if (startingIndex !== 0) {
+                loop.jumpToIndex(startingIndex);
+                syncScales();
+            }
+
             cards.forEach((card, i) =>
                 card.addEventListener("click", () => {
                     //console.log(`Carousel was Clicked by user - Heading to card ${i}`);
@@ -244,7 +250,7 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
 
         console.debug('syncScales complete. Now Rendering CardCarousel with props:', { resolvedCardHeight, resolvedCardWidth, cardGapInPx, animations });
         return (
-           <div style={{ perspective: '800px', perspectiveOrigin: '50vw 50%', width: '100%' }}>
+            <div style={{ perspective: '800px', perspectiveOrigin: '50vw 50%', width: '100%' }}>
                 <div ref={wrapperRef} className="wrapper" data-preserve-3d={!disable3d ? "true" : undefined}>
                     {cardIds.map((cardId, index) => (
                         <div key={index} className="card" style={{ marginRight: cardGapInPx }}>
@@ -367,6 +373,11 @@ function horizontalLoop(items: any, config: any) {
     tl.updateIndex = () => (curIndex = gsap.utils.wrap(0, length, Math.round((tl.progress() - ((config.startIndex || 0) / length)) * length)));
     tl.times = times;
     tl.progress(1, true).progress(0, true);
+    tl.jumpToIndex = (index: number) => {
+        const targetTime = times[gsap.utils.wrap(0, length, index)];
+        curIndex = gsap.utils.wrap(0, length, index);
+        tl.progress(gsap.utils.wrap(0, 1, targetTime / tl.duration()), true);
+    };
 
     if (config.reversed) {
         tl.vars.onReverseComplete();

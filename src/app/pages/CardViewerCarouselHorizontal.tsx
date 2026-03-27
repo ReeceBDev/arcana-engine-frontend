@@ -14,15 +14,20 @@ const CAROUSEL_ANIMATIONS = [
   { property: 'z', peak: 0, trough: -450, ease: "power1.in" },
 ];
 
-export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0}: { onBack?: () => void, startingIndex?: number }) {
+export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0, onIndexChange }: {
+  onBack?: () => void;
+  startingIndex?: number;
+  onIndexChange?: (index: number) => void;
+}) {
   const carouselRef = useRef<CarouselDraggableSnapHandle>(null!);
   const lastSyncedIndex = useRef(startingIndex);
 
- const onCarouselndexChange = useCallback((index: number) => {
-      if (lastSyncedIndex.current === index) return;
-      console.debug(`Carousel card changed (onCarouselIndexChange) - new index ${index}`);
-      lastSyncedIndex.current = index;
-    }, []);
+  const onCarouselIndexChange = useCallback((index: number) => {
+    if (lastSyncedIndex.current === index) return;
+    console.debug(`Carousel card changed (onCarouselIndexChange) - new index ${index}`);
+    lastSyncedIndex.current = index;
+    onIndexChange?.(index);
+  }, [onIndexChange]);
 
   return (
     <div className="horizontal-carousel-page">
@@ -35,7 +40,7 @@ export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0}
         className="background-image"
       />
       <TopNavBarRegion onBack={onBack} />
-      <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselndexChange} lastSyncedIndex={lastSyncedIndex} />
+      <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselIndexChange} lastSyncedIndex={lastSyncedIndex} />
       <CarouselControls carouselRef={carouselRef} />
     </div>
   )
@@ -48,27 +53,27 @@ function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
         <img src={arrow} alt="Back" />
       </button>
       <button className="back-button">
-        <img src={arrow} style={{ visibility: 'hidden'}}/>
+        <img src={arrow} style={{ visibility: 'hidden' }} />
       </button>
       <div className="nav-bar-text-container">
         <div className="text-spacer" />
 
-      <div className="centre-spacer" />
-      <div className="text">
-              <p className="first-child">The order of arcana,</p>
-              <p className="second-child">tell of a fools journey.</p>
-      </div>
-      <div className="text-spacer" />
+        <div className="centre-spacer" />
+        <div className="text">
+          <p className="first-child">The order of arcana,</p>
+          <p className="second-child">tell of a fools journey.</p>
+        </div>
+        <div className="text-spacer" />
       </div>
     </div>
   );
 }
 
-function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex } : { 
-    carouselRef: React.RefObject<CarouselDraggableSnapHandle>, 
-    onIndexChange: (index: number) => void, 
-    lastSyncedIndex: React.RefObject<number> 
-  }){
+function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex }: {
+  carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
+  onIndexChange: (index: number) => void,
+  lastSyncedIndex: React.RefObject<number>
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
 
@@ -76,8 +81,8 @@ function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex } : {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
       const height = entries[0].contentRect.height;
-          console.log('container height:', height);
-          setCardHeight(height);
+      console.log('container height:', height);
+      setCardHeight(height);
     });
     observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -96,7 +101,7 @@ function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex } : {
               cardGapInPx={CARD_GAP_IN_PX}
               onIndexChange={onIndexChange}
               onDragStart={undefined}
-              onDragComplete={undefined}
+              onDragComplete={onIndexChange}
               animations={CAROUSEL_ANIMATIONS}
               deadzoneEnabled={false}
             />

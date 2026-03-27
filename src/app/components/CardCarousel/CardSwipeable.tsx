@@ -15,20 +15,21 @@ const SWIPE_THRESHOLD = 80; // Swipe threshold in pixels. Drags past this point 
 const MAX_ROTATION = 15; // Max rotation in degrees at full drag
 
 interface CardSwipeableProps {
+    startingIndex: number;
     onIndexChange?: (index: number) => void;
 }
 
-const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ onIndexChange }, ref) {
+const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ onIndexChange, startingIndex }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
-    const [curIndex, setCurIndex] = useState(0);
-    const indexRef = useRef(0);
+    const [curIndex, setCurIndex] = useState(startingIndex);
+    const indexRef = useRef(startingIndex);
     const isAnimating = useRef(false);
     const onIndexChangeRef = useRef(onIndexChange);
     const exitDirectionRef = useRef<1 | -1>(1);
     const wrap = gsap.utils.wrap(0, cardIds.length);
     const pendingIndexRef = useRef<number | null>(null);
-    const intendedIndexRef = useRef(0); // tracks where we're heading
+    const intendedIndexRef = useRef(startingIndex); // tracks where we're heading
 
     onIndexChangeRef.current = onIndexChange;
 

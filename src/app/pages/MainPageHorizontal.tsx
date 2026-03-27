@@ -1,18 +1,15 @@
 import './MainPageHorizontal.css';
 import { proxyImageUrl } from '../utilities/proxy-image-url.ts';
-import { useState } from 'react';
-import CardViewerCarouselVertical from './CardViewerCarouselVertical.tsx';
-import CardViewerCarouselHorizontal from './CardViewerCarouselHorizontal.tsx';
 import type { PageIdentity } from '../../types/page-identity.ts';
 import Spacer from '../../assets/iconography/spacer.svg?react';
 import FallingCards from '../components/FallingCards.tsx';
+import type { DeckConfig } from '../constants/page-orientations.tsx';
 
-export default function MainMenuHorizontal() {
-    const [page, setPage] = useState<PageIdentity>('main-menu-horizontal');
+interface Props {
+  navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;
+}
 
-    if (page === 'deck-viewer-vertical') return <CardViewerCarouselVertical startingIndex={1} onBack={() => setPage('main-menu-horizontal')} />;
-    if (page === 'deck-viewer-horizontal') return <CardViewerCarouselHorizontal startingIndex={6} onBack={() => setPage('main-menu-horizontal')} />;
-
+export default function MainMenuHorizontal({ navigate }: Props) {
     return (
         <div className="main-page-horizontal">
             <img
@@ -34,15 +31,15 @@ export default function MainMenuHorizontal() {
             </div>
             <div className="footer-segment">
                 <div className="nav-control-container">
-                    <button className="begin-button" onClick={() => setPage('deck-viewer-vertical')}>~ Begin ~</button>
+                    <button className="begin-button" onClick={() => navigate('deck-viewer')}>~ Begin ~</button>
                     <ColouredSplit colour={'red'} />
-                    <button className="find-cards-button" onClick={() => setPage('deck-viewer-horizontal')}>Find your Cards</button>
+                    <button className="find-cards-button" onClick={() => navigate('deck-viewer')}>Find your Cards</button>
                     <ColouredSplit colour={'blue'} />
-                    <button className="deck-viewer-button" onClick={() => setPage('deck-viewer')}>Deck Viewer</button>
+                    <button className="deck-viewer-button" onClick={() => navigate('deck-viewer')}>Deck Viewer</button>
                     <ColouredSplit colour={'yellow'} />
-                    <button className="calendar-button" onClick={() => setPage('calendar-viewer')}>Calendar</button>
+                    <button className="calendar-button" onClick={() => navigate('calendar')}>Calendar</button>
                     <ColouredSplit colour={'green'} />
-                    <button className="faq-button" onClick={() => setPage('faq-page')}>FAQ</button>
+                    <button className="faq-button" onClick={() => navigate('faq')}>FAQ</button>
                 </div>
             </div>
         </div>

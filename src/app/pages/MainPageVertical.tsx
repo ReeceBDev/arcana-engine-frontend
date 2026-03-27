@@ -1,14 +1,16 @@
 import './MainPageVertical.css';
 import { proxyImageUrl } from '../utilities/proxy-image-url';
 import { useEffect, useRef, useState } from 'react';
-import CardViewerCarouselVertical from './CardViewerCarouselVertical';
-import CardViewerCarouselHorizontal from './CardViewerCarouselHorizontal';
-import type { PageIdentity } from './../../types/page-identity.ts';
 import SpinningCard from '../components/SpinningCard.tsx'
 import Spacer from '../../assets/iconography/spacer.svg?react';
+import type { PageIdentity } from '../../types/page-identity.ts';
+import type { DeckConfig } from '../constants/page-orientations.tsx';
 
-export default function MainMenuVertical() {
-    const [page, setPage] = useState<PageIdentity>('main-menu-vertical');
+interface Props {
+  navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;
+}
+
+export default function MainMenuVertical({ navigate }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerHeight, setContainerHeight] = useState(300);
 
@@ -20,10 +22,6 @@ export default function MainMenuVertical() {
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
-
-
-    if (page === 'deck-viewer-vertical') return <CardViewerCarouselVertical startingIndex={1} onBack={() => setPage('main-menu-vertical')} />;
-    if (page === 'deck-viewer-horizontal') return <CardViewerCarouselHorizontal startingIndex={6} onBack={() => setPage('main-menu-vertical')} />;
 
     return (
         <div className="main-page-vertical">
@@ -50,15 +48,15 @@ export default function MainMenuVertical() {
             </div>
             <div className="footer-segment">
                 <div className="nav-control-container">
-                    <button className="begin-button" onClick={() => setPage('deck-viewer-vertical')}>~ Begin ~</button>
+                    <button className="begin-button" onClick={() => navigate('deck-viewer')}>~ Begin ~</button>
                     <ColouredSplit colour={'red'} />
-                    <button className="find-cards-button" onClick={() => setPage('deck-viewer-horizontal')}>Find your Cards</button>
+                    <button className="find-cards-button" onClick={() => navigate('deck-viewer')}>Find your Cards</button>
                     <ColouredSplit colour={'blue'} />
-                    <button className="deck-viewer-button" onClick={() => setPage('deck-viewer')}>Deck Viewer</button>
+                    <button className="deck-viewer-button" onClick={() => navigate('deck-viewer')}>Deck Viewer</button>
                     <ColouredSplit colour={'yellow'} />
-                    <button className="calendar-button" onClick={() => setPage('calendar-viewer')}>Calendar</button>
+                    <button className="calendar-button" onClick={() => navigate('calendar')}>Calendar</button>
                     <ColouredSplit colour={'green'} />
-                    <button className="faq-button" onClick={() => setPage('faq-page')}>FAQ</button>
+                    <button className="faq-button" onClick={() => navigate('faq')}>FAQ</button>
                 </div>
             </div>
         </div>

@@ -14,7 +14,11 @@ const CAROUSEL_ANIMATIONS = [
     { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
 ];
 
-export default function CardViewerCarouselVertical({ onBack, startingIndex = 0 }: { onBack?: () => void, startingIndex?: number }) {
+export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, onIndexChange }: {
+  onBack?: () => void;
+  startingIndex?: number;
+  onIndexChange?: (index: number) => void;
+}) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
   const lastSyncedIndex = useRef(startingIndex);
@@ -24,14 +28,16 @@ export default function CardViewerCarouselVertical({ onBack, startingIndex = 0 }
     console.debug(`Swipeable card changed (onSwipeIndexChange) - syncing carousel to index ${index}`);
     lastSyncedIndex.current = index;
     smallRef.current?.toIndex(index);
-  }, []);
+    onIndexChange?.(index);
+  }, [onIndexChange]);
 
   const onSmallIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
     console.debug(`Carousel card changed (onSmallIndexChange) - syncing swipeable to index ${index}`);
     lastSyncedIndex.current = index;
     swipeRef.current?.toIndex(index);
-  }, []);
+    onIndexChange?.(index);
+  }, [onIndexChange]);
 
   const onSmallDragStart = useCallback(() => {
   }, []);
@@ -52,7 +58,7 @@ export default function CardViewerCarouselVertical({ onBack, startingIndex = 0 }
         className="background-image"
       />
       <TopNavBarRegion onBack={onBack} />
-      <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} />
+      <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} startingIndex={startingIndex} />
       <MinimapCarouselRegion carouselRef={smallRef} onIndexChange={onSmallIndexChange} onDragStart={onSmallDragStart} onDragComplete={onSmallDragComplete} startingIndex={startingIndex} />
       <CarouselControls swipeRef={swipeRef} />
     </div>
@@ -69,14 +75,18 @@ function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
   );
 }
 
-function CardDisplayRegion({ swipeRef, onIndexChange }: { swipeRef: React.RefObject<CarouselDraggableSnapHandle>, onIndexChange: (index: number) => void }) {
+function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex }: { 
+  swipeRef: React.RefObject<CarouselDraggableSnapHandle>, 
+  onIndexChange: (index: number) => void,
+  startingIndex: number  // ← add
+}) {
   return (
     <div className="card-display-region">
       <div className="container-banner-bundle">
         <p className="card-display-banner">Tap the card to Inspect it...</p>
         <div className="card-display-container">
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
-          <CardSwipeable ref={swipeRef} onIndexChange={onIndexChange} />
+          <CardSwipeable ref={swipeRef} startingIndex={startingIndex} onIndexChange={onIndexChange} />
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
         </div>
       </div>
