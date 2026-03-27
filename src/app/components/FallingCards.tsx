@@ -15,14 +15,15 @@ const LEFT_ZONE_END = 37.5;    // left zone covers 0–37.5%
 const MIDDLE_ZONE_END = 62.5;  // middle zone covers 37.5–62.5%
 // right zone covers remainder up until -100%
 
-const SPAWN_JIGGLE_MS = 150; // max random delay between simultaneous spawns
+const SPAWN_JIGGLE_MS = 600; // max random delay between simultaneous spawns
 
 export default function FallingCards() {
     const containerRef = useRef<HTMLDivElement>(null);
     const activeCards = useRef(0);
     const MAX_CARDS = 300;
     const lastSpawnTime = useRef(Date.now());
-    
+    const activeCardIds = useRef<Set<number>>(new Set());
+
     useEffect(() => {
         const container = containerRef.current!;
 
@@ -45,6 +46,9 @@ export default function FallingCards() {
 
                     const cardIndices = Object.values(ArcanaIdentities).filter(v => v !== ArcanaIdentities.BACK) as number[];
                     const randomIndex = cardIndices[Math.floor(Math.random() * cardIndices.length)];
+                    if (activeCardIds.current.has(randomIndex)) return;
+                    activeCardIds.current.add(randomIndex);
+
                     let isFlipped = (Math.random() * 100 | 0) % 2 === 1;
                     let frontUri = ARCANA_IMAGE_URI[(isFlipped ? ArcanaIdentities.BACK : randomIndex) as keyof typeof ARCANA_IMAGE_URI][0]?.uri;
                     let backUri = ARCANA_IMAGE_URI[(isFlipped ? randomIndex : ArcanaIdentities.BACK) as keyof typeof ARCANA_IMAGE_URI][0]?.uri;
@@ -81,6 +85,7 @@ export default function FallingCards() {
                         onComplete: () => {
                             card.remove();
                             activeCards.current--;
+                            activeCardIds.current.delete(randomIndex);
                         }
                     });
                 }, delay);
