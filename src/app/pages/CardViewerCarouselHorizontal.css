@@ -227,8 +227,8 @@
 
          & .left-button img,
          & .right-button img {
-             width: 20vh;
-             height: 10vh;
+             width: 40vh;
+             height: 20vh;
              transform: rotateZ(-5deg);
          }
 

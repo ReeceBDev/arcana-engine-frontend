@@ -7,19 +7,46 @@ import orientedPage, { getOrientationType } from '../constants/page-orientations
 import type { DeckConfig, PageProps } from '../constants/page-orientations';
 import type { PageIdentity } from '../../types/page-identity';
 import type { Orientation } from '../../types/orientation';
+import type { WorkflowConfig } from '../../types/workflow-config';
 
 function App() {
   const [orientation, setOrientation] = useState<Orientation>('portrait');
   const [page, setPage] = useState<PageIdentity>('main-menu');
   const [deckConfig, setDeckConfig] = useState<DeckConfig>({ currentIndex: 0 });
+  const [workflowConfig, setWorkflowConfig] = useState<WorkflowConfig>({ currentIteration: 0, lastIteration: 0 });
+
+  console.debug('workflowConfig', workflowConfig);
 
   const navigate = (base: PageIdentity, config?: Partial<DeckConfig>) => {
+    console.debug('navigate called!', base);
     if (config) setDeckConfig(c => ({ ...c, ...config }));
     setPage(base);
   };
 
+  const navigateNext = (base: PageIdentity, config?: Partial<DeckConfig>) => {
+    console.debug('navigateNext called!', base);
+    setWorkflowConfig(c => ({ ...c, currentIteration: c.currentIteration + 1 }));
+    navigate(base, config);
+  }; 
+
+  const navigateBack = (base: PageIdentity, config?: Partial<DeckConfig>) => {
+    console.debug('navigateBack called!', base);
+    setWorkflowConfig(c => ({ lastIteration: c.currentIteration, currentIteration: c.currentIteration - 1 }));
+    navigate(base, config);
+  };
+
   const onIndexChange = (index: number) => setDeckConfig(c => ({ ...c, currentIndex: index }));
-  const props: PageProps = { navigate, deckConfig, onIndexChange };
+  const resetWorkflow = () => setWorkflowConfig({ currentIteration: 0, lastIteration: 0 });
+
+  const props: PageProps = {
+    navigate,
+    navigateNext,
+    navigateBack,
+    resetWorkflow,
+    deckConfig,
+    onIndexChange,
+    workflowConfig,
+  };
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) Fullscreen.activateImmersiveMode();
@@ -47,7 +74,8 @@ function App() {
     };
   }, []);
 
-  return orientedPage[page][orientation](props);
+  const CurrentPage = orientedPage[page][orientation];
+  return <CurrentPage key={page} {...props} />;
 }
 
 export default App;

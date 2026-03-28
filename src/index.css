@@ -5,6 +5,27 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'Cloister Oldstyle Roman';
+  src: url('./assets/fonts/Cloister Oldstyle Roman.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Caudex';
+  src: url('./assets/fonts/Caudex-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Caudex';
+  src: url('./assets/fonts/Caudex-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 body {
   margin: 0;
   font-family: 'CloisterBlack';

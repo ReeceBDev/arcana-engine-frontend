@@ -16,6 +16,8 @@ const MIDDLE_ZONE_END = 62.5;  // middle zone covers 37.5–62.5%
 // right zone covers remainder up until -100%
 
 const SPAWN_JIGGLE_MS = 600; // max random delay between simultaneous spawns
+const STALE_TIMEOUT = 700; // if a spawn is delayed by more than this, it will not be spawned. (i.e. when tabbed out for a while before returning)
+// Note: The above STALE_TIMEOUT might trigger accidentally if the browser is slow. Therefore, try to keep it higher, and consider this if none are spawning!
 
 export default function FallingCards() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -29,19 +31,24 @@ export default function FallingCards() {
 
         const spawnCard = () => {
             const now = Date.now();
-            if (now - lastSpawnTime.current > 1000) {
-                // tab was inactive, skip the backlog
-                lastSpawnTime.current = now;
-                return;
-            }
+            const isStale = now - lastSpawnTime.current > 1000;
             lastSpawnTime.current = now;
+            if (isStale) return;
+
             for (let i = 0; i < SPAWNS_PER_TICK; i++) {
                 if (Math.random() > SPAWN_CHANCE) continue;
                 if (activeCards.current >= MAX_CARDS) return;
 
+                const spawnTime = Date.now();
                 const delay = Math.random() * SPAWN_JIGGLE_MS;
+
                 setTimeout(() => {
+                    // Check whether the spawn is stale or still relevant
+                    if (Date.now() - spawnTime > STALE_TIMEOUT) return;
+
+                    // Check whether we have capacity to spawn a new card.
                     if (activeCards.current >= MAX_CARDS) return;
+
                     activeCards.current++;
 
                     const cardIndices = Object.values(ArcanaIdentities).filter(v => v !== ArcanaIdentities.BACK) as number[];

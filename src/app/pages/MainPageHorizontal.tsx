@@ -7,9 +7,10 @@ import type { DeckConfig } from '../constants/page-orientations.tsx';
 
 interface Props {
   navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;
+  resetWorkflow: () => void;
 }
 
-export default function MainMenuHorizontal({ navigate }: Props) {
+export default function MainMenuHorizontal({ navigate, resetWorkflow }: Props) {
     return (
         <div className="main-page-horizontal">
             <img
@@ -31,11 +32,11 @@ export default function MainMenuHorizontal({ navigate }: Props) {
             </div>
             <div className="footer-segment">
                 <div className="nav-control-container">
-                    <button className="begin-button" onClick={() => navigate('deck-viewer')}>~ Begin ~</button>
+                    <button className="begin-button" onClick={() => {resetWorkflow(); navigate('card-finder-introduction-part-1')}}>~ Begin ~</button>
                     <ColouredSplit colour={'red'} />
-                    <button className="find-cards-button" onClick={() => navigate('deck-viewer')}>Find your Cards</button>
-                    <ColouredSplit colour={'blue'} />
                     <button className="deck-viewer-button" onClick={() => navigate('deck-viewer')}>Deck Viewer</button>
+                    <ColouredSplit colour={'blue'} />
+                    <button onClick={() => navigate('card-finder-introduction-part-1')}>Find your Cards</button>
                     <ColouredSplit colour={'yellow'} />
                     <button className="calendar-button" onClick={() => navigate('calendar')}>Calendar</button>
                     <ColouredSplit colour={'green'} />

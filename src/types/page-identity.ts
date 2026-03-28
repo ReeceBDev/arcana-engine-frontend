@@ -2,4 +2,7 @@ export type PageIdentity =
 | 'main-menu' 
 | 'deck-viewer' 
 | 'calendar' 
-| 'faq';
+| 'faq'
+| 'card-finder-introduction-part-1'
+| 'card-finder-introduction-part-2'
+;
