@@ -1,10 +1,11 @@
 import './MainPageVertical.css';
-import { proxyImageUrl } from '../../utilities/proxy-image-url.ts';
+import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import { useEffect, useRef, useState } from 'react';
 import SpinningCard from '../../components/SpinningCard.tsx'
 import Spacer from '../../../assets/iconography/spacer.svg?react';
 import type { PageIdentity } from '../../../types/page-identity.ts';
 import type { DeckConfig } from '../../constants/page-orientations.tsx';
+import FallingCards from '../../components/FallingCards.tsx';
 
 interface Props {
     navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;
@@ -26,14 +27,8 @@ export default function MainMenuVertical({ navigate, resetWorkflow }: Props) {
 
     return (
         <div className="main-page-vertical">
-            <img
-                src={proxyImageUrl(
-                    'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
-                    window.innerWidth,
-                    window.innerHeight
-                )}
-                className="background-image"
-            />
+            <CardSequenceBackground zIndex={0} />
+            <FallingCards maxCards={5} spawnChance={0.1} spawnRate={0.5} fallDuration={4} />
             <div className="header-text-container">
                 <div className="crowley-container">
                     <p className="text-crowley">Alastair Crowley's</p>

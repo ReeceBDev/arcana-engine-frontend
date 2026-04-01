@@ -10,6 +10,8 @@ import type { WorkflowConfig } from "../../types/workflow-config";
 import IntroductionVertical from "../pages/CardFinderSequence/Introduction/IntroductionVertical";
 import IntroductionPart2Horizontal from "../pages/CardFinderSequence/IntroductionPart2/IntroductionPart2Horizontal";
 import IntroductionPart2Vertical from "../pages/CardFinderSequence/IntroductionPart2/IntroductionPart2Vertical";
+import DateSelectorHorizontal from "../pages/CardFinderSequence/DateSelection/DateSelectorHorizontal";
+import DateSelectorVertical from "../pages/CardFinderSequence/DateSelection/DateSelectorVertical";
 
 export function getOrientationType(type: string): Orientation {
   return type.startsWith('landscape') ? 'landscape' : 'portrait';
@@ -56,9 +58,14 @@ const orientedPage: Record<PageIdentity, { portrait: (props: PageProps) => JSX.E
     landscape: (props) => <IntroductionHorizontal onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('card-finder-introduction-part-2')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
   },
   'card-finder-introduction-part-2': {
-    portrait: (props) => <IntroductionPart2Vertical onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
-    landscape: (props) => <IntroductionPart2Horizontal onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    portrait: (props) => <IntroductionPart2Vertical onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('date-selector')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    landscape: (props) => <IntroductionPart2Horizontal onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('date-selector')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
   },
+  'date-selector': {
+    portrait: (props) => <DateSelectorVertical onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('deck-viewer')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-2')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    landscape: (props) => <DateSelectorHorizontal onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('deck-viewer')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-2')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+
+  }
 };
 
 export default orientedPage;

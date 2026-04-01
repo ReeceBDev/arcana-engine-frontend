@@ -90,3 +90,70 @@ p {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-flipped {
+    from {
+        opacity: 0;
+        transform: scaleX(-1) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(-1) translateY(0);
+    }
+}
+
+.gold {
+    background: linear-gradient(90deg,
+            #e8c97a 0%,
+            #f5e6b8 44%,
+            #fdf3d0 50%,
+            #f5e6b8 56%,
+            #e8c97a 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fade-in 1.2s ease-in forwards, gold-wave 6s linear infinite;
+    font-weight: bold;
+}
+
+.purple {
+    background: linear-gradient(90deg,
+            #9b59b6 0%,
+            #d7a8e8 44%,
+            #f0d6f5 50%,
+            #d7a8e8 56%,
+            #9b59b6 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fade-in 1.2s ease-in forwards, purple-wave 6s linear infinite;
+    font-weight: bold;
+}
+
+.silver {
+    background: linear-gradient(90deg,
+            #c8dff0 0%,
+            #f0f8ff 40%,
+            #ffffff 50%,
+            #f0f8ff 60%,
+            #c8dff0 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fade-in 1.2s ease-in forwards, gold-wave 6s linear infinite;
+    font-weight: bold;
+}

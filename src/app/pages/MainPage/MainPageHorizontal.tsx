@@ -1,5 +1,5 @@
 import './MainPageHorizontal.css';
-import { proxyImageUrl } from '../../utilities/proxy-image-url.ts';
+import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import type { PageIdentity } from '../../../types/page-identity.ts';
 import Spacer from '../../../assets/iconography/spacer.svg?react';
 import FallingCards from '../../components/FallingCards.tsx';
@@ -13,15 +13,8 @@ interface Props {
 export default function MainMenuHorizontal({ navigate, resetWorkflow }: Props) {
     return (
         <div className="main-page-horizontal">
-            <img
-                src={proxyImageUrl(
-                    'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
-                    window.innerWidth,
-                    window.innerHeight
-                )}
-                className="background-image"
-            />
-            <FallingCards />
+            <CardSequenceBackground zIndex={0} />
+            <FallingCards fallDuration={1}/>
             <div className="header-text-container">
                 <div className="crowley-container">
                     <p className="text-crowley">Alastair Crowley's</p>

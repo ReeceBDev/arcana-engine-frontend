@@ -4,8 +4,8 @@ import gsap from "gsap";
 import { ArcanaIdentities } from "../constants/arcana-identities";
 import { ARCANA_IMAGE_URI } from "../constants/arcana-images";
 
-const SPAWNS_PER_TICK = 1.5;   // base cards per tick
-const SPAWN_CHANCE = 0.6;    // chance each individual spawn attempt succeeds
+const DEFAULT_SPAWNS_PER_TICK = 1.5;   // base cards per tick
+const DEFAULT_SPAWN_CHANCE = 0.6;    // chance each individual spawn attempt succeeds
 
 const LEFT_ZONE_CHANCE = 0.425;  // { total must sum to 1 }
 const MIDDLE_ZONE_CHANCE = 0.15; // { total must sum to 1 }
@@ -19,10 +19,14 @@ const SPAWN_JIGGLE_MS = 600; // max random delay between simultaneous spawns
 const STALE_TIMEOUT = 700; // if a spawn is delayed by more than this, it will not be spawned. (i.e. when tabbed out for a while before returning)
 // Note: The above STALE_TIMEOUT might trigger accidentally if the browser is slow. Therefore, try to keep it higher, and consider this if none are spawning!
 
-export default function FallingCards() {
+export default function FallingCards({ maxCards = 20, spawnRate = DEFAULT_SPAWNS_PER_TICK, spawnChance = DEFAULT_SPAWN_CHANCE, fallDuration: fallRate = 1 }: 
+    { maxCards?: number, spawnRate?: number, spawnChance?: number, fallDuration?: number }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const activeCards = useRef(0);
-    const MAX_CARDS = 300;
+    const MAX_CARDS = maxCards;
+    const SPAWNS_PER_TICK = spawnRate;
+    const SPAWN_CHANCE = spawnChance;
+    const FALL_DURATION = fallRate;
     const lastSpawnTime = useRef(Date.now());
     const activeCardIds = useRef<Set<number>>(new Set());
 
@@ -79,7 +83,7 @@ export default function FallingCards() {
                         rotationZ: (Math.random() - 0.5) * 720,
                         rotationY: 360,
                         x: (Math.random() - 0.5) * 100,
-                        duration: 2.5 + Math.random() * 2,
+                        duration: (2.5 + Math.random() * 2) * FALL_DURATION,
                         ease: 'power1.in',
                         onUpdate: () => {
                             const rotY = (gsap.getProperty(card, "rotationY") as number) % 360;

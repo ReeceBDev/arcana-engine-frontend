@@ -5,17 +5,6 @@
     flex-direction: column;
     align-items: center;
 
-    & .background-image {
-        position: absolute;
-        object-fit: cover;
-        object-position: center;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        z-index: -1;
-    }
-
     & .top-wrapper {
         flex: 1;
         display: flex;
@@ -25,48 +14,6 @@
         overflow: hidden;
         position: relative;
         align-items: center;
-
-        & .top-nav-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            width: 100%;
-            padding: 1vh 2vw;
-            padding-left: 0.4vw;
-
-            & .home-button {
-                background: none;
-                border: none;
-                margin: 0;
-                padding: 0;
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 0;
-
-                & img {
-                    width: auto;
-                    height: 3vw;
-                    opacity: 0.8;
-                    transform: rotate(180deg);
-                }
-
-                & .home-title {
-                    color: white;
-                    font-size: 1.5vw;
-                    margin: 0;
-                    margin-left: 0.4vw;
-                    padding-bottom: 3%;
-                    opacity: 0.6;
-                    letter-spacing: 0.05em;
-                }
-
-            }
-        }
 
         & .header-image {
             position: absolute;
@@ -151,126 +98,7 @@
 
                 animation: fade-in 0.5s ease-in forwards, white-pulsating-glow 3s ease-in-out infinite;
             }
-
-            & .gold {
-                background: linear-gradient(90deg,
-                        #e8c97a 0%,
-                        #f5e6b8 44%,
-                        #fdf3d0 50%,
-                        #f5e6b8 56%,
-                        #e8c97a 100%);
-                background-size: 200% 100%;
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-                animation: fade-in 1.2s ease-in forwards, gold-wave 6s linear infinite;
-                font-weight: bold;
-            }
-
-            & .purple {
-                background: linear-gradient(90deg,
-                        #9b59b6 0%,
-                        #d7a8e8 44%,
-                        #f0d6f5 50%,
-                        #d7a8e8 56%,
-                        #9b59b6 100%);
-                background-size: 200% 100%;
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-                animation: fade-in 1.2s ease-in forwards, gold-wave 6s linear infinite;
-                font-weight: bold;
-            }
-
-            & .silver {
-                background: linear-gradient(90deg,
-                        #c8dff0 0%,
-                        #f0f8ff 40%,
-                        #ffffff 50%,
-                        #f0f8ff 60%,
-                        #c8dff0 100%);
-                background-size: 200% 100%;
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-                animation: fade-in 1.2s ease-in forwards, gold-wave 6s linear infinite;
-                font-weight: bold;
-            }
         }
     }
 
-    & .bottom-nav-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 2vh;
-        padding-top: 1vh;
-        height: 8vh;
-        width: 100%;
-
-        & img {
-            width: 70%;
-            height: 4vw;
-            padding-left: 0;
-            padding-right: 0;
-        }
-
-        & .back-button {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-
-            margin-left: -1.2%;
-            margin-bottom: 0;
-        }
-
-        & .skip-button {
-            margin-left: auto;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: white;
-            font-size: 2.5vw;
-            opacity: 0.7;
-            letter-spacing: 0.05em;
-            padding: 1vh 2vw;
-
-            animation: white-pulsating-glow 3s ease-in-out infinite;
-
-            &:hover {
-                opacity: 1;
-            }
-        }
-
-        & .next-button {
-            margin-left: auto;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: white;
-            font-size: 2.5vw;
-            opacity: 0.8;
-            letter-spacing: 0.05em;
-            margin-right: -1.6%;
-            margin-bottom: 0;
-            animation: white-pulsating-glow 3s ease-in-out infinite;
-
-            &:hover {
-                opacity: 1;
-            }
-        }
-    }
-}
-
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }

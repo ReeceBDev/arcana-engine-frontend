@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import arrow from 'url:../../../assets/images/arrow.webp';
 import type { CarouselDraggableSnapHandle } from '../../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import { gsap } from 'gsap';
-import { proxyImageUrl } from '../../utilities/proxy-image-url';
+import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 
 const CARD_GAP_IN_PX = 10;
 const CAROUSEL_ANIMATIONS = [
@@ -31,14 +31,7 @@ export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0,
 
   return (
     <div className="horizontal-carousel-page">
-      <img
-        src={proxyImageUrl(
-          'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
-          window.innerWidth,
-          window.innerHeight
-        )}
-        className="background-image"
-      />
+      <CardSequenceBackground />
       <TopNavBarRegion onBack={onBack} />
       <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselIndexChange} lastSyncedIndex={lastSyncedIndex} />
       <CarouselControls carouselRef={carouselRef} />

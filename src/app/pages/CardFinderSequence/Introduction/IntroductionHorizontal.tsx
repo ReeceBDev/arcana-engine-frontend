@@ -1,8 +1,9 @@
 import './IntroductionHorizontal.css';
 import { useEffect, useRef, useState } from "react";
-import { proxyImageUrl } from "../../../utilities/proxy-image-url";
-import arrow from 'url:../../../../assets/images/arrow.webp';
+import { BottomNavBarHorizontal } from '../../../components/CardSequenceBottomNavBar/CardSequenceBottomNavBar';
+import { CardSequenceBackground } from '../../../components/CardSequenceBackground/CardSequenceBackground';
 import hermesTrismegistus from 'url:../../../../assets/images/hermesTrismegistus.webp';
+import { TopNavBarHorizontal } from '../../../components/CardSequenceBottomNavBar/TopNavBar';
 
 // delays before each block appears after the previous, starting from nothing being visible.
 const BLOCK_GAPS_MS = [
@@ -56,16 +57,9 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
 
     return (
         <div className="introduction-horizontal">
-            <img
-                src={proxyImageUrl(
-                    'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
-                    window.innerWidth,
-                    window.innerHeight
-                )}
-                className="background-image"
-            />
+            <CardSequenceBackground objectPosition="center" />
             <div className="top-wrapper">
-                <TopNavBar onHome={onHome} />
+                <TopNavBarHorizontal onHome={onHome} />
 
                 <img src={hermesTrismegistus} className="header-image" />
                 <div className="content">
@@ -106,40 +100,9 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
 
                 </div>
             </div>
-            <BottomNavBar onBack={onBack} onSkip={skip} onNext={onNext} showNext={showNext} showSkip={!showSkip} />
+            <BottomNavBarHorizontal onBack={onBack} onSkip={skip} onNext={onNext} showNext={showNext} showSkip={!showSkip} />
         </div>
     );
 }
 
-function TopNavBar({ onHome }: { onHome: () => void }) {
-    return (
-        <div className="top-nav-bar">
-            <button className="home-button" onClick={onHome}>
-                <p className="home-title">Go Home</p>
-            </button>
-        </div>
-    );
-}
 
-function BottomNavBar({ onBack, onSkip, showSkip, onNext, showNext }:
-    { onBack?: () => void; onSkip: () => void; showSkip: boolean; onNext: () => void; showNext: boolean }) {
-    return (
-        <div className="bottom-nav-bar">
-            {!showSkip && onBack && (
-                <button className="back-button" onClick={onBack}>
-                    <img src={arrow} style={{ transform: 'rotate(180deg)' }} />
-                </button>
-            )}
-            {showSkip && (
-                <button className="skip-button" onClick={onSkip}>
-                    Skip
-                </button>
-            )}
-            {!showSkip && showNext && (
-                <button className="next-button" onClick={onNext}>
-                    <img src={arrow} />
-                </button>
-            )}
-        </div>
-    );
-}

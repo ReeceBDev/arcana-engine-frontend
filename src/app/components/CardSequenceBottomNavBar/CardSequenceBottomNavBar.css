@@ -1,0 +1,117 @@
+.bottom-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 8vh;
+    width: 100%;
+    z-index: 2;
+
+    &.vertical {
+        & img {
+            width: 90%;
+            height: 3.4vh;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        & .back-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        & .skip-button {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 2.5vh;
+            opacity: 0.7;
+            letter-spacing: 0.05em;
+            margin-top: 4.4vh;
+            padding-bottom: 3vh;
+            padding-right: 1.8vh;
+            animation: white-pulsating-glow 3s ease-in-out infinite;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        & .next-button {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 2.5vh;
+            opacity: 0.8;
+            letter-spacing: 0.05em;
+            margin-bottom: 0;
+            animation: white-pulsating-glow 3s ease-in-out infinite;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+
+    &.horizontal {
+        padding-bottom: 2vh;
+        padding-top: 1vh;
+
+        & img {
+            width: 70%;
+            height: 4vw;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        & .back-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            margin-left: -1.2%;
+            margin-bottom: 0;
+        }
+
+        & .skip-button {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 2.5vw;
+            opacity: 0.7;
+            letter-spacing: 0.05em;
+            padding: 1vh 2vw;
+            animation: white-pulsating-glow 3s ease-in-out infinite;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        & .next-button {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 2.5vw;
+            opacity: 0.8;
+            letter-spacing: 0.05em;
+            margin-right: -1.6%;
+            margin-bottom: 0;
+            animation: white-pulsating-glow 3s ease-in-out infinite;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+}
