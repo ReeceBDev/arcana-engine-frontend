@@ -68,6 +68,19 @@
             }
         }
 
+        & .header-image {
+            position: absolute;
+            padding-top: 1.5vh;
+            margin-left: -90%;
+            z-index: -1;
+            width: auto;
+            height: 100%;
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+
+            animation: fade-in-flipped 1.2s ease-in forwards;
+        }
+
         & .content {
             display: flex;
             flex-direction: column;

@@ -1,7 +1,8 @@
-import './IntroductionVertical.css';
+import './IntroductionHorizontal.css';
 import { useEffect, useRef, useState } from "react";
-import { proxyImageUrl } from "../../utilities/proxy-image-url";
-import arrow from 'url:../../../assets/images/arrow.webp';
+import { proxyImageUrl } from "../../../utilities/proxy-image-url";
+import arrow from 'url:../../../../assets/images/arrow.webp';
+import hermesTrismegistus from 'url:../../../../assets/images/hermesTrismegistus.webp';
 
 // delays before each block appears after the previous, starting from nothing being visible.
 const BLOCK_GAPS_MS = [
@@ -20,7 +21,7 @@ const TOTAL_BLOCKS = 3;
 
 
 
-export default function IntroductionVertical({ onHome, onNext, onBack = undefined, showNext = false }: {
+export default function IntroductionHorizontal({ onHome, onNext, onBack = undefined, showNext = false }: {
     onHome: () => void;
     onNext: () => void;
     onBack?: () => void;
@@ -54,17 +55,19 @@ export default function IntroductionVertical({ onHome, onNext, onBack = undefine
     }, []);
 
     return (
-        <div className="introduction-vertical">
-             <img
-                    src={proxyImageUrl(
-                        'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
-                        window.innerWidth,
-                        window.innerHeight
-                    )}
-                    className="background-image"
-                />
+        <div className="introduction-horizontal">
+            <img
+                src={proxyImageUrl(
+                    'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
+                    window.innerWidth,
+                    window.innerHeight
+                )}
+                className="background-image"
+            />
             <div className="top-wrapper">
                 <TopNavBar onHome={onHome} />
+
+                <img src={hermesTrismegistus} className="header-image" />
                 <div className="content">
 
                     {visibleCount >= 1 && (

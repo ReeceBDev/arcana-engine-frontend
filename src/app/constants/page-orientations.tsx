@@ -1,13 +1,15 @@
 import { type JSX } from "react";
 import type { PageIdentity } from "../../types/page-identity";
-import MainPageVertical from "../pages/MainPageVertical";
-import MainPageHorizontal from "../pages/MainPageHorizontal";
-import CardViewerCarouselVertical from "../pages/CardViewerCarouselVertical";
-import CardViewerCarouselHorizontal from "../pages/CardViewerCarouselHorizontal";
+import MainPageVertical from "../pages/MainPage/MainPageVertical";
+import MainPageHorizontal from "../pages/MainPage/MainPageHorizontal";
+import CardViewerCarouselVertical from "../pages/CarddViewerCarousel/CardViewerCarouselVertical";
+import CardViewerCarouselHorizontal from "../pages/CarddViewerCarousel/CardViewerCarouselHorizontal";
 import type { Orientation } from "../../types/orientation";
-import IntroductionHorizontal from "../pages/CardFinderSequence/IntroductionHorizontal";
+import IntroductionHorizontal from "../pages/CardFinderSequence/Introduction/IntroductionHorizontal";
 import type { WorkflowConfig } from "../../types/workflow-config";
-import IntroductionVertical from "../pages/CardFinderSequence/IntroductionVertical";
+import IntroductionVertical from "../pages/CardFinderSequence/Introduction/IntroductionVertical";
+import IntroductionPart2Horizontal from "../pages/CardFinderSequence/IntroductionPart2/IntroductionPart2Horizontal";
+import IntroductionPart2Vertical from "../pages/CardFinderSequence/IntroductionPart2/IntroductionPart2Vertical";
 
 export function getOrientationType(type: string): Orientation {
   return type.startsWith('landscape') ? 'landscape' : 'portrait';
@@ -54,8 +56,8 @@ const orientedPage: Record<PageIdentity, { portrait: (props: PageProps) => JSX.E
     landscape: (props) => <IntroductionHorizontal onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('card-finder-introduction-part-2')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
   },
   'card-finder-introduction-part-2': {
-    portrait: (props) => <IntroductionVertical onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
-    landscape: (props) => <IntroductionHorizontal onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    portrait: (props) => <IntroductionPart2Vertical onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    landscape: (props) => <IntroductionPart2Horizontal onHome={() => props.navigate('main-menu')} onNext={() => props.navigateNext('deck-viewer')} onBack={() => props.navigateBack('card-finder-introduction-part-1')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
   },
 };
 

@@ -1,9 +1,9 @@
 import './MainPageHorizontal.css';
-import { proxyImageUrl } from '../utilities/proxy-image-url.ts';
-import type { PageIdentity } from '../../types/page-identity.ts';
-import Spacer from '../../assets/iconography/spacer.svg?react';
-import FallingCards from '../components/FallingCards.tsx';
-import type { DeckConfig } from '../constants/page-orientations.tsx';
+import { proxyImageUrl } from '../../utilities/proxy-image-url.ts';
+import type { PageIdentity } from '../../../types/page-identity.ts';
+import Spacer from '../../../assets/iconography/spacer.svg?react';
+import FallingCards from '../../components/FallingCards.tsx';
+import type { DeckConfig } from '../../constants/page-orientations.tsx';
 
 interface Props {
   navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;

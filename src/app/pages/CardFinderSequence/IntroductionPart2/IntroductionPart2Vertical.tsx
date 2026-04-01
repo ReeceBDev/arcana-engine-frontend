@@ -1,13 +1,16 @@
-import './IntroductionHorizontal.css';
+import './IntroductionPart2Vertical.css';
 import { useEffect, useRef, useState } from "react";
-import { proxyImageUrl } from "../../utilities/proxy-image-url";
-import arrow from 'url:../../../assets/images/arrow.webp';
+import { proxyImageUrl } from "../../../utilities/proxy-image-url";
+import arrow from 'url:../../../../assets/images/arrow.webp';
+import sophia from 'url:../../../../assets/images/sophia.webp';
 
 // delays before each block appears after the previous, starting from nothing being visible.
 const BLOCK_GAPS_MS = [
-    100,   // block 1 - title
-    1000,  // block 2
-    2700,  // block 3
+    400,   // block 1 - title
+    1600,  // block 2
+    2400,  // block 3
+    1600,  // block 4
+    1200,  // block 5   
 ];
 
 const BLOCK_DELAYS_MS = BLOCK_GAPS_MS.reduce<number[]>((acc, gap, i) => {
@@ -15,12 +18,12 @@ const BLOCK_DELAYS_MS = BLOCK_GAPS_MS.reduce<number[]>((acc, gap, i) => {
     return acc;
 }, []);
 
-const CONTINUE_DELAY_MS = 1500; // delay before continue button appears after last block
-const TOTAL_BLOCKS = 3;
+const CONTINUE_DELAY_MS = 1200; // delay before continue button appears after last block
+const TOTAL_BLOCKS = 5;
 
 
 
-export default function IntroductionHorizontal({ onHome, onNext, onBack = undefined, showNext = false }: {
+export default function IntroductionPart2Vertical({ onHome, onNext, onBack = undefined, showNext = false }: {
     onHome: () => void;
     onNext: () => void;
     onBack?: () => void;
@@ -54,22 +57,28 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
     }, []);
 
     return (
-        <div className="introduction-horizontal">
-             <img
-                    src={proxyImageUrl(
-                        'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
-                        window.innerWidth,
-                        window.innerHeight
-                    )}
-                    className="background-image"
-                />
+        <div className="introduction-part2-vertical">
+            <img
+                src={proxyImageUrl(
+                    'https://image.api.playstation.com/vulcan/ap/rnd/202204/2111/bkE38eKm1en1mVblRmsWjmgA.png',
+                    window.innerWidth,
+                    window.innerHeight
+                )}
+                className="background-image"
+            />
             <div className="top-wrapper">
                 <TopNavBar onHome={onHome} />
+                {visibleCount >= 1 && (
+                    <img src={sophia} className="header-image" />
+                )}
                 <div className="content">
+
+                    {visibleCount >= 1 && <div className="block-spacer" />}
 
                     {visibleCount >= 1 && (
                         <div className="content-block block-1">
-                            <p className="block-1-heading">What is this? Why does this work?</p>
+                            <p className="block-1-line-1">I present to you a pantheon of archetypes,</p>
+                            <p className="block-1-line-2">The universe in its many forms.</p>
                         </div>
                     )}
 
@@ -77,9 +86,9 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
 
                     {visibleCount >= 2 && (
                         <div className="content-block block-2">
-                            <p className="block-2-line-1">The <span className="purple">psychoanalysists</span> of old realised the mind worked in <span className="a">archetypes</span>:</p>
-                            <p className="block-2-line-2">Archetypes transmogrify <span className="purple"> complex ideas and reduce them into simple ones</span>,</p>
-                            <p className="block-2-line-3">since you'd never know trees had roots if you only looked closely at the leaves.</p>
+                            <p className="block-2-line-1">Allow me to place the universe into a deck of cards.</p>
+                            <p className="block-2-line-2">Behold this deck of cards, and ask it:</p>
+                            <p className="block-2-line-3"><span className="purple">"What is the colour of my soul?"</span></p>
                         </div>
                     )}
 
@@ -87,9 +96,20 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
 
                     {visibleCount >= 3 && (
                         <div className="content-block block-3">
-                            <p className="block-3-line-1">We find the <span className="a">archetypes</span> everywhere,</p>
-                            <p className="block-3-line-2">the <span className="a">characters</span> of yore: <span className="silver">King Arthur</span> and <span className="silver">The Lady in the Lake</span>,</p>
-                            <p className="block-3-line-3">the stories of the gods, <span className="silver">Zeus</span> and <span className="silver">Odin</span>, <span className="silver">Hermes</span> and <span className="silver">Thoth</span>...</p>
+                            <p className="block-3-line-1">Listen to the symphony of the spheres and see:</p>
+                            <p className="block-3-line-2">Ask, and it shall answer.</p>
+                        </div>
+                    )}
+
+                    {visibleCount >= 4 && (
+                        <div className="content-block block-4">
+                            <p className="block-4-line-1"><span className="gold">That love is the law.</span></p>
+                        </div>
+                    )}
+
+                    {visibleCount >= 5 && (
+                        <div className="content-block block-5">
+                            <p className="block-5-line-1"><span className="gold">Love under will.</span></p>
                         </div>
                     )}
 

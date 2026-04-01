@@ -1,10 +1,10 @@
 import './MainPageVertical.css';
-import { proxyImageUrl } from '../utilities/proxy-image-url';
+import { proxyImageUrl } from '../../utilities/proxy-image-url.ts';
 import { useEffect, useRef, useState } from 'react';
-import SpinningCard from '../components/SpinningCard.tsx'
-import Spacer from '../../assets/iconography/spacer.svg?react';
-import type { PageIdentity } from '../../types/page-identity.ts';
-import type { DeckConfig } from '../constants/page-orientations.tsx';
+import SpinningCard from '../../components/SpinningCard.tsx'
+import Spacer from '../../../assets/iconography/spacer.svg?react';
+import type { PageIdentity } from '../../../types/page-identity.ts';
+import type { DeckConfig } from '../../constants/page-orientations.tsx';
 
 interface Props {
     navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;

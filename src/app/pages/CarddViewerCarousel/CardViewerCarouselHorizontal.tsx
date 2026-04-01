@@ -1,10 +1,10 @@
 import './CardViewerCarouselHorizontal.css'
-import CardCarousel from '../components/CardCarousel/CardCarousel';
+import CardCarousel from '../../components/CardCarousel/CardCarousel';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import arrow from 'url:../../assets/images/arrow.webp';
-import type { CarouselDraggableSnapHandle } from '../components/CardCarousel/CardCarouselDraggableSnapHandle';
+import arrow from 'url:../../../assets/images/arrow.webp';
+import type { CarouselDraggableSnapHandle } from '../../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import { gsap } from 'gsap';
-import { proxyImageUrl } from '../utilities/proxy-image-url';
+import { proxyImageUrl } from '../../utilities/proxy-image-url';
 
 const CARD_GAP_IN_PX = 10;
 const CAROUSEL_ANIMATIONS = [
