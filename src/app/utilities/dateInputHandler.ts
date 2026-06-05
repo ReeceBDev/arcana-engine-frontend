@@ -30,6 +30,45 @@ export function handleDateInput(
     setError(null);
 }
 
+export function handleTimeInput(
+    e: React.ChangeEvent<HTMLInputElement>,
+    setShow: (v: boolean) => void,
+    setError: (v: string | null) => void
+) {
+    const raw = e.currentTarget.value.replace(/\D/g, '').slice(0, 4);
+
+    let value = raw;
+    if (raw.length >= 3) {
+        value = `${raw.slice(0, 2)} : ${raw.slice(2, 4)}`;
+    }
+
+    e.currentTarget.value = value;
+
+    if (raw.length < 4) {
+        setShow(false);
+        setError(null);
+        return;
+    }
+
+    const hours = Number(raw.slice(0, 2));
+    const minutes = Number(raw.slice(2, 4));
+
+    if (hours > 23) {
+        setShow(false);
+        setError('The Hour must be between 00 and 23...');
+        return;
+    }
+
+    if (minutes > 59) {
+        setShow(false);
+        setError('The Minutes must be between 00 and 59...');
+        return;
+    }
+
+    setShow(true);
+    setError(null);
+}
+
 export function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Backspace') {
         const input = e.currentTarget;
@@ -37,6 +76,10 @@ export function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (v.endsWith('/')) {
             e.preventDefault();
             input.value = v.slice(0, -1);
+        }
+        if (v.endsWith(' : ')) {
+            e.preventDefault();
+            input.value = v.slice(0, -3);
         }
     }
     console.debug("User is entering into text entry:", e.key);

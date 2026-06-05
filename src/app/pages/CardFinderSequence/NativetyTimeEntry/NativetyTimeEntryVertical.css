@@ -1,0 +1,137 @@
+.nativety-time-entry-vertical {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & .top-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        position: relative;
+        align-items: center;
+        overflow: show;
+
+        & .top-image {
+            position: absolute;
+            height: 20%;
+            margin-left: -20vh;
+            margin-top: -35vh;
+
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 95%);
+            mask-image: linear-gradient(to bottom, black 80%, transparent 95%);
+            animation: fade-in 1.2s ease-in forwards;
+        }
+
+        & .bottom-image {
+            position: absolute;
+            padding-top: -10vh;
+            margin-left: -60%;
+            z-index: -1;
+            width: auto;
+            height: 50%;
+            rotate: 70deg;
+            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 98%);
+            mask-image: linear-gradient(to bottom, black 85%, transparent 98%);
+
+            animation: fade-in 1.2s ease-in forwards;
+        }
+
+        & .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            text-align: center;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 40vh;
+
+            & p {
+                margin: 0;
+                color: white;
+                letter-spacing: -0.01em;
+                line-height: 4.2vh;
+                font-size: 2.4vh;
+                font-family: 'Caudex', serif;
+                font-weight: bold;
+            }
+
+            & .time-input {
+                font-size: 3.0vh;
+                height: 5vh;
+                width: 12vh;
+                outline: none;
+                border: 3px solid white;
+                border-radius: 20vh;
+                background: transparent;
+                color: white;
+                caret-color: white;
+                margin: 1vh;
+                font-family: 'CloisterBlack', serif;
+                padding-left: 3vh;
+            }
+
+            & .time-format {
+                color: rgb(157, 164, 173);
+            }
+
+            & .time-error {
+                color: #ff6b6b;
+                font-size: 2.0vh;
+                margin-top: 2vh;
+                background: linear-gradient(90deg,
+                        #8b0000 0%,
+                        #cc2200 44%,
+                        #ff6b6b 50%,
+                        #cc2200 56%,
+                        #8b0000 100%);
+                background-size: 400% 100%;
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                animation: fade-in 0.3s ease-in forwards, red-wave 8s linear infinite;
+            }
+        }
+
+        & .continue-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 2.8vh;
+            color: white;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+            margin-top: 2vh;
+            animation: fade-in 0.5s ease-in forwards, gold-wave 6s linear infinite, white-pulsating-glow 3s ease-in-out infinite;
+            z-index: 1;
+
+            background: linear-gradient(90deg,
+                    #e8c97a 0%,
+                    #f5e6b8 44%,
+                    #fdf3d0 50%,
+                    #f5e6b8 56%,
+                    #e8c97a 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    }
+}
+
+
+@keyframes red-wave {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

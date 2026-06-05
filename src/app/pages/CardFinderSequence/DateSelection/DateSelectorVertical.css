@@ -11,21 +11,21 @@
         flex-direction: column;
         height: 100%;
         width: 100%;
-        overflow: hidden;
+        overflow: show;
         position: relative;
         align-items: center;
 
-        & .header-image {
+        & .bottom-image {
             position: absolute;
-            padding-top: 1.5vh;
-            padding-left: 18%;
+            padding-top: 50vh;
+            margin-left: 40%;
             z-index: -1;
             width: auto;
-            height: 80vh;
-            -webkit-mask-image: linear-gradient(to bottom, black 32%, transparent 46%);
-            mask-image: linear-gradient(to bottom, black 32%, transparent 46%);
+            height: 60%;
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 92%);
+            mask-image: linear-gradient(to bottom, black 80%, transparent 92%);
 
-            animation: fade-in-flipped 1.2s ease-in forwards;
+            animation: fade-in 1.2s ease-in forwards;
         }
 
         & .content {
@@ -37,30 +37,31 @@
             text-align: center;
             width: 100%;
             overflow: hidden;
-            margin-top: 50vh;
+            margin-top: 40vh;
 
             & p {
                 margin: 0;
                 color: white;
                 letter-spacing: -0.01em;
-                line-height: 4.2 vh;
+                line-height: 4.2vh;
                 font-size: 2.4vh;
                 font-family: 'Caudex', serif;
                 font-weight: bold;
             }
 
-            & .date-input {
-                height: 4vh;
-                width: 80px;
+             & .date-input {
+                font-size: 3.0vh;
+                height: 5vh;
+                width: 18vh;
                 outline: none;
                 border: 3px solid white;
-                border-radius: 20px;
+                border-radius: 20vh;
                 background: transparent;
                 color: white;
                 caret-color: white;
-                margin: 0.8vh;
+                margin: 1vh;
                 font-family: 'CloisterBlack', serif;
-                padding-left: 4vw;
+                padding-left: 3vh;
             }
 
             & .date-format {

@@ -1,0 +1,1 @@
+export const THOTH_BACKEND_API = "http://localhost:5096";

@@ -3,8 +3,8 @@ setlocal enabledelayedexpansion
 
 :: User Configuration !! IMPORTANT - MAKE SURE YOU SET THIS EVERY TIME YOU TURN ON THE DEVICE!
 set USEUSB=FALSE
-set DEVICE_IP=192.168.0.106
-set DEVICE_PORT=37499
+set DEVICE_IP=192.168.0.20
+set DEVICE_PORT=40665
 
 
 :: Variables

@@ -28,8 +28,8 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
     onBack?: () => void;
     showNext?: boolean;
 }) {
-    const [visibleCount, setVisibleCount] = useState(0);
-    const [showSkip, setShowContinue] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(showNext ? TOTAL_BLOCKS : 0);
+    const [showSkip, setShowContinue] = useState(showNext);
 
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
     const continueTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -42,6 +42,12 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
     };
 
     useEffect(() => {
+        if (showNext) {
+            setVisibleCount(TOTAL_BLOCKS);
+            setShowContinue(true);
+            return;
+        }
+
         timersRef.current = BLOCK_DELAYS_MS.map((delay, i) =>
             setTimeout(() => setVisibleCount(i + 1), delay)
         );
@@ -53,7 +59,7 @@ export default function IntroductionHorizontal({ onHome, onNext, onBack = undefi
             timersRef.current.forEach(clearTimeout);
             clearTimeout(continueTimerRef.current);
         };
-    }, []);
+    }, [showNext]);
 
     return (
         <div className="introduction-horizontal">

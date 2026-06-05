@@ -10,9 +10,10 @@ import FallingCards from '../../components/FallingCards.tsx';
 interface Props {
     navigate: (base: PageIdentity, config?: Partial<DeckConfig>) => void;
     resetWorkflow: () => void;
+    hasNewPractitioners: boolean;
 }
 
-export default function MainMenuVertical({ navigate, resetWorkflow }: Props) {
+export default function MainMenuVertical({ navigate, resetWorkflow, hasNewPractitioners }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerHeight, setContainerHeight] = useState(300);
 
@@ -50,9 +51,9 @@ export default function MainMenuVertical({ navigate, resetWorkflow }: Props) {
                     <ColouredSplit colour={'blue'} />
                     <button onClick={() => navigate('card-finder-introduction-part-1')}>Find your Cards</button>
                     <ColouredSplit colour={'yellow'} />
-                    <button className="calendar-button" onClick={() => navigate('calendar')}>Calendar</button>
+                    <button className={`practitioners-button${hasNewPractitioners ? ' practitioners-pulse' : ''}`} onClick={() => navigate('practitioners-list')}>Practitioners</button>
                     <ColouredSplit colour={'green'} />
-                    <button className="faq-button" onClick={() => navigate('faq')}>FAQ</button>
+                    <button className="faq-button" onClick={() => navigate('card-stack')}>FAQ</button>
                 </div>
             </div>
         </div>

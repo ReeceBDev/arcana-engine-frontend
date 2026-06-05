@@ -1,0 +1,141 @@
+.practitioner-view-horizontal {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & .top-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        align-items: center;
+
+        & .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-align: center;
+            width: 100%;
+            padding-top: 6vh;
+            animation: fade-in 0.55s ease-out forwards;
+
+            & .click-to-view {
+                margin: 0 0 3vh;
+                color: white;
+                font-size: 1.6vw;
+                font-family: 'Caudex', serif;
+                font-weight: bold;
+                letter-spacing: 0.06em;
+                opacity: 0.7;
+                animation: white-pulsating-glow 3s infinite ease-in-out;
+            }
+
+            & .card-options {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+                gap: 3.5vw;
+
+                & .card-option {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 1.2vh;
+                    cursor: pointer;
+
+                    & .card-label {
+                        margin: 0;
+                        color: white;
+                        font-size: 1.5vw;
+                        font-family: 'Caudex', serif;
+                        font-weight: bold;
+                        letter-spacing: 0.03em;
+                        background: linear-gradient(90deg, #c9a84c, #f6e27a, #c9a84c, #f6e27a);
+                        background-size: 300% 100%;
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        animation: gold-wave 6s infinite linear;
+                    }
+
+                    & .card-preview {
+                        position: relative;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+                        transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+                        &:hover {
+                            transform: scale(1.04);
+                            box-shadow: 0 6px 32px rgba(201, 168, 76, 0.35);
+                        }
+
+                        & .card-overlay-label {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: rgba(0, 0, 0, 0.45);
+                            z-index: 1;
+                            pointer-events: none;
+
+                            & span {
+                                color: white;
+                                font-size: 1.3vw;
+                                font-family: 'Caudex', serif;
+                                font-weight: bold;
+                                letter-spacing: 0.04em;
+                                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+                            }
+                        }
+
+                        & .empty-card-placeholder {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
+                            border: 1.5px solid rgba(255, 255, 255, 0.15);
+
+                            & span {
+                                color: rgba(255, 255, 255, 0.35);
+                                font-size: 1.1vw;
+                                font-family: 'Caudex', serif;
+                                font-style: italic;
+                            }
+                        }
+                    }
+
+                    & .edit-link {
+                        margin: 0;
+                        color: rgba(255, 255, 255, 0.6);
+                        font-size: 1.15vw;
+                        font-family: 'Caudex', serif;
+                        font-weight: bold;
+                        letter-spacing: 0.03em;
+                        cursor: pointer;
+                        border: none;
+                        background: none;
+                        padding: 0.4vh 0.8vw;
+                        transition: color 0.2s ease;
+
+                        &:hover {
+                            color: rgba(246, 226, 122, 0.9);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -144,6 +144,10 @@
                 animation: white-pulsating-glow 3s ease-in-out infinite;
             }
 
+            & .practitioners-pulse {
+                animation: gold-pulsating-glow 2s ease-in-out infinite;
+            }
+
             & .coloured-split {
                 margin: -0.5vh;
                 vertical-align: middle;

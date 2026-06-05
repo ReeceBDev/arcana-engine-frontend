@@ -1,0 +1,277 @@
+.card-stack-vertical {
+    width: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &.is-finishing {
+        & .top-wrapper .content,
+        & .top-right-action-row,
+        & .bottom-controls {
+            opacity: 0;
+        }
+    }
+
+    & .top-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        overflow: visible;
+        position: relative;
+        align-items: center;
+
+        & .bottom-image {
+            position: absolute;
+            padding-top: 10vh;
+            margin-left: -5%;
+            z-index: -1;
+            width: 105vw;
+            height: auto;
+            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 90%);
+            mask-image: linear-gradient(to bottom, black 70%, transparent 90%);
+            animation: fade-in 1.2s ease-in forwards;
+        }
+
+        & .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: stretch;
+            flex: 1;
+            min-height: 0;
+            text-align: center;
+            width: 100%;
+            overflow: visible;
+            margin-top: 0;
+            padding: 0 4vw 1.2vh;
+            transition: opacity 0.24s ease-out;
+            position: relative;
+            z-index: 3;
+
+            & p {
+                margin: 0;
+                color: white;
+                letter-spacing: -0.01em;
+                line-height: 1.35;
+                font-size: clamp(15px, 2.05vh, 22px);
+                font-family: 'Caudex', serif;
+                font-weight: bold;
+            }
+
+            & .instructions {
+                color: rgb(157, 164, 173);
+                margin-bottom: 2vh;
+            }
+
+            & .stack-region {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+                flex: 0 0 auto;
+            }
+
+            & .card-role-label {
+                margin-bottom: 1vh;
+                margin-top: 0;
+                font-size: clamp(18px, 2.7vh, 29px);
+                letter-spacing: 0.02em;
+                background: linear-gradient(90deg, #c9a84c, #f6e27a, #c9a84c);
+                background-size: 260% 100%;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                animation: gold-wave 6s linear infinite;
+            }
+        }
+    }
+}
+
+.text-stage {
+    width: min(92vw, 760px);
+    min-height: min(20vh, 220px);
+    max-height: min(25vh, 260px);
+    overflow: hidden;
+    padding: 0 0.4vh 0.3vh;
+    margin-top: 1vh;
+    margin-bottom: 0.6vh;
+}
+
+.stack-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    padding-top: 9.6vh;
+    position: relative;
+    z-index: 4;
+}
+
+/* Pre-flip astrological text block */
+.astro-text-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8vh;
+    padding: 0 2vw;
+    margin-bottom: 0;
+    will-change: transform, opacity;
+
+    & .astro-card-label {
+        font-size: clamp(18px, 2.6vh, 28px);
+        font-family: 'Caudex', serif;
+        font-weight: bold;
+        color: white;
+        letter-spacing: 0.02em;
+        margin: 0 0 0.3vh;
+    }
+
+    & .astro-body-text {
+        font-size: clamp(14px, 1.8vh, 20px);
+        font-family: 'Caudex', serif;
+        color: rgb(200, 207, 216);
+        line-height: 1.35;
+        margin: 0;
+        font-weight: bold;
+    }
+}
+
+.top-right-action-row {
+    position: absolute;
+    top: 1vh;
+    right: 4vw;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.24s ease-out;
+}
+
+.archetype-toggle-button {
+    border: 1.5px solid transparent;
+    border-radius: 999px;
+    color: white;
+    padding: 0.5vh 1.5vh;
+    font-size: clamp(12px, 1.55vh, 17px);
+    background: rgba(255, 255, 255, 0.06);
+    letter-spacing: 0.03em;
+    font-family: 'Caudex', serif;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.5;
+    will-change: transform, opacity;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.archetype-toggle-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1.5px;
+    border-radius: 999px;
+    background: rgba(216, 216, 216, 0.7);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.55;
+}
+
+.archetype-toggle-button.is-active::before {
+    background: conic-gradient(
+        from var(--pill-spin-angle),
+        rgba(255, 255, 255, 0.08) 0deg,
+        rgba(255, 255, 255, 0.9) 56deg,
+        rgba(255, 255, 255, 0.08) 130deg,
+        rgba(255, 255, 255, 0.5) 215deg,
+        rgba(255, 255, 255, 0.08) 360deg
+    );
+    animation: pill-color-spin 2.8s linear infinite;
+}
+
+.archetype-body {
+    font-size: clamp(13px, 1.68vh, 18px);
+    font-family: 'Caudex', serif;
+    color: rgb(200, 207, 216);
+    line-height: 1.35;
+    margin: 0;
+    font-weight: bold;
+}
+
+/* Bottom controls pinned at bottom */
+.bottom-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1vw;
+    padding-bottom: max(2vh, env(safe-area-inset-bottom));
+    margin-top: auto;
+    width: min(92vw, 760px);
+    transition: opacity 0.24s ease-out;
+    position: relative;
+    z-index: 1;
+}
+
+.icon-nav-button {
+    background: none;
+    border: none;
+    width: clamp(44px, 8vh, 74px);
+    height: clamp(28px, 5vh, 48px);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.icon-nav-button.is-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.icon-nav-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.icon-nav-left img {
+    transform: rotate(180deg);
+}
+
+.view-card-info-link {
+    flex: 1;
+    border: none;
+    background: none;
+    color: white;
+    text-align: center;
+    font-size: clamp(16px, 2.15vh, 24px);
+    font-family: 'Caudex', serif;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    animation: white-pulsating-glow 3s ease-in-out infinite;
+    cursor: pointer;
+}
+
+@property --pill-spin-angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+
+@keyframes pill-color-spin {
+    0% {
+        --pill-spin-angle: 0deg;
+    }
+    100% {
+        --pill-spin-angle: 360deg;
+    }
+}
