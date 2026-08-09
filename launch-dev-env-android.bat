@@ -360,6 +360,7 @@ set RETRY_COUNT=0
 goto MONITOR_LOOP
 
 
+:: Resolve mDNS target from DEVICE_IP:DEVICE_PORT
 :RESOLVE_TARGET
 set "ADB_TARGET="
 set "ADB_MDNS_NAME="
