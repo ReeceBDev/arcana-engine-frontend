@@ -135,9 +135,9 @@ if /I "%USEUSB%"=="TRUE" (
     goto STARTUP
 )
 
-adb devices | findstr /C:"%DEVICE_IP%:%DEVICE_PORT%" >nul
-if not errorlevel 1 (
-    echo Device %DEVICE_IP%:%DEVICE_PORT% is already connected.
+call :RESOLVE_TARGET
+if defined ADB_TARGET (
+    echo Device connected: !ADB_TARGET!
     goto STARTUP
 )
 
@@ -287,22 +287,23 @@ if /I "%USEUSB%"=="TRUE" (
 
 :: Check ADB Wireless Connection
 echo Checking ADB connection...
-adb devices | findstr /C:"%DEVICE_IP%:%DEVICE_PORT%" >nul
-if errorlevel 1 (
-    echo Device not connected. Connecting to %DEVICE_IP%:%DEVICE_PORT%...
-    adb connect %DEVICE_IP%:%DEVICE_PORT%
-    echo Waiting for device connection...
-    
-    for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set CONNECT_START=%%t
-    goto WAIT_CONNECT
+call :RESOLVE_TARGET
+if defined ADB_TARGET (
+    echo Device found: !ADB_TARGET!
+    goto CONNECT_SUCCESS
 )
-set ADB_TARGET=%DEVICE_IP%:%DEVICE_PORT%
-goto CONNECT_SUCCESS
+
+echo Device not connected. Connecting to %DEVICE_IP%:%DEVICE_PORT%...
+adb connect %DEVICE_IP%:%DEVICE_PORT%
+echo Waiting for device connection...
+
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set CONNECT_START=%%t
+goto WAIT_CONNECT
 
 :WAIT_CONNECT
 powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
-adb devices | findstr /C:"%DEVICE_IP%:%DEVICE_PORT%" >nul
-if not errorlevel 1 goto CONNECT_SUCCESS
+call :RESOLVE_TARGET
+if defined ADB_TARGET goto CONNECT_SUCCESS
 
 for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
 set /a CONNECT_ELAPSED=!NOW!-!CONNECT_START!
@@ -357,6 +358,21 @@ echo.
 
 set RETRY_COUNT=0
 goto MONITOR_LOOP
+
+
+:RESOLVE_TARGET
+set "ADB_TARGET="
+set "ADB_MDNS_NAME="
+set "ADB_MDNS_TYPE="
+for /f "tokens=1,2" %%a in ('adb mdns services ^| findstr /C:"%DEVICE_IP%:%DEVICE_PORT%"') do (
+    set "ADB_MDNS_NAME=%%a"
+    set "ADB_MDNS_TYPE=%%b"
+)
+if not defined ADB_MDNS_NAME goto :eof
+set "ADB_TARGET=!ADB_MDNS_NAME!.!ADB_MDNS_TYPE!"
+adb devices | findstr /C:"!ADB_TARGET!" | findstr "device" >nul 2>&1
+if errorlevel 1 set "ADB_TARGET="
+goto :eof
 
 
 :START_CHROME
