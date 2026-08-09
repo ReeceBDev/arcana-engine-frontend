@@ -14,8 +14,11 @@ To run on PC:
 
 To run on Android:
 - Enable developer settings on the device
-- Enable ADB Wireless Debugging 
+- Pair your device manually from within the device's "Wireless Debugging" settings menu.
 - Modify ./launch-dev-env-android.bat
   * Set the device port accordingly from the ADB Wireless Debugging menu
   * Set the device ip accordingly from the ADB Wireless Debugging menu
 - Launch ./launch-dev-env-android.bat
+
+Prerequisites:
+- adb - Android Platform Tools (https://developer.android.com/tools/releases/platform-tools)

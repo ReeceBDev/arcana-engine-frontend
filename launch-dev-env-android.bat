@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 :: User Configuration !! IMPORTANT - MAKE SURE YOU SET THIS EVERY TIME YOU TURN ON THE DEVICE!
 set USEUSB=FALSE
 set DEVICE_IP=192.168.0.20
-set DEVICE_PORT=40665
+set DEVICE_PORT=38681
 
 
 :: Variables
@@ -17,6 +17,7 @@ set ADB_CONNECT_TIMEOUT=5000
 set WEBSERVER_BIND_TIMEOUT=8000
 set WEBSERVER_READY_TIMEOUT=8000
 set CHROME_READY_TIMEOUT=8000
+set MAX_RETRIES=3
 set SYSTEMS_OK=0
 
 echo ====================================
@@ -24,7 +25,77 @@ echo Arcana Engine Android - Resilient Dev Environment
 echo ====================================
 echo.
 
+:: Check prerequisites
+echo Checking prerequisites...
+
+where node >nul 2>&1
+if errorlevel 1 (
+    powershell -command "Write-Host 'node is not installed or not on PATH. Install from https://nodejs.org' -ForegroundColor Red"
+    pause
+    exit /b 1
+)
+
+where npm >nul 2>&1
+if errorlevel 1 (
+    powershell -command "Write-Host 'npm is not installed or not on PATH.' -ForegroundColor Red"
+    pause
+    exit /b 1
+)
+
+where npx >nul 2>&1
+if errorlevel 1 (
+    powershell -command "Write-Host 'npx is not installed or not on PATH.' -ForegroundColor Red"
+    pause
+    exit /b 1
+)
+
+where adb >nul 2>&1
+if errorlevel 1 (
+    powershell -command "Write-Host 'adb is not installed or not on PATH. Download from https://developer.android.com/tools/releases/platform-tools' -ForegroundColor Red"
+    pause
+    exit /b 1
+)
+
+echo All prerequisites found.
+
+:: Check dependencies
+if not exist "%~dp0node_modules" (
+    echo node_modules not found. Running npm install...
+    call npm install
+    if errorlevel 1 (
+        powershell -command "Write-Host 'npm install failed. Run npm install manually.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+    echo Dependencies installed successfully.
+)
+
+:: Check ADB pairing
+:CHECK_PAIRING
+echo.
+echo Checking if device is paired and connected...
+
+if /I "%USEUSB%"=="TRUE" (
+    echo USB mode - skipping pairing check.
+    goto STARTUP
+)
+
+adb devices | findstr /C:"%DEVICE_IP%:%DEVICE_PORT%" >nul
+if not errorlevel 1 (
+    echo Device %DEVICE_IP%:%DEVICE_PORT% is already connected.
+    goto STARTUP
+)
+
+powershell -command "Write-Host 'Device %DEVICE_IP%:%DEVICE_PORT% is not paired or connected.' -ForegroundColor Red"
+powershell -command "Write-Host 'Please pair your device manually from within the device''s Wireless Debugging settings menu, then press any key to continue...' -ForegroundColor Blue"
+pause >nul
+goto CHECK_PAIRING
+
+
 :STARTUP
+set RETRY_COUNT=0
+
+:STARTUP_RETRY
 :: Kill any existing Parcel processes
 echo Cleaning up existing processes...
 :: Kill any process holding the webserver port
@@ -38,14 +109,32 @@ taskkill /F /IM node.exe 2>nul
 taskkill /F /IM npm.cmd 2>nul
 echo Waiting for port to be released...
 
+:: Wait for port to be free
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set START_TIME=%%t
+
 :WAIT_PORT_FREE
 netstat -ano | findstr /R ":%WEBSERVER_PORT%[^0-9]" >nul
 if not errorlevel 1 (
     powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
+    for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
+    set /a ELAPSED=!NOW!-!START_TIME!
+    set /a PORT_TIMEOUT_SECS=%WEBSERVER_BIND_TIMEOUT% / 1000
+    if !ELAPSED! gtr !PORT_TIMEOUT_SECS! (
+        powershell -command "Write-Host 'Port %WEBSERVER_PORT% could not be freed after %WEBSERVER_BIND_TIMEOUT%ms.' -ForegroundColor Red"
+        set /a RETRY_COUNT+=1
+        if !RETRY_COUNT! gtr !MAX_RETRIES! (
+            powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for port release. Aborting.' -ForegroundColor Red"
+            pause
+            exit /b 1
+        )
+        echo Retrying startup (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+        goto STARTUP_RETRY
+    )
     goto WAIT_PORT_FREE
 )
 echo Port %WEBSERVER_PORT% is now free.
 goto CHECK_WEBSERVER
+
 
 :: ENSURE WEBSERVER IS RUNNING
 :CHECK_WEBSERVER
@@ -56,8 +145,7 @@ if errorlevel 1 (
     start "Parcel Server" cmd /c "cd /d %~dp0 && npm run dev"
     echo Waiting for Parcel to bind to port
     
-    set /a MAX_BIND_ATTEMPTS=%WEBSERVER_BIND_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-    set BIND_ATTEMPTS=0
+    for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set BIND_START=%%t
     goto WAIT_SERVER_BIND
 ) else (
     echo Parcel Webserver: Port is already bound - skipping
@@ -68,29 +156,46 @@ goto WEBSERVER_ALREADY_RUNNING
 powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
 netstat -ano | findstr /R ":%WEBSERVER_PORT%[^0-9]" >nul
 if not errorlevel 1 goto SERVER_DEPLOYED
-set /a BIND_ATTEMPTS+=1
 
-if !BIND_ATTEMPTS! gtr !MAX_BIND_ATTEMPTS! (
-    echo Parcel failed to bind after %WEBSERVER_BIND_TIMEOUT%ms. Retrying...
-    goto STARTUP
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
+set /a BIND_ELAPSED=!NOW!-!BIND_START!
+set /a BIND_TIMEOUT_SECS=%WEBSERVER_BIND_TIMEOUT% / 1000
+if !BIND_ELAPSED! gtr !BIND_TIMEOUT_SECS! (
+    powershell -command "Write-Host 'Parcel failed to bind after %WEBSERVER_BIND_TIMEOUT%ms.' -ForegroundColor Red"
+    set /a RETRY_COUNT+=1
+    if !RETRY_COUNT! gtr !MAX_RETRIES! (
+        powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for Parcel startup. Aborting.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+    echo Retrying startup (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    goto STARTUP_RETRY
 )
 goto WAIT_SERVER_BIND
 
 :SERVER_DEPLOYED
 echo Server deployed and Port bound! Waiting for Parcel to be ready...
 
-set /a MAX_READY_ATTEMPTS=%WEBSERVER_READY_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-set READY_ATTEMPTS=0
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set READY_START=%%t
 goto CHECK_WEBSERVER_READY
 
 :CHECK_WEBSERVER_READY
 powershell -command "$timeout = %CONNECTION_RETRY_INTERVAL% / 1000; try { Invoke-WebRequest -Uri 'http://localhost:%WEBSERVER_PORT%' -TimeoutSec $timeout -UseBasicParsing -ErrorAction Stop | Out-Null; exit 0 } catch { exit 1 }"
 if not errorlevel 1 goto WEBSERVER_READY
 
-set /a READY_ATTEMPTS+=1
-if !READY_ATTEMPTS! gtr !MAX_READY_ATTEMPTS! (
-    echo Parcel failed to respond after %WEBSERVER_READY_TIMEOUT%ms. Retrying...
-    goto STARTUP
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
+set /a READY_ELAPSED=!NOW!-!READY_START!
+set /a READY_TIMEOUT_SECS=%WEBSERVER_READY_TIMEOUT% / 1000
+if !READY_ELAPSED! gtr !READY_TIMEOUT_SECS! (
+    powershell -command "Write-Host 'Parcel failed to respond after %WEBSERVER_READY_TIMEOUT%ms.' -ForegroundColor Red"
+    set /a RETRY_COUNT+=1
+    if !RETRY_COUNT! gtr !MAX_RETRIES! (
+        powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for Parcel startup. Aborting.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+    echo Retrying startup (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    goto STARTUP_RETRY
 )
 goto CHECK_WEBSERVER_READY
 
@@ -100,6 +205,7 @@ goto WEBSERVER_READY
 
 :WEBSERVER_READY
 echo Parcel is ready!
+set RETRY_COUNT=0
 goto CHECK_DEVICE_CONNECTION
 
 
@@ -111,7 +217,8 @@ if /I "%USEUSB%"=="TRUE" (
     echo Checking USB ADB connection...
     adb devices | findstr /v "List of devices" | findstr "device" >nul
     if errorlevel 1 (
-        echo No USB device found. Please connect your device via USB and press any key...
+        powershell -command "Write-Host 'No USB device found.' -ForegroundColor Red"
+        powershell -command "Write-Host 'Please connect your device via USB and press any key...' -ForegroundColor Blue"
         pause >nul
         goto CHECK_DEVICE_CONNECTION
     )
@@ -129,8 +236,7 @@ if errorlevel 1 (
     adb connect %DEVICE_IP%:%DEVICE_PORT%
     echo Waiting for device connection...
     
-    set /a MAX_CONNECT_ATTEMPTS=%ADB_CONNECT_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-    set CONNECT_ATTEMPTS=0
+    for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set CONNECT_START=%%t
     goto WAIT_CONNECT
 )
 set ADB_TARGET=%DEVICE_IP%:%DEVICE_PORT%
@@ -141,15 +247,26 @@ powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
 adb devices | findstr /C:"%DEVICE_IP%:%DEVICE_PORT%" >nul
 if not errorlevel 1 goto CONNECT_SUCCESS
 
-set /a CONNECT_ATTEMPTS+=1
-if !CONNECT_ATTEMPTS! gtr !MAX_CONNECT_ATTEMPTS! (
-    echo Connection timeout after %ADB_CONNECT_TIMEOUT%ms. Retrying from scratch...
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
+set /a CONNECT_ELAPSED=!NOW!-!CONNECT_START!
+set /a CONNECT_TIMEOUT_SECS=%ADB_CONNECT_TIMEOUT% / 1000
+if !CONNECT_ELAPSED! gtr !CONNECT_TIMEOUT_SECS! (
+    powershell -command "Write-Host 'Connection timeout after %ADB_CONNECT_TIMEOUT%ms.' -ForegroundColor Red"
+    set /a RETRY_COUNT+=1
+    if !RETRY_COUNT! gtr !MAX_RETRIES! (
+        powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for device connection. Aborting.' -ForegroundColor Red"
+        powershell -command "Write-Host 'If you haven''t paired yet, restart the script and pair when prompted.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+    echo Retrying connection (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
     goto CHECK_DEVICE_CONNECTION
 )
 goto WAIT_CONNECT
 
 :CONNECT_SUCCESS
 echo Device connected!
+set RETRY_COUNT=0
 goto DEPLOY
 
 :DEPLOY
@@ -162,8 +279,15 @@ call npx cap sync
 call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --port %PC_PORT%
 
 if errorlevel 1 (
-    echo Deployment failed. Retrying...
-    goto CHECK_DEVICE_CONNECTION
+    powershell -command "Write-Host 'Deployment failed.' -ForegroundColor Red"
+    set /a RETRY_COUNT+=1
+    if !RETRY_COUNT! gtr !MAX_RETRIES! (
+        powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for deployment. Aborting.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+    echo Retrying deployment (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    goto DEPLOY
 )
 
 echo.
@@ -174,6 +298,7 @@ echo Press Ctrl+C to stop
 echo ====================================
 echo.
 
+set RETRY_COUNT=0
 goto MONITOR_LOOP
 
 
@@ -187,18 +312,19 @@ if not errorlevel 1 (
     start chrome --remote-debugging-port=9222
 )
 
-set /a MAX_CHROME_ATTEMPTS=%CHROME_READY_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-set CHROME_ATTEMPTS=0
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set CHROME_START=%%t
 
 :WAIT_FOR_CHROME
 powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
 netstat -ano | findstr ":9222" >nul
 if not errorlevel 1 goto CHROME_READY
 
-set /a CHROME_ATTEMPTS+=1
-if !CHROME_ATTEMPTS! gtr !MAX_CHROME_ATTEMPTS! (
-    echo Chrome failed to start remote debugging after %CHROME_READY_TIMEOUT%ms.
-    echo Please restart Chrome with: chrome --remote-debugging-port=9222
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
+set /a CHROME_ELAPSED=!NOW!-!CHROME_START!
+set /a CHROME_TIMEOUT_SECS=%CHROME_READY_TIMEOUT% / 1000
+if !CHROME_ELAPSED! gtr !CHROME_TIMEOUT_SECS! (
+    powershell -command "Write-Host 'Chrome failed to start remote debugging after %CHROME_READY_TIMEOUT%ms.' -ForegroundColor Red"
+    powershell -command "Write-Host 'Please restart Chrome with: chrome --remote-debugging-port=9222' -ForegroundColor Red"
     pause
     goto START_CHROME
 )
@@ -210,8 +336,7 @@ echo Chrome remote debugging is active on port 9222.
 :OPEN_DEVTOOLS
 echo Waiting for app page to be available in Chrome DevTools...
 
-set /a MAX_DEVTOOLS_ATTEMPTS=%CHROME_READY_TIMEOUT% / %CONNECTION_RETRY_INTERVAL%
-set DEVTOOLS_ATTEMPTS=0
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set DEVTOOLS_START=%%t
 
 :WAIT_FOR_DEVTOOLS_PAGE
 powershell -command "Start-Sleep -Milliseconds %CONNECTION_RETRY_INTERVAL%"
@@ -226,9 +351,11 @@ if defined PAGE_ID (
     goto MONITOR_LOOP
 )
 
-set /a DEVTOOLS_ATTEMPTS+=1
-if !DEVTOOLS_ATTEMPTS! gtr !MAX_DEVTOOLS_ATTEMPTS! (
-    echo Could not find page ID after %CHROME_READY_TIMEOUT%ms. Opening inspect page as fallback...
+for /f %%t in ('powershell -command "[int](Get-Date -UFormat %%s)"') do set NOW=%%t
+set /a DEVTOOLS_ELAPSED=!NOW!-!DEVTOOLS_START!
+set /a DEVTOOLS_TIMEOUT_SECS=%CHROME_READY_TIMEOUT% / 1000
+if !DEVTOOLS_ELAPSED! gtr !DEVTOOLS_TIMEOUT_SECS! (
+    powershell -command "Write-Host 'Could not find page ID after %CHROME_READY_TIMEOUT%ms. Opening inspect page as fallback...' -ForegroundColor Red"
     start chrome chrome://inspect/#devices
     goto MONITOR_LOOP
 )
@@ -243,6 +370,12 @@ adb devices | findstr /C:"!ADB_TARGET!" >nul
 if errorlevel 1 (
     set SYSTEMS_OK=0
     echo !time! - Device disconnected! Reconnecting...
+    set /a RETRY_COUNT+=1
+    if !RETRY_COUNT! gtr !MAX_RETRIES! (
+        powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for reconnection. Aborting.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
     goto CHECK_DEVICE_CONNECTION
 )
 
@@ -251,6 +384,12 @@ powershell -command "$timeout = %CONNECTION_RETRY_INTERVAL% / 1000; try { Invoke
 if errorlevel 1 (
     set SYSTEMS_OK=0
     echo !time! - Parcel server died! Restarting...
+    set /a RETRY_COUNT+=1
+    if !RETRY_COUNT! gtr !MAX_RETRIES! (
+        powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for Parcel recovery. Aborting.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
     goto CHECK_WEBSERVER
 )
 
@@ -261,7 +400,13 @@ if errorlevel 1 (
     echo !time! - App not running on device. Relaunching...
     adb -s !ADB_TARGET! shell am start -n com.arcanaengine.client/com.arcanaengine.client.MainActivity
     if errorlevel 1 (
-        echo Failed to launch app. Full redeploy needed...
+        powershell -command "Write-Host 'Failed to launch app. Full redeploy needed.' -ForegroundColor Red"
+        set /a RETRY_COUNT+=1
+        if !RETRY_COUNT! gtr !MAX_RETRIES! (
+            powershell -command "Write-Host 'Exceeded max retries (%MAX_RETRIES%) for app recovery. Aborting.' -ForegroundColor Red"
+            pause
+            exit /b 1
+        )
         goto DEPLOY
     )
 )
