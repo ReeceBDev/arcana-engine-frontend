@@ -56,6 +56,61 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Check for Java (required by Android SDK / Gradle)
+if defined JAVA_HOME (
+    if not exist "%JAVA_HOME%\bin\java.exe" (
+        powershell -command "Write-Host 'JAVA_HOME is set but java.exe not found at %JAVA_HOME%\bin. Check your Java installation.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+) else (
+    where java >nul 2>&1
+    if errorlevel 1 (
+        powershell -command "Write-Host 'Java not found. Install JDK 17+ and set JAVA_HOME.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
+)
+
+:: Check for Android SDK (required by cap run / native-run)
+set "SDK_FOUND=FALSE"
+if defined ANDROID_HOME (
+    if exist "%ANDROID_HOME%\platforms" set "SDK_FOUND=TRUE"
+)
+if "!SDK_FOUND!"=="FALSE" (
+    if defined ANDROID_SDK_ROOT (
+        if exist "%ANDROID_SDK_ROOT%\platforms" set "SDK_FOUND=TRUE"
+    )
+)
+if "!SDK_FOUND!"=="FALSE" (
+    if exist "%LOCALAPPDATA%\Android\Sdk\platforms" (
+        set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
+        set "SDK_FOUND=TRUE"
+    )
+)
+if "!SDK_FOUND!"=="FALSE" (
+    powershell -command "Write-Host 'Android SDK not found. Install Android Studio from https://developer.android.com/studio and set ANDROID_HOME to the SDK path.' -ForegroundColor Red"
+    pause
+    exit /b 1
+)
+
+:: Check gradle.properties has a valid java.home path (if set)
+set "GRADLE_PROPS=%~dp0android\gradle.properties"
+if exist "%GRADLE_PROPS%" (
+    for /f "tokens=2 delims==" %%j in ('findstr /C:"org.gradle.java.home" "%GRADLE_PROPS%" 2^>nul') do (
+        set "GRADLE_JAVA_HOME=%%j"
+    )
+    if defined GRADLE_JAVA_HOME (
+        set "GRADLE_JAVA_HOME=!GRADLE_JAVA_HOME:\\=\!"
+        if not exist "!GRADLE_JAVA_HOME!\bin\java.exe" (
+            powershell -command "Write-Host 'gradle.properties specifies org.gradle.java.home=!GRADLE_JAVA_HOME! but java.exe was not found there.' -ForegroundColor Red"
+            powershell -command "Write-Host 'Edit android\gradle.properties and update the path to your JDK installation.' -ForegroundColor Red"
+            pause
+            exit /b 1
+        )
+    )
+)
+
 echo All prerequisites found.
 
 :: Check dependencies
@@ -87,8 +142,10 @@ if not errorlevel 1 (
 )
 
 powershell -command "Write-Host 'Device %DEVICE_IP%:%DEVICE_PORT% is not paired or connected.' -ForegroundColor Red"
-powershell -command "Write-Host 'Please pair your device manually from within the device''s Wireless Debugging settings menu, then press any key to continue...' -ForegroundColor Blue"
-pause >nul
+powershell -command "Write-Host 'Please pair your device from within the device''s Wireless Debugging settings menu by scanning the QR code below...' -ForegroundColor Blue"
+echo.
+"%~dp0bin\adb-wireless.exe" pair
+echo.
 goto CHECK_PAIRING
 
 
@@ -127,7 +184,7 @@ if not errorlevel 1 (
             pause
             exit /b 1
         )
-        echo Retrying startup (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+        echo Retrying startup attempt !RETRY_COUNT!/!MAX_RETRIES!...
         goto STARTUP_RETRY
     )
     goto WAIT_PORT_FREE
@@ -168,7 +225,7 @@ if !BIND_ELAPSED! gtr !BIND_TIMEOUT_SECS! (
         pause
         exit /b 1
     )
-    echo Retrying startup (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    echo Retrying startup attempt !RETRY_COUNT!/!MAX_RETRIES!...
     goto STARTUP_RETRY
 )
 goto WAIT_SERVER_BIND
@@ -194,7 +251,7 @@ if !READY_ELAPSED! gtr !READY_TIMEOUT_SECS! (
         pause
         exit /b 1
     )
-    echo Retrying startup (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    echo Retrying startup attempt !RETRY_COUNT!/!MAX_RETRIES!...
     goto STARTUP_RETRY
 )
 goto CHECK_WEBSERVER_READY
@@ -259,7 +316,7 @@ if !CONNECT_ELAPSED! gtr !CONNECT_TIMEOUT_SECS! (
         pause
         exit /b 1
     )
-    echo Retrying connection (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    echo Retrying connection attempt !RETRY_COUNT!/!MAX_RETRIES!...
     goto CHECK_DEVICE_CONNECTION
 )
 goto WAIT_CONNECT
@@ -286,7 +343,7 @@ if errorlevel 1 (
         pause
         exit /b 1
     )
-    echo Retrying deployment (attempt !RETRY_COUNT!/!MAX_RETRIES!)...
+    echo Retrying deployment attempt !RETRY_COUNT!/!MAX_RETRIES!...
     goto DEPLOY
 )
 
