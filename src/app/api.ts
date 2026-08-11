@@ -42,7 +42,18 @@ export async function fetchFullReading(birthDate: string, name: string, birthTim
     return data;
 }
 
-export async function fetchGrowthReading(birthDate: string, year: number, before?: number, after?: number) {
+/** A single growth-card entry: the calendar year it applies to + its card. */
+export type GrowthYearCard = {
+    year: number;
+    card: CardData | null;
+};
+
+export type GrowthReading = {
+    targetYear: number;
+    cards: GrowthYearCard[];
+};
+
+export async function fetchGrowthReading(birthDate: string, year: number, before?: number, after?: number): Promise<GrowthReading> {
     console.debug("API: fetchGrowthReading request:", { birthDate, year, before, after });
     const params = new URLSearchParams({ birthDate, year: year.toString() });
     if (before != null) params.append("before", before.toString());
@@ -51,7 +62,18 @@ export async function fetchGrowthReading(birthDate: string, year: number, before
     const response = await fetch(`${THOTH_BACKEND_API}/reading/growth?${params.toString()}`);
     const data = await response.json();
     console.debug("API: Growth reading:", data);
-    return data;
+
+    const cards: GrowthYearCard[] = Array.isArray(data.cards)
+        ? data.cards.map((entry: any) => ({
+            year: typeof entry?.year === "number" ? entry.year : Number(entry?.year),
+            card: normalizeCardData(entry?.card ?? entry),
+        }))
+        : [];
+
+    return {
+        targetYear: typeof data.targetYear === "number" ? data.targetYear : year,
+        cards,
+    };
 }
 
 function mapBirthdateReading(data: any) {
@@ -59,7 +81,12 @@ function mapBirthdateReading(data: any) {
     const zodiacal = data.zodiacalSunCards ?? [];
 
     const personality = normalizeCardData(personalityCards.find((c: any) => c.role === "PersonalityCard")) ?? null;
-    const character = normalizeCardData(personalityCards.find((c: any) => c.role === "CharacterCard")) ?? personality;
+    const explicitCharacter = normalizeCardData(personalityCards.find((c: any) => c.role === "CharacterCard"));
+    // When the backend omits a CharacterCard, it has signalled that the character
+    // cross-sum collapsed to the personality card. Relabel the second personality
+    // card as the hybrid role so the frontend can present a merged description.
+    const character = explicitCharacter
+        ?? (personality ? { ...personality, role: 'HybridCharacterPersonalCard' as CardRole } : null);
 
     return {
         personalityCard: personality,

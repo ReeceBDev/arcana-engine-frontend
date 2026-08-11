@@ -2,6 +2,7 @@ export const CARD_ROLES = [
     'UncategorisedCard',
     'PersonalityCard',
     'CharacterCard',
+    'HybridCharacterPersonalCard',
     'GrowthCard',
     'FirstNameCard',
     'MiddleNameCard',

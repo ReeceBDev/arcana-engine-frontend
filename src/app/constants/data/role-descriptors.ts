@@ -28,6 +28,14 @@ export const ROLE_DESCRIPTORS: Record<CardRole, RoleDescriptor> = {
             'Derived from your specific celestial data.',
         ],
     },
+    HybridCharacterPersonalCard: {
+        label: 'Your Unified Persona Card',
+        lines: [
+            'When the personality and the character become one — outer mask and inner face aligned.',
+            'Your date of birth reduces to a single essence: the same card speaks for both the persona you present and the nature beneath it.',
+            'A unified persona — what you show the world is precisely who you are within.',
+        ],
+    },
     GrowthCard: {
         label: 'Your Growth Card',
         lines: [
