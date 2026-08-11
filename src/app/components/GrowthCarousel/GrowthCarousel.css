@@ -1,0 +1,72 @@
+/* GrowthCarousel — non-looping, dynamically-growing horizontal carousel.
+   Scoped under .growth-carousel so it can't collide with other carousels'
+   global CSS (see repo css-orientation-split-pattern convention). */
+
+.growth-carousel {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.growth-carousel-stage {
+    /* perspective gives translateZ/rotateY on items real depth */
+    perspective: 800px;
+    perspective-origin: 50% 50%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+}
+
+.growth-carousel-track {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    /* transform (translateX) is owned by gsap, not React — do not set it here. */
+    will-change: transform;
+    transform-style: preserve-3d;
+}
+
+.growth-item {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: grab;
+    user-select: none;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.growth-item:active {
+    cursor: grabbing;
+}
+
+.growth-card-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.growth-year-label {
+    color: hsl(0, 0%, 70%);
+    font-size: clamp(14px, 2.4vh, 26px);
+    letter-spacing: 0.02em;
+    text-align: center;
+    transition: color 120ms ease, transform 120ms ease, text-shadow 120ms ease;
+    font-variant-numeric: tabular-nums;
+}
+
+.growth-item.is-centered .growth-year-label {
+    color: #f5e6b8;
+    text-shadow: 0 0 12px rgba(245, 230, 184, 0.6);
+    transform: scale(1.12);
+}

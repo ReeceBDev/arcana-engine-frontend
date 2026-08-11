@@ -14,5 +14,6 @@ export type PageIdentity =
 | 'birthdate-card-stack'
 | 'name-card-stack'
 | 'growth-card-stack'
+| 'growth-card-carousel'
 | 'practitioner-view'
 ;

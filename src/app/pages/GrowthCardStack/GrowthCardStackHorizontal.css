@@ -1,0 +1,116 @@
+/* GrowthCardStackHorizontal — scoped under .growth-card-stack-horizontal so it
+   can't collide with other pages' global CSS (repo css-orientation-split
+   convention). Uses vh units per the repo orientation convention. */
+
+.growth-card-stack-horizontal {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+
+    & .growth-top-bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2vh 3vw 1vh;
+        gap: 2vw;
+
+        & .growth-arrow-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+
+        & .growth-arrow-button img {
+            width: 14vh;
+            height: 8vh;
+            opacity: 0.85;
+        }
+
+        & .growth-back-button img {
+            transform: rotate(184deg);
+        }
+
+        /* forward arrow points right (un-rotated source arrow) */
+        & .growth-forward-button img {
+            transform: scaleX(-1);
+        }
+
+        & .growth-title {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        & .growth-title-line-1 {
+            margin: 0;
+            font-size: clamp(22px, 4vh, 40px);
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg,
+                    #e8c97a 0%,
+                    #f5e6b8 44%,
+                    #fdf3d0 50%,
+                    #f5e6b8 56%,
+                    #e8c97a 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gold-wave 6s linear infinite;
+        }
+
+        & .growth-title-line-2 {
+            margin: 0.4vh 0 0;
+            font-size: clamp(14px, 2.4vh, 24px);
+            color: hsl(0, 0%, 80%);
+            letter-spacing: 0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        & .growth-set-range-button {
+            pointer-events: auto;
+            margin-top: 1vh;
+            background: rgba(245, 230, 184, 0.12);
+            border: 1px solid rgba(245, 230, 184, 0.4);
+            color: #f5e6b8;
+            font-size: clamp(11px, 1.8vh, 16px);
+            padding: 0.6vh 1.2vw;
+            border-radius: 999px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 120ms ease;
+        }
+
+        & .growth-set-range-button:hover {
+            background: rgba(245, 230, 184, 0.22);
+        }
+    }
+
+    & .growth-seed-warning {
+        align-self: center;
+        color: hsl(35, 90%, 75%);
+        background: rgba(0, 0, 0, 0.35);
+        padding: 0.6vh 2vw;
+        border-radius: 8px;
+        font-size: clamp(12px, 2vh, 16px);
+        margin-bottom: 1vh;
+    }
+
+    & .growth-carousel-region {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
