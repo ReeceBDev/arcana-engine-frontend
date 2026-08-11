@@ -36,11 +36,13 @@ function App() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>(() => loadPractitioners());
   const [currentPractitionerId, setCurrentPractitionerId] = useState<string | null>(null);
   const [newPractitioners, setNewPractitioners] = useState(() => checkHasNew());
+  const [returnDestination, setReturnDestination] = useState<PageIdentity | null>(null);
 
   console.debug('workflowConfig', workflowConfig);
 
   const navigate = (base: PageIdentity, config?: Partial<DeckConfig>) => {
     console.debug('navigate called!', base);
+    setReturnDestination(null);
     if (base === 'practitioners-list') {
       const deduped = deduplicatePractitioners();
       setPractitioners(deduped);
@@ -70,6 +72,28 @@ function App() {
       lastIteration: c.lastIteration,
     }));
     navigate(base, config);
+  };
+
+  // Navigate away from the practitioner dashboard into an edit/stack page,
+  // remembering the dashboard so the destination page's back button can
+  // return to it instead of jumping into the card-finder workflow.
+  const navigateFromPractitioner = (page: PageIdentity) => {
+    navigate(page);
+    setReturnDestination('practitioner-view');
+  };
+
+  // Back handler for edit/stack pages: if the user arrived from the
+  // practitioner dashboard, return there; otherwise use the normal workflow
+  // back navigation.
+  const handleBackWithReturn = (fallback: PageIdentity, config?: Partial<DeckConfig>) => {
+    if (returnDestination) {
+      const dest = returnDestination;
+      setReturnDestination(null);
+      setPage(dest);
+      if (config) setDeckConfig(c => ({ ...c, ...config }));
+    } else {
+      navigateBack(fallback, config);
+    }
   };
 
   const onIndexChange = (index: number) => setDeckConfig(c => ({ ...c, currentIndex: index }));
@@ -178,12 +202,16 @@ function App() {
     navigate,
     navigateNext,
     navigateBack,
+    navigateFromPractitioner,
+    handleBackWithReturn,
     resetWorkflow,
     deckConfig,
     onIndexChange,
     workflowConfig,
     birthDate,
     userName,
+    birthTime,
+    birthLocation,
     birthdateCards,
     nameCards,
     growthCards,
