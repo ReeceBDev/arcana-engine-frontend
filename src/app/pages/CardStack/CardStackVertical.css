@@ -56,7 +56,7 @@
                 color: white;
                 letter-spacing: -0.01em;
                 line-height: 1.35;
-                font-size: clamp(15px, 2.05vh, 22px);
+                font-size: 9cqh;
                 font-family: 'Caudex', serif;
                 font-weight: bold;
             }
@@ -71,7 +71,9 @@
                 align-items: center;
                 justify-content: center;
                 margin: 0;
-                flex: 0 0 auto;
+                flex: 1 1 0;
+                min-height: 0;
+                width: 100%;
             }
 
             & .card-role-label {
@@ -91,9 +93,11 @@
 }
 
 .text-stage {
+    display: flex;
+    flex-direction: column;
     width: min(92vw, 760px);
-    min-height: min(20vh, 220px);
-    max-height: min(25vh, 260px);
+    flex: 0 0 auto;
+    height: min(25vh, 240px);
     overflow: hidden;
     padding: 0 0.4vh 0.3vh;
     margin-top: 1vh;
@@ -107,25 +111,31 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     overflow: visible;
-    padding-top: 9.6vh;
+    padding-top: 4vh;
     position: relative;
     z-index: 4;
 }
 
 /* Pre-flip astrological text block */
 .astro-text-block {
+    container-type: size;
+    container-name: astro-text;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-height: 0;
     gap: 0.8vh;
     padding: 0 2vw;
     margin-bottom: 0;
+    overflow: hidden;
     will-change: transform, opacity;
 
     & .astro-card-label {
-        font-size: clamp(18px, 2.6vh, 28px);
+        font-size: clamp(2vh, 2.6vh, 4vh);
         font-family: 'Caudex', serif;
         font-weight: bold;
         color: white;
@@ -134,7 +144,7 @@
     }
 
     & .astro-body-text {
-        font-size: clamp(14px, 1.8vh, 20px);
+        font-size: 6px;
         font-family: 'Caudex', serif;
         color: rgb(200, 207, 216);
         line-height: 1.35;
@@ -147,7 +157,7 @@
     position: absolute;
     top: 1vh;
     right: 4vw;
-    z-index: 2;
+    z-index: 10;
     display: flex;
     align-items: center;
     transition: opacity 0.24s ease-out;
@@ -196,6 +206,16 @@
         rgba(255, 255, 255, 0.08) 360deg
     );
     animation: pill-color-spin 2.8s linear infinite;
+}
+
+/* Expanded (unfolded) state — purple so the user knows it's open and clickable again */
+.archetype-toggle-button.is-open {
+    background: rgba(150, 90, 220, 0.35);
+}
+
+.archetype-toggle-button.is-open::before {
+    background: rgba(180, 130, 240, 0.9);
+    opacity: 0.9;
 }
 
 .archetype-body {

@@ -37,11 +37,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
             flex: 1;
+            min-height: 0;
             text-align: center;
             width: 100%;
-            overflow: show;
             margin-top: 6vh;
             animation: fade-in 0.8s ease-in forwards;
             transition: opacity 0.24s ease-out;
@@ -64,13 +63,15 @@
                 justify-content: center;
                 gap: 2.4vw;
                 width: 100%;
-                margin-bottom: 2vh;
+                flex: 0 1 auto;
+                min-height: 0;
+                padding-bottom: min(6vh, 12px);
             }
 
             & .type-info-panel,
             & .archetype-info-panel {
-                min-height: clamp(220px, 48vh, 560px);
-                max-height: clamp(220px, 48vh, 560px);
+                min-height: min(48vh, 620px);
+                max-height: min(48vh, 620px);
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
@@ -78,11 +79,27 @@
                 justify-content: center;
                 text-align: center;
                 padding: 1.2vh 0.9vw;
+                background:
+                    linear-gradient(135deg,
+                        rgba(255, 255, 255, 0.14) 0%,
+                        rgba(255, 255, 255, 0.03) 38%,
+                        rgba(255, 255, 255, 0.07) 100%),
+                    rgba(8, 14, 34, 0.58);
+                backdrop-filter: blur(30px) saturate(190%);
+                -webkit-backdrop-filter: blur(30px) saturate(190%);
+                border-radius: 22px;
+                box-shadow:
+                    0 12px 36px rgba(0, 0, 0, 0.5),
+                    inset 0 1.5px 1px rgba(255, 255, 255, 0.55),
+                    inset 0 8px 22px rgba(255, 255, 255, 0.08),
+                    inset 0 -1px 1px rgba(255, 255, 255, 0.14),
+                    inset 0 -14px 26px rgba(0, 0, 0, 0.16);
             }
 
             & .panel-title {
-                margin: 0 0 1.2vh;
-                font-size: clamp(20px, 2.3vw, 36px);
+                margin: 0 2vw 1.2vh;
+                max-width: 20ch;
+                font-size: clamp(2vw, 2.6vw, 6vw);
                 line-height: 1.05;
                 background: linear-gradient(90deg, #c9a84c, #f6e27a, #c9a84c);
                 background-size: 240% 100%;
@@ -93,11 +110,31 @@
             }
 
             & .panel-body {
-                margin: 0 0 0.7vh;
+                margin: 0 auto 0.7vh;
+                max-width: 30ch;
                 color: rgb(200, 207, 216);
-                font-size: clamp(14px, 1.22vw, 22px);
+                font-size: clamp(1.5vw, 1.8vw, 4vw);
                 line-height: 1.28;
                 letter-spacing: 0;
+            }
+
+            & .panel-title-box {
+                flex: 0 0 auto;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            & .panel-body-box {
+                flex: 1 1 auto;
+                min-height: 0;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
             }
 
             & .instructions {
@@ -144,8 +181,8 @@
                 background: none;
                 border: none;
                 padding: 0;
-                width: 9.8vh;
-                height: 4.8vh;
+                width: min(20vh, 80px);
+                height: min(10vh, 40px);
                 display: grid;
                 place-items: center;
                 cursor: pointer;
@@ -158,7 +195,7 @@
                 }
 
                 & img.left {
-                    transform: rotate(180deg) rotateZ(-5deg);
+                    transform: rotate(189deg) rotateZ(-5deg);
                 }
             }
 

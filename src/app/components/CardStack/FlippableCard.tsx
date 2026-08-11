@@ -14,6 +14,7 @@ type FlippableCardProps = {
     translateY: number;
     rotateDeg: number;
     zIndex: number;
+    dropShadow?: string;
     transitionDurationMs: number;
     transitionDelayMs: number;
     transitionEasing: string;
@@ -33,6 +34,7 @@ export default function FlippableCard({
     translateY,
     rotateDeg,
     zIndex,
+    dropShadow,
     transitionDurationMs,
     transitionDelayMs,
     transitionEasing,
@@ -129,6 +131,8 @@ export default function FlippableCard({
                 width: cardWidth,
                 height: cardHeight,
                 zIndex,
+                filter: dropShadow,
+                transition: 'filter 480ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}

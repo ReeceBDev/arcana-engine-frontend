@@ -1,5 +1,5 @@
 import './CardStackVertical.css';
-import { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { gsap } from 'gsap';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import cerebus from 'url:../../../assets/images/cerebus.webp';
@@ -9,6 +9,7 @@ import CardStack from '../../components/CardStack/CardStack';
 import type { CardData } from '../../../types/card-data';
 import { ROLE_DESCRIPTORS, type RoleDescriptor } from '../../constants/data/role-descriptors';
 import { ARCHETYPE_DATA } from '../../constants/data/archetype-data';
+import { textfill } from '../../utilities/textfill';
 
 export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBack = undefined }: {
     cards: CardData[];
@@ -27,8 +28,36 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
     const topCardFlipped = flippedCards.includes(cardIndex);
     const hasNextCard = cardIndex < arcana.length - 1;
 
-    const cardWidth = useMemo(() => Math.min(window.innerWidth * 0.54, 260), []);
-    const cardHeight = useMemo(() => Math.round(cardWidth * 1.5), [cardWidth]);
+    const stackRegionRef = useRef<HTMLDivElement>(null);
+    const [cardSize, setCardSize] = useState<{ width: number; height: number }>(() => {
+        const width = Math.min(window.innerWidth * 0.54, 260);
+        return { width, height: Math.round(width * 1.5) };
+    });
+
+    // .stack-region is a flex-grow box that fills all the vertical space above
+    // the descriptor text. We measure it directly and size the card to fill its
+    // height (preserving the 1.5 aspect ratio), so the card occupies the region
+    // edge-to-edge with no gaps. The region's size comes from flex layout and is
+    // independent of the card, so there's no feedback loop.
+    useLayoutEffect(() => {
+        const region = stackRegionRef.current;
+        if (!region) return;
+
+        const recompute = () => {
+            const availHeight = region.clientHeight;
+            const availWidth = region.clientWidth;
+            const width = Math.max(0, Math.min(availWidth, availHeight / 1.5));
+            setCardSize({ width: Math.round(width), height: Math.round(width * 1.5) });
+        };
+
+        recompute();
+        const ro = new ResizeObserver(recompute);
+        ro.observe(region);
+        return () => ro.disconnect();
+    }, []);
+
+    const cardWidth = cardSize.width;
+    const cardHeight = cardSize.height;
 
     const astroRef = useRef<HTMLDivElement>(null);
     const archetypeButtonRef = useRef<HTMLButtonElement>(null);
@@ -41,17 +70,25 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
     const prevFlipped = useRef(false);
     const prevIndex = useRef(cardIndex);
 
-    // When a new card comes to the top, reset to pre-flip state instantly
+    // When a new card comes to the top, reset to pre-flip state instantly.
+    // If the target card was already flipped (e.g. navigating back), keep the
+    // archetype pill active instead of resetting it to the grey/disabled state.
     useEffect(() => {
         if (prevIndex.current !== cardIndex) {
             prevIndex.current = cardIndex;
-            prevFlipped.current = false;
+            const newCardAlreadyFlipped = flippedCards.includes(cardIndex);
+            prevFlipped.current = newCardAlreadyFlipped;
             firstPillToggleRef.current = true;
             setIsPillTextOpen(false);
             isAnimatingPillRef.current = false;
             if (astroRef.current) gsap.set(astroRef.current, { opacity: 1, y: 0, scaleY: 1 });
-            if (archetypeButtonRef.current) gsap.set(archetypeButtonRef.current, { opacity: 0.5, scale: 1 });
-            if (archetypeRef.current) gsap.set(archetypeRef.current, { opacity: 0, y: 10 });
+            if (archetypeButtonRef.current) {
+                gsap.set(archetypeButtonRef.current, {
+                    opacity: newCardAlreadyFlipped ? 1 : 0.5,
+                    scale: 1,
+                });
+            }
+            if (archetypeRef.current) gsap.set(archetypeRef.current, { opacity: 1, y: 0 });
         }
     }, [cardIndex]);
 
@@ -148,6 +185,18 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
     const showingAstroText = !topCardFlipped || isPillTextOpen;
     const compactRoleLabel = currentAstro.label.replace(/^Your\s+/i, '');
 
+    // Fit text within its box. Re-run whenever the content changes, the
+    // archetype pill toggles open/closed, or the window is resized.
+    useLayoutEffect(() => {
+        textfill(astroRef.current, { maxFontSize: 26 });
+    }, [cardIndex, showingAstroText, isPillTextOpen, currentAstro, currentArchetype]);
+
+    useEffect(() => {
+        const onResize = () => textfill(astroRef.current, { maxFontSize: 26 });
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
     return (
         <div className={`card-stack-vertical${isFinishing ? ' is-finishing' : ''}`}>
             <CardSequenceBackground />
@@ -155,7 +204,7 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
                 <TopNavBarVertical onHome={onHome} />
                 <div className="top-right-action-row">
                     <button
-                        className={`archetype-toggle-button${topCardFlipped ? ' is-active' : ''}`}
+                        className={`archetype-toggle-button${topCardFlipped ? ' is-active' : ''}${isPillTextOpen ? ' is-open' : ''}`}
                         ref={archetypeButtonRef}
                         onClick={() => {
                             if (!topCardFlipped || isAnimatingPillRef.current) return;
@@ -189,7 +238,7 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
                     <div className="stack-stage">
                         <p className="card-role-label">{compactRoleLabel}</p>
                         {/* Card stack */}
-                        <div className="stack-region" style={{ width: cardWidth, height: cardHeight + 24 }}>
+                        <div className="stack-region" ref={stackRegionRef}>
                             <CardStack
                                 arcana={arcana}
                                 selectedArcanaIndex={cardIndex}

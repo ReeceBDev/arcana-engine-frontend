@@ -1,5 +1,5 @@
 import './CardStackHorizontal.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import cerebus from 'url:../../../assets/images/cerebus.webp';
 import arrow from 'url:../../../assets/images/arrow.webp';
@@ -8,6 +8,7 @@ import CardStack from '../../components/CardStack/CardStack';
 import type { CardData } from '../../../types/card-data';
 import { ROLE_DESCRIPTORS } from '../../constants/data/role-descriptors';
 import { ARCHETYPE_DATA } from '../../constants/data/archetype-data';
+import { textfill } from '../../utilities/textfill';
 
 export default function CardStackHorizontal({ cards, onHome, onNext, onBack: _onBack = undefined }: {
     cards: CardData[];
@@ -26,6 +27,11 @@ export default function CardStackHorizontal({ cards, onHome, onNext, onBack: _on
 
     const cardWidth = useMemo(() => Math.min(window.innerWidth * 0.24, 260), []);
     const cardHeight = useMemo(() => Math.round(cardWidth * 1.5), [cardWidth]);
+
+    const typeTitleRef = useRef<HTMLDivElement>(null);
+    const typeBodyRef = useRef<HTMLDivElement>(null);
+    const archetypeTitleRef = useRef<HTMLDivElement>(null);
+    const archetypeBodyRef = useRef<HTMLDivElement>(null);
 
     const isLastCard = cardIndex >= arcana.length - 1;
     const canGoBack = cardIndex > 0 && !isFinishing;
@@ -55,6 +61,26 @@ export default function CardStackHorizontal({ cards, onHome, onNext, onBack: _on
     const currentArchetype = currentCardIdentity ? ARCHETYPE_DATA[currentCardIdentity] : undefined;
     const compactRoleLabel = currentDescriptor.label.replace(/^Your\s+/i, '');
 
+    // Fit each panel's title and body text within its box. Re-run whenever the
+    // displayed content changes (card change / flip) or the window is resized.
+    useLayoutEffect(() => {
+        textfill(typeTitleRef.current, { maxFontSize: 60 });
+        textfill(typeBodyRef.current, { maxFontSize: 26 });
+        textfill(archetypeTitleRef.current, { maxFontSize: 60 });
+        textfill(archetypeBodyRef.current, { maxFontSize: 26 });
+    }, [cardIndex, topCardFlipped, currentDescriptor, currentArchetype]);
+
+    useEffect(() => {
+        const onResize = () => {
+            textfill(typeTitleRef.current, { maxFontSize: 60 });
+            textfill(typeBodyRef.current, { maxFontSize: 26 });
+            textfill(archetypeTitleRef.current, { maxFontSize: 60 });
+            textfill(archetypeBodyRef.current, { maxFontSize: 26 });
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
     return (
         <div className={`card-stack-horizontal${isFinishing ? ' is-finishing' : ''}`}>
             <CardSequenceBackground objectPosition="center" />
@@ -63,10 +89,14 @@ export default function CardStackHorizontal({ cards, onHome, onNext, onBack: _on
                 <div className="content">
                     <div className="stack-info-layout">
                         <div className="type-info-panel">
-                            <p className="panel-title">{compactRoleLabel}</p>
-                            {currentDescriptor.lines.map((line, i) => (
-                                <p key={`type-line-${i}`} className="panel-body">{line}</p>
-                            ))}
+                            <div className="panel-title-box" ref={typeTitleRef}>
+                                <p className="panel-title">{compactRoleLabel}</p>
+                            </div>
+                            <div className="panel-body-box" ref={typeBodyRef}>
+                                {currentDescriptor.lines.map((line, i) => (
+                                    <p key={`type-line-${i}`} className="panel-body">{line}</p>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="stack-region" style={{ width: cardWidth, height: cardHeight + 24 }}>
@@ -90,12 +120,16 @@ export default function CardStackHorizontal({ cards, onHome, onNext, onBack: _on
                         </div>
 
                         <div className="archetype-info-panel">
-                            <p className="panel-title">{currentArchetype?.title ?? 'Archetype'}</p>
-                            <p className="panel-body">
-                                {topCardFlipped
-                                    ? (currentArchetype?.body ?? 'No archetype data for this card.')
-                                    : 'Flip the current card to reveal archetype details.'}
-                            </p>
+                            <div className="panel-title-box" ref={archetypeTitleRef}>
+                                <p className="panel-title">{currentArchetype?.title ?? 'Archetype'}</p>
+                            </div>
+                            <div className="panel-body-box" ref={archetypeBodyRef}>
+                                <p className="panel-body">
+                                    {topCardFlipped
+                                        ? (currentArchetype?.body ?? 'No archetype data for this card.')
+                                        : 'Flip the current card to reveal archetype details.'}
+                                </p>
+                            </div>
                         </div>
                     </div>
 

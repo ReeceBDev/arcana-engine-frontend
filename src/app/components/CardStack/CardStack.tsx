@@ -26,6 +26,12 @@ const TOSS_EASE = 'cubic-bezier(0.2, 0.85, 0.22, 1)';
 const RELAXED_STACK_DURATION_MS = 820;
 const TOSS_DURATION_MS = 760;
 
+// Natural hand-shuffled look for cards resting behind the top card.
+const STACK_STAGGER_STEP = 5;    // px each card peeks down behind the top card
+const STACK_X_DRIFT = 1.5;       // px of horizontal fan per depth step
+const STACK_TWIST_DEG = 1.1;     // deg of rotation twist per depth step
+const STACK_MAX_DEPTH = 3;       // cap so deep cards don't drift too far
+
 export default function CardStack({
     arcana,
     selectedArcanaIndex,
@@ -148,9 +154,16 @@ export default function CardStack({
                             rotateDeg = 0;
                         }
                     } else {
-                        translateX = 0;
-                        translateY = 0;
-                        rotateDeg = 0;
+                        // Cards resting in the stack behind the top card get a
+                        // subtle, deterministic stagger/twist so they read as a
+                        // natural shuffled deck rather than a single flat card.
+                        const depthFromTop = index - selectedArcanaIndex;
+                        const magnitude = Math.min(depthFromTop, STACK_MAX_DEPTH);
+                        const twistSign = depthFromTop % 2 === 0 ? 1 : -1;
+
+                        translateX = twistSign * magnitude * STACK_X_DRIFT;
+                        translateY = magnitude * STACK_STAGGER_STEP;
+                        rotateDeg = twistSign * magnitude * STACK_TWIST_DEG;
                     }
                 }
 
@@ -182,6 +195,14 @@ export default function CardStack({
                     ? TOSS_EASE
                     : (initialAnimationDone ? RELAXED_EASE : ENTRY_EASE);
 
+                // Depth-based drop shadow: the top card casts onto the cards
+                // behind, and each deeper card gains a touch more separation.
+                const shadowDepth = Math.min(Math.max(index - selectedArcanaIndex, 0), STACK_MAX_DEPTH);
+                const shadowOffsetY = 4 + shadowDepth * 2;
+                const shadowBlur = 8 + shadowDepth * 5;
+                const shadowAlpha = Math.min(0.4 + shadowDepth * 0.06, 0.6);
+                const dropShadow = `drop-shadow(0 ${shadowOffsetY}px ${shadowBlur}px rgba(0,0,0,${shadowAlpha.toFixed(2)}))`;
+
                 return (
                     <FlippableCard
                         key={`${card}-${index}`}
@@ -193,6 +214,7 @@ export default function CardStack({
                         translateY={translateY}
                         rotateDeg={rotateDeg}
                         zIndex={arcana.length - index}
+                        dropShadow={dropShadow}
                         transitionDurationMs={transitionDurationMs}
                         transitionDelayMs={transitionDelayMs}
                         transitionEasing={transitionEasing}
