@@ -1,0 +1,46 @@
+/*
+ * CardSplay — face-down deck fan rendered behind a preview card.
+ *
+ * Default state: DESPAWNED. Cards collapse to the centre (spread/lift 0) and
+ * fade to opacity 0, fully hidden behind the top card. Consumers opt-in to the
+ * fan by setting `--splay-spread`/`--splay-lift` and fading `.splay-card` in on
+ * hover (horizontal) or .active (vertical) — identical behaviour in both.
+ */
+
+.card-splay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.splay-card {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0d0d1a;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+    filter: brightness(0.45) saturate(0.85);
+    /* Despawned by default: invisible and collapsed to the centre, fully
+       hidden behind the top card. Consumers fan them out + fade them in on
+       hover (horizontal) or .active (vertical). */
+    opacity: 0;
+    transform-origin: bottom center;
+    will-change: transform;
+    transition: transform 0.35s ease, filter 0.35s ease, opacity 0.35s ease;
+
+    /*
+     * Fan math. `--t` (-1..1) is the card's normalised slot; outer cards rotate
+     * and lift more, arcing up from a bottom pivot like a hand of cards.
+     * Defaults of 0 spread / 0 lift collapse every card to the centre so the
+     * whole fan is tucked directly behind the top card (despawned).
+     */
+    transform:
+        rotate(calc(var(--t, 0) * var(--splay-spread, 0) * 1deg))
+        translateY(calc((1 + var(--t, 0) * var(--t, 0)) * var(--splay-lift, 0%)));
+}

@@ -4,6 +4,7 @@ import { gsap } from 'gsap';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import { TopNavBarVertical } from '../../components/CardSequenceBottomNavBar/TopNavBar';
 import CardFace from '../../components/ArcanaCard/CardFace';
+import CardSplay from '../../components/CardSplay/CardSplay';
 import { ArcanaIdentities } from '../../constants/arcana-identities';
 import type { CardData } from '../../../types/card-data';
 import type { PageIdentity } from '../../../types/page-identity';
@@ -14,15 +15,21 @@ type CardCategory = {
     cards: CardData[];
     stackPage: PageIdentity;
     editPage: PageIdentity;
+    /** Overrides the default hasCards ? stackPage : editPage rule. */
+    resolveTarget?: () => PageIdentity;
 };
 
 export default function PractitionerViewVertical({
+    birthTime,
+    birthLocation,
     birthdateCards,
     nameCards,
     growthCards,
     onHome,
     navigate,
 }: {
+    birthTime: string;
+    birthLocation: string;
     birthdateCards: CardData[];
     nameCards: CardData[];
     growthCards: CardData[];
@@ -56,10 +63,19 @@ export default function PractitionerViewVertical({
             label: 'Growth Cards',
             editLabel: 'Edit Time',
             cards: growthCards,
-            stackPage: 'growth-card-stack',
+            stackPage: 'growth-card-carousel',
             editPage: 'nativety-time-entry',
+            // Resume the workflow at the step after the last completed one:
+            //   birthLocation set  -> growth-card carousel
+            //   birthTime set      -> birth-location-entry
+            //   neither            -> nativety-time-entry
+            resolveTarget: () => birthLocation
+                ? 'growth-card-carousel'
+                : birthTime
+                    ? 'birth-location-entry'
+                    : 'nativety-time-entry',
         },
-    ], [birthdateCards, nameCards, growthCards]);
+    ], [birthdateCards, nameCards, growthCards, birthTime, birthLocation]);
 
     const goTo = useCallback((index: number) => {
         const clamped = Math.max(0, Math.min(index, categories.length - 1));
@@ -86,6 +102,11 @@ export default function PractitionerViewVertical({
         gsap.fromTo(el, { scale: 0.92, opacity: 0.6 }, {
             scale: 1, opacity: 1, duration: 0.35, ease: 'power2.out'
         });
+        return () => {
+            gsap.to(el, {
+                scale: 0.82, opacity: 0.45, duration: 0.35, ease: 'power2.out'
+            });
+        };
     }, []);
 
     return (
@@ -107,7 +128,7 @@ export default function PractitionerViewVertical({
                                 className="carousel-track"
                                 ref={trackRef}
                                 style={{
-                                    transform: `translateX(${-activeIndex * (cardWidth + window.innerWidth * 0.04)}px)`,
+                                    transform: `translateX(${((categories.length - 1) / 2 - activeIndex) * (cardWidth + window.innerWidth * 0.04)}px)`,
                                 }}
                             >
                                 {categories.map((cat, i) => {
@@ -127,18 +148,27 @@ export default function PractitionerViewVertical({
                                             <p className="card-label">{cat.label}</p>
 
                                             <div
-                                                className="card-preview"
-                                                onClick={() => navigate(hasCards ? cat.stackPage : cat.editPage)}
+                                                className="card-preview-wrap"
+                                                onClick={() => navigate(cat.resolveTarget
+                                                    ? cat.resolveTarget()
+                                                    : (hasCards ? cat.stackPage : cat.editPage))}
                                             >
-                                                <div className="card-overlay-label">
-                                                    <span>{cat.label}</span>
-                                                </div>
-                                                <CardFace
-                                                    cardId={lastCard ? ArcanaIdentities[lastCard.card] : ArcanaIdentities.THELEMA}
+                                                <CardSplay
+                                                    count={cat.cards.length - 1}
                                                     cardWidth={cardWidth}
                                                     cardHeight={cardHeight}
-                                                    isOptimised
                                                 />
+                                                <div className="card-preview">
+                                                    <div className="card-overlay-label">
+                                                        <span>{cat.label}</span>
+                                                    </div>
+                                                    <CardFace
+                                                        cardId={lastCard ? ArcanaIdentities[lastCard.card] : ArcanaIdentities.THELEMA}
+                                                        cardWidth={cardWidth}
+                                                        cardHeight={cardHeight}
+                                                        isOptimised
+                                                    />
+                                                </div>
                                             </div>
 
                                             <button
