@@ -42,3 +42,8 @@ ios/App/*.xcodeproj/xcuserdata/
 .parcel-cache/3f2a1bf6c4205295
 .parcel-cache/
 .parcel-cache
+
+# Aider (AI coding assistant) local artifacts
+.aider*
+.aider.input.history
+.aider-desk/

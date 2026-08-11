@@ -1,11 +1,17 @@
 @echo off
 setlocal enabledelayedexpansion
 
+:: Android Configuration !! IMPORTANT - SET AS REQUIRED FOR TESTING DEV VS PRODUCTION:
+:: NOTE: True is for dev. False is production-ready and faster. 
+set USE_GRADLE_DEBUG=FALSE
+:: NOTE: False is for dev. True is production-ready, and smaller, but might break things, and might be just unnecessary, anyway.
+set USE_GRADLE_MINIFY=TRUE
+
 :: User Configuration !! IMPORTANT - MAKE SURE YOU SET THIS EVERY TIME YOU TURN ON THE DEVICE!
+set USE_MOBILE_DEVICE=FALSE
 set USEUSB=FALSE
 set DEVICE_IP=192.168.0.20
-set DEVICE_PORT=38681
-
+set DEVICE_PORT=38587
 
 :: Variables
 for /f %%a in ('powershell -command "(Get-NetIPAddress -InterfaceAlias 'Wi-Fi' -AddressFamily IPv4).IPAddress"') do set PC_IP=%%a
@@ -49,64 +55,72 @@ if errorlevel 1 (
     exit /b 1
 )
 
-where adb >nul 2>&1
-if errorlevel 1 (
-    powershell -command "Write-Host 'adb is not installed or not on PATH. Download from https://developer.android.com/tools/releases/platform-tools' -ForegroundColor Red"
-    pause
-    exit /b 1
-)
-
-:: Check for Java (required by Android SDK / Gradle)
-if defined JAVA_HOME (
-    if not exist "%JAVA_HOME%\bin\java.exe" (
-        powershell -command "Write-Host 'JAVA_HOME is set but java.exe not found at %JAVA_HOME%\bin. Check your Java installation.' -ForegroundColor Red"
+if /I "!USE_MOBILE_DEVICE!"=="TRUE" (
+    where adb >nul 2>&1
+    if errorlevel 1 (
+        powershell -command "Write-Host 'adb is not installed or not on PATH. Download from https://developer.android.com/tools/releases/platform-tools' -ForegroundColor Red"
         pause
         exit /b 1
     )
-) else (
-    where java >nul 2>&1
-    if errorlevel 1 (
-        powershell -command "Write-Host 'Java not found. Install JDK 17+ and set JAVA_HOME.' -ForegroundColor Red"
-        pause
-        exit /b 1
+)
+
+:: Check for Java (required by Android SDK / Gradle)
+if /I "!USE_MOBILE_DEVICE!"=="TRUE" (
+    if defined JAVA_HOME (
+        if not exist "%JAVA_HOME%\bin\java.exe" (
+            powershell -command "Write-Host 'JAVA_HOME is set but java.exe not found at %JAVA_HOME%\bin. Check your Java installation.' -ForegroundColor Red"
+            pause
+            exit /b 1
+        )
+    ) else (
+        where java >nul 2>&1
+        if errorlevel 1 (
+            powershell -command "Write-Host 'Java not found. Install JDK 17+ and set JAVA_HOME.' -ForegroundColor Red"
+            pause
+            exit /b 1
+        )
     )
 )
 
 :: Check for Android SDK (required by cap run / native-run)
-set "SDK_FOUND=FALSE"
-if defined ANDROID_HOME (
-    if exist "%ANDROID_HOME%\platforms" set "SDK_FOUND=TRUE"
-)
-if "!SDK_FOUND!"=="FALSE" (
-    if defined ANDROID_SDK_ROOT (
-        if exist "%ANDROID_SDK_ROOT%\platforms" set "SDK_FOUND=TRUE"
+if /I "!USE_MOBILE_DEVICE!"=="TRUE" (
+    set "SDK_FOUND=FALSE"
+    if defined ANDROID_HOME (
+        if exist "%ANDROID_HOME%\platforms" set "SDK_FOUND=TRUE"
     )
-)
-if "!SDK_FOUND!"=="FALSE" (
-    if exist "%LOCALAPPDATA%\Android\Sdk\platforms" (
-        set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
-        set "SDK_FOUND=TRUE"
+    if "!SDK_FOUND!"=="FALSE" (
+        if defined ANDROID_SDK_ROOT (
+            if exist "%ANDROID_SDK_ROOT%\platforms" set "SDK_FOUND=TRUE"
+        )
     )
-)
-if "!SDK_FOUND!"=="FALSE" (
-    powershell -command "Write-Host 'Android SDK not found. Install Android Studio from https://developer.android.com/studio and set ANDROID_HOME to the SDK path.' -ForegroundColor Red"
-    pause
-    exit /b 1
+    if "!SDK_FOUND!"=="FALSE" (
+        if exist "%LOCALAPPDATA%\Android\Sdk\platforms" (
+            set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
+            set "SDK_FOUND=TRUE"
+        )
+    )
+    if "!SDK_FOUND!"=="FALSE" (
+        powershell -command "Write-Host 'Android SDK not found. Install Android Studio from https://developer.android.com/studio and set ANDROID_HOME to the SDK path.' -ForegroundColor Red"
+        pause
+        exit /b 1
+    )
 )
 
 :: Check gradle.properties has a valid java.home path (if set)
-set "GRADLE_PROPS=%~dp0android\gradle.properties"
-if exist "%GRADLE_PROPS%" (
-    for /f "tokens=2 delims==" %%j in ('findstr /C:"org.gradle.java.home" "%GRADLE_PROPS%" 2^>nul') do (
-        set "GRADLE_JAVA_HOME=%%j"
-    )
-    if defined GRADLE_JAVA_HOME (
-        set "GRADLE_JAVA_HOME=!GRADLE_JAVA_HOME:\\=\!"
-        if not exist "!GRADLE_JAVA_HOME!\bin\java.exe" (
-            powershell -command "Write-Host 'gradle.properties specifies org.gradle.java.home=!GRADLE_JAVA_HOME! but java.exe was not found there.' -ForegroundColor Red"
-            powershell -command "Write-Host 'Edit android\gradle.properties and update the path to your JDK installation.' -ForegroundColor Red"
-            pause
-            exit /b 1
+if /I "!USE_MOBILE_DEVICE!"=="TRUE" (
+    set "GRADLE_PROPS=%~dp0android\gradle.properties"
+    if exist "%GRADLE_PROPS%" (
+        for /f "tokens=2 delims==" %%j in ('findstr /C:"org.gradle.java.home" "%GRADLE_PROPS%" 2^>nul') do (
+            set "GRADLE_JAVA_HOME=%%j"
+        )
+        if defined GRADLE_JAVA_HOME (
+            set "GRADLE_JAVA_HOME=!GRADLE_JAVA_HOME:\\=\!"
+            if not exist "!GRADLE_JAVA_HOME!\bin\java.exe" (
+                powershell -command "Write-Host 'gradle.properties specifies org.gradle.java.home=!GRADLE_JAVA_HOME! but java.exe was not found there.' -ForegroundColor Red"
+                powershell -command "Write-Host 'Edit android\gradle.properties and update the path to your JDK installation.' -ForegroundColor Red"
+                pause
+                exit /b 1
+            )
         )
     )
 )
@@ -126,6 +140,7 @@ if not exist "%~dp0node_modules" (
 )
 
 :: Check ADB pairing
+if /I not "!USE_MOBILE_DEVICE!"=="TRUE" goto STARTUP
 :CHECK_PAIRING
 echo.
 echo Checking if device is paired and connected...
@@ -263,7 +278,8 @@ goto WEBSERVER_READY
 :WEBSERVER_READY
 echo Parcel is ready!
 set RETRY_COUNT=0
-goto CHECK_DEVICE_CONNECTION
+if /I "!USE_MOBILE_DEVICE!"=="TRUE" goto CHECK_DEVICE_CONNECTION
+goto MONITOR_LOOP
 
 
 :: Check ADB Wired Connection
@@ -332,9 +348,20 @@ goto DEPLOY
 echo.
 echo Building and deploying app...
 call npx cap sync
+
+:: Build gradle flags based on configuration
+set "CAP_BUILD_TYPE="
+set "GRADLE_EXTRA="
+if /I "!USE_GRADLE_DEBUG!"=="FALSE" (
+    set "CAP_BUILD_TYPE=--build-type release"
+)
+if /I "!USE_GRADLE_MINIFY!"=="TRUE" (
+    set "GRADLE_EXTRA=-- -PminifyEnabled=true"
+)
+
 :: call npx cap run android --target %DEVICE_IP%:%DEVICE_PORT% -l --host=%DEVICE_IP% --port %WEBSERVER_PORT%
 :: call npx cap run android --target=%DEVICE_IP%:%DEVICE_PORT%
-call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --port %PC_PORT%
+call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --port %PC_PORT% !CAP_BUILD_TYPE! !GRADLE_EXTRA!
 
 if errorlevel 1 (
     powershell -command "Write-Host 'Deployment failed.' -ForegroundColor Red"
@@ -440,6 +467,7 @@ goto WAIT_FOR_DEVTOOLS_PAGE
 powershell -command "Start-Sleep -Milliseconds %HEARTBEAT_INTERVAL%"
 
 :: Check ADB connection
+if /I not "!USE_MOBILE_DEVICE!"=="TRUE" goto MONITOR_CHECK_PARCEL
 adb devices | findstr /C:"!ADB_TARGET!" >nul
 if errorlevel 1 (
     set SYSTEMS_OK=0
@@ -454,6 +482,7 @@ if errorlevel 1 (
 )
 
 :: Check Parcel server
+:MONITOR_CHECK_PARCEL
 powershell -command "$timeout = %CONNECTION_RETRY_INTERVAL% / 1000; try { Invoke-WebRequest -Uri 'http://localhost:%WEBSERVER_PORT%' -TimeoutSec $timeout -UseBasicParsing -ErrorAction Stop | Out-Null; exit 0 } catch { exit 1 }"
 if errorlevel 1 (
     set SYSTEMS_OK=0
@@ -468,6 +497,7 @@ if errorlevel 1 (
 )
 
 :: Check if app is running
+if /I not "!USE_MOBILE_DEVICE!"=="TRUE" goto MONITOR_REPORT
 adb -s !ADB_TARGET! shell "pidof com.arcanaengine.client" >nul 2>&1
 if errorlevel 1 (
     set SYSTEMS_OK=0
@@ -506,9 +536,10 @@ REM if errorlevel 1 (
     REM goto OPEN_DEVTOOLS
 REM )
 
-if !SYSTEMS_OK! equ 0 (
-    echo !time! - All systems operational - Device: Connected, Parcel: Running, App: Active
-    set SYSTEMS_OK=1
-)
+:MONITOR_REPORT
+if not !SYSTEMS_OK! equ 0 goto MONITOR_LOOP
+if /I "!USE_MOBILE_DEVICE!"=="TRUE" echo !time! - All systems operational - Device: Connected, Parcel: Running, App: Active
+if /I not "!USE_MOBILE_DEVICE!"=="TRUE" echo !time! - All systems operational - Parcel: Running
+set SYSTEMS_OK=1
 
 goto MONITOR_LOOP

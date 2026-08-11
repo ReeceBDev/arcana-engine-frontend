@@ -1,1 +1,1 @@
-export const THOTH_BACKEND_API = "http://localhost:5096";
+export const THOTH_BACKEND_API = "http://127.0.0.1:5069";
