@@ -24,6 +24,31 @@
       height: 4vh;
       transform: rotate(184deg);
     }
+
+    & .elements-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding-right: 1vh;
+
+      & .element-button {
+        width: 3vh;
+        height: 3vh;
+        min-width: 16px;
+        min-height: 16px;
+        border-radius: 50%;
+        border: 1px solid white;
+        background: white;
+        padding: 0;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      & .element-button.selected.fire-button { background: red; }
+      & .element-button.selected.water-button { background: blue; }
+      & .element-button.selected.air-button { background: green; }
+      & .element-button.selected.earth-button { background: yellow; }
+    }
   }
 
   & .card-display-region {
@@ -45,7 +70,7 @@
       margin-top: 0%;
       margin-bottom: 8px;
       text-align: center;
-      font-size: 26px;
+      font-size: min(9vw, 30px);
       line-height: 25px;
     }
 
@@ -67,7 +92,7 @@
 
     & .minimap-carousel-banner {
       text-align: center;
-      font-size: 24px;
+      font-size: min(7vw, 30px);
       margin: 10px;
       margin-bottom: 8px;
     }
@@ -143,7 +168,7 @@
 
     & .nav-bar-instruction,
     & .switch-arcana {
-      font-size: 26px;
+      font-size: min(7vw, 30px);
       color: hsl(0, 0%, 85%);
       text-align: center;
 

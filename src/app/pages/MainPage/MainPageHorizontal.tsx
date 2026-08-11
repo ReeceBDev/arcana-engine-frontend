@@ -15,7 +15,7 @@ export default function MainMenuHorizontal({ navigate, resetWorkflow, hasNewPrac
     return (
         <div className="main-page-horizontal">
             <CardSequenceBackground zIndex={0} />
-            <FallingCards fallDuration={1}/>
+            <FallingCards fallDuration={3}/>
             <div className="header-text-container">
                 <div className="crowley-container">
                     <p className="text-crowley">Alastair Crowley's</p>

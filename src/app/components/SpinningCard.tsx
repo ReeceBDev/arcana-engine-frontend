@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import CardFace from "./ArcanaCard/CardFace";
 import { ArcanaIdentities, type ArcanaIdentity } from "../constants/arcana-identities";
+import { ARCANA_IMAGE_URI } from "../constants/arcana-images";
 
 gsap.registerPlugin(CustomEase);
 
@@ -29,19 +30,20 @@ export default function SpinningCard({ height, width }: { height?: number, width
                 rotationY: 90,
                 duration: 2.8,
                 ease: "cardSpinDramatic",
-                onStart: () => setSelectedId(nextFrontIdRef.current)
+                onStart: () => {
+                    setSelectedId(nextFrontIdRef.current);
+                    const nextId = randomCard();
+                    const nextUri = ARCANA_IMAGE_URI[ArcanaIdentities[nextId]][0].uri;
+                    new Image().src = nextUri;
+                    nextFrontIdRef.current = nextId;
+                    console.debug("SpinningCard: preloaded the next card image during front segment. Next id:", nextId, " with URI:", nextUri);
+                }
             })
             .fromTo(".animated-card", { rotationY: 90 }, {
                 rotationY: 270,
                 duration: 0.6,
                 ease: "sine.inOut",
-                onStart: () => {
-                    setSelectedId('BACK' as ArcanaIdentity);
-                    const nextId = randomCard();
-                    new Image().src = String(ArcanaIdentities[nextId]);
-                    nextFrontIdRef.current = nextId;
-                    console.debug("SpinningCard: preloaded the next card image. Next id:", nextId, " with URI:", ArcanaIdentities[nextId]);
-                },
+                onStart: () => setSelectedId('BACK' as ArcanaIdentity),
             })
     }, { scope: carouselRef });
     return (

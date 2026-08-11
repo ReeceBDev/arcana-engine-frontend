@@ -29,7 +29,7 @@ export default function MainMenuVertical({ navigate, resetWorkflow, hasNewPracti
     return (
         <div className="main-page-vertical">
             <CardSequenceBackground zIndex={0} />
-            <FallingCards maxCards={5} spawnChance={0.1} spawnRate={0.5} fallDuration={4} />
+            <FallingCards maxCards={7} spawnChance={0.2} spawnRate={0.5} fallDuration={4} />
             <div className="header-text-container">
                 <div className="crowley-container">
                     <p className="text-crowley">Alastair Crowley's</p>

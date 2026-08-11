@@ -136,7 +136,7 @@
                  margin-top: 0%;
                  margin-bottom: -10px;
                  text-align: center;
-                 font-size: 20px;
+                 font-size: min(3vw, 25px);
                  line-height: 20px;
                  color: white;
              }
@@ -192,7 +192,58 @@
              margin-inline: -10px;
              margin-bottom: 0px;
              margin-block: 0px;
+             margin-right: 1vw;
 
+         & .nav-bar-instruction,
+         & .switch-arcana {
+             font-size: clamp(20px, 4.5vw, 35px);
+             color: hsl(0, 0%, 85%);
+             text-align: center;
+
+             animation: white-pulsating-glow 3s ease-in-out infinite;
+         }
+         }
+
+        & .switch-to-arcana-text-container-small {
+             line-height: 20px;
+             margin-top: 0px;
+             padding-top: 0px;
+             margin-inline: -10px;
+             margin-bottom: 0px;
+             margin-block: 0px;
+             margin-right: 1vw;
+         }
+
+         & .minor-arcana-controls {
+             flex: 1;
+             display: flex;
+             align-items: center;
+             gap: 2vw;
+         }
+
+         & .elements-container {
+             flex: 1;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+
+             & .element-button {
+                 width: 2.5vw;
+                 height: 2.5vw;
+                 min-width: 16px;
+                 min-height: 16px;
+                 border-radius: 50%;
+                 border: 1px solid white;
+                 background: white;
+                 padding: 0;
+                 cursor: pointer;
+                 transition: background-color 0.2s ease;
+             }
+
+             & .element-button.selected.fire-button { background: red; }
+             & .element-button.selected.water-button { background: blue; }
+             & .element-button.selected.air-button { background: green; }
+             & .element-button.selected.earth-button { background: yellow; }
          }
 
          & p {
@@ -216,8 +267,8 @@
 
          & .left-button img,
          & .right-button img {
-             width: 40vh;
-             height: 20vh;
+             width: min(16vw, 100px);
+             height: min(8vw, 50px);
              transform: rotateZ(-5deg);
          }
 
@@ -232,7 +283,7 @@
 
          & .nav-bar-instruction,
          & .switch-arcana {
-             font-size: 26px;
+             font-size: clamp(14px, 2.2vw, 30px);
              color: hsl(0, 0%, 85%);
              text-align: center;
 
@@ -245,6 +296,12 @@
 
          & .text-spacer {
              flex: 5;
+         }
+
+         &:has(.minor-arcana-controls) .spacer,
+         &:has(.minor-arcana-controls) .text-spacer {
+             flex: 0;
+             padding: 3vw;
          }
      }
  }

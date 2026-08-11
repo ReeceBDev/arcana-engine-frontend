@@ -18,7 +18,6 @@
         font-size: 2.5vh;
         line-height: 50%;
         color: white;
-        margin: 0;
         letter-spacing: -0.02em;
     }
 
@@ -31,6 +30,7 @@
         gap: 0;
         overflow: visible;
         width: 100%;
+        margin-top: 2.7vh;
 
         & .crowley-container {
             display: flex;
@@ -149,7 +149,8 @@
             }
 
             & .coloured-split {
-                margin: -0.5vh;
+                z-index: -1;
+                margin: -20px;
                 vertical-align: middle;
                 width: 20vh;
             }

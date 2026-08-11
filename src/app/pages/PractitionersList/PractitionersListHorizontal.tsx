@@ -1,4 +1,4 @@
-import '../PractitionersList/PractitionersListVertical.css';
+import './PractitionersListHorizontal.css';
 import { useState } from 'react';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import type { Practitioner } from '../../../types/practitioner';
@@ -18,6 +18,7 @@ export default function PractitionersListHorizontal({
     const [showConfirm, setShowConfirm] = useState(false);
 
     return (
+        <div className="practitioners-list-horizontal">
         <div className="practitioners-overlay">
             <CardSequenceBackground />
             <div className="practitioners-backdrop" onClick={onClose} />
@@ -60,6 +61,7 @@ export default function PractitionersListHorizontal({
                     </div>
                 </>
             )}
+        </div>
         </div>
     );
 }
