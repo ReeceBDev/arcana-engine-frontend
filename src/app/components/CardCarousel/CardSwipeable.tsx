@@ -3,23 +3,22 @@ import gsap from 'gsap';
 import { Draggable } from 'gsap/Draggable';
 import { useGSAP } from '@gsap/react';
 import CardFace from '../ArcanaCard/CardFace';
-import { ArcanaIdentities, type ArcanaIdentity } from '../../constants/arcana-identities';
+import { type ArcanaIdentityIndex } from '../../constants/arcana-identities';
 import './CardSwipeable.css';
 import type { CarouselDraggableSnapHandle } from './CardCarouselDraggableSnapHandle';
 
 gsap.registerPlugin(useGSAP, Draggable);
 
-const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
-
 const SWIPE_THRESHOLD = 80; // Swipe threshold in pixels. Drags past this point will trigger card switch in that direction.
 const MAX_ROTATION = 15; // Max rotation in degrees at full drag
 
 interface CardSwipeableProps {
+    cardIDs: ArcanaIdentityIndex[];
     startingIndex: number;
     onIndexChange?: (index: number) => void;
 }
 
-const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ onIndexChange, startingIndex }, ref) {
+const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ cardIDs, onIndexChange, startingIndex }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [curIndex, setCurIndex] = useState(startingIndex);
@@ -27,7 +26,7 @@ const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps
     const isAnimating = useRef(false);
     const onIndexChangeRef = useRef(onIndexChange);
     const exitDirectionRef = useRef<1 | -1>(1);
-    const wrap = gsap.utils.wrap(0, cardIds.length);
+    const wrap = gsap.utils.wrap(0, cardIDs.length);
     const pendingIndexRef = useRef<number | null>(null);
     const intendedIndexRef = useRef(startingIndex); // tracks where we're heading
 
@@ -50,8 +49,8 @@ const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps
         if (!card) return;
 
         let diff = targetIndex - indexRef.current;
-        if (Math.abs(diff) > cardIds.length / 2) {
-            diff -= Math.sign(diff) * cardIds.length;
+        if (Math.abs(diff) > cardIDs.length / 2) {
+            diff -= Math.sign(diff) * cardIDs.length;
         }
         const direction = diff > 0 ? 1 : -1;
         const exitX = -direction * window.innerWidth;
@@ -253,20 +252,20 @@ const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps
         });
     }, { scope: containerRef });
 
-    const cardId = cardIds[curIndex];
-    const prevId = cardIds[wrap(curIndex - 1)];
-    const nextId = cardIds[wrap(curIndex + 1)];
+    const cardId = cardIDs[curIndex];
+    const prevId = cardIDs[wrap(curIndex - 1)];
+    const nextId = cardIDs[wrap(curIndex + 1)];
 
     return (
         <div ref={containerRef} className="swipe-container">
             <div className="swipe-card peek-card peek-left">
-                <CardFace cardId={ArcanaIdentities[prevId]} />
+                <CardFace cardId={prevId} />
             </div>
             <div ref={cardRef} className="swipe-card">
-                <CardFace cardId={ArcanaIdentities[cardId]} />
+                <CardFace cardId={cardId} />
             </div>
             <div className="swipe-card peek-card peek-right">
-                <CardFace cardId={ArcanaIdentities[nextId]} />
+                <CardFace cardId={nextId} />
             </div>
         </div>
     );

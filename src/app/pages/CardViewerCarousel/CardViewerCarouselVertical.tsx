@@ -1,12 +1,18 @@
 import './CardViewerCarouselVertical.css'
 import CardCarousel from '../../components/CardCarousel/CardCarousel';
 import CardSwipeable from '../../components/CardCarousel/CardSwipeable';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import arrow from 'url:../../../assets/images/arrow.webp';
 import type { CarouselDraggableSnapHandle } from '../../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import SmallVerticalTabLine from '../../components/SmallVerticalTabLine';
 import { gsap } from 'gsap';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
+import { type ArcanaIdentityIndex } from '../../constants/arcana-identities';
+import {
+  MAJOR_ARCANA_IDS,
+  ELEMENT_ARCANA_IDS,
+  type Element,
+} from '../../constants/data/arcana-elements';
 
 const CARD_GAP_IN_PX = 10;
 const CAROUSEL_ANIMATIONS = [
@@ -14,14 +20,22 @@ const CAROUSEL_ANIMATIONS = [
     { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
 ];
 
-export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, onIndexChange }: {
+export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, onIndexChange, cardIDs: cardIDsProp = MAJOR_ARCANA_IDS }: {
   onBack?: () => void;
   startingIndex?: number;
   onIndexChange?: (index: number) => void;
+  cardIDs?: ArcanaIdentityIndex[];
 }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
   const lastSyncedIndex = useRef(startingIndex);
+
+  // Currently selected minor-arcana element. Defaults to fire. While null, the
+  // major arcana list (cardIDsProp) is shown.
+  const [selectedElement, setSelectedElement] = useState<Element | null>(null);
+  const cardIDs = selectedElement ? ELEMENT_ARCANA_IDS[selectedElement] : cardIDsProp;
+
+  const onToggleArcana = () => setSelectedElement(prev => prev === null ? 'fire' : null);
 
   const onSwipeIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
@@ -50,28 +64,42 @@ export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, 
   return (
     <div className="vertical-carousel-page">
       <CardSequenceBackground />
-      <TopNavBarRegion onBack={onBack} />
-      <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} startingIndex={startingIndex} />
-      <MinimapCarouselRegion carouselRef={smallRef} onIndexChange={onSmallIndexChange} onDragStart={onSmallDragStart} onDragComplete={onSmallDragComplete} startingIndex={startingIndex} />
-      <CarouselControls swipeRef={swipeRef} />
+      <TopNavBarRegion onBack={onBack} selectedElement={selectedElement} onSelectElement={setSelectedElement} />
+      <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} startingIndex={startingIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
+      <MinimapCarouselRegion carouselRef={smallRef} onIndexChange={onSmallIndexChange} onDragStart={onSmallDragStart} onDragComplete={onSmallDragComplete} startingIndex={startingIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
+      <CarouselControls swipeRef={swipeRef} onToggleArcana={onToggleArcana} selectedElement={selectedElement} />
     </div>
   )
 }
 
-function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
+function TopNavBarRegion({ onBack, selectedElement, onSelectElement }: {
+  onBack?: () => void;
+  selectedElement: Element | null;
+  onSelectElement: (element: Element) => void;
+}) {
   return (
     <div className="top-nav-bar-region">
       <button className="back-button" onClick={onBack}>
         <img src={arrow} alt="Back" />
       </button>
+      {selectedElement !== null && (
+        <div className="elements-container">
+          <button className={`element-button fire-button${selectedElement === 'fire' ? ' selected' : ''}`} onClick={() => onSelectElement('fire')} />
+          <button className={`element-button water-button${selectedElement === 'water' ? ' selected' : ''}`} onClick={() => onSelectElement('water')} />
+          <button className={`element-button air-button${selectedElement === 'air' ? ' selected' : ''}`} onClick={() => onSelectElement('air')} />
+          <button className={`element-button earth-button${selectedElement === 'earth' ? ' selected' : ''}`} onClick={() => onSelectElement('earth')} />
+        </div>
+      )}
     </div>
   );
 }
 
-function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex }: { 
+function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex, cardIDs, selectedElement }: { 
   swipeRef: React.RefObject<CarouselDraggableSnapHandle>, 
   onIndexChange: (index: number) => void,
-  startingIndex: number  // ← add
+  startingIndex: number,
+  cardIDs: ArcanaIdentityIndex[],
+  selectedElement: Element | null
 }) {
   return (
     <div className="card-display-region">
@@ -79,7 +107,7 @@ function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex }: {
         <p className="card-display-banner">Tap the card to Inspect it...</p>
         <div className="card-display-container">
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
-          <CardSwipeable ref={swipeRef} startingIndex={startingIndex} onIndexChange={onIndexChange} />
+          <CardSwipeable key={`${selectedElement ?? 'major'}`} ref={swipeRef} cardIDs={cardIDs} startingIndex={startingIndex} onIndexChange={onIndexChange} />
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
         </div>
       </div>
@@ -87,12 +115,14 @@ function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex }: {
   );
 }
 
-function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDragComplete, startingIndex }: {
+function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDragComplete, startingIndex, cardIDs, selectedElement }: {
   carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
   onIndexChange: (index: number) => void,
   onDragStart: (direction: 1 | -1) => void,
   onDragComplete: (index: number) => void,
-  startingIndex: number
+  startingIndex: number,
+  cardIDs: ArcanaIdentityIndex[],
+  selectedElement: Element | null
 }) {
 
   return (
@@ -100,7 +130,9 @@ function MinimapCarouselRegion({ carouselRef, onIndexChange, onDragStart, onDrag
       <p className="minimap-carousel-banner">Swipe left and right to change cards</p>
       <div className="minimap-carousel-container">
         <CardCarousel
+          key={`${selectedElement ?? 'major'}`}
           ref={carouselRef}
+          cardIDs={cardIDs}
           startingIndex={startingIndex}
           cardHeight={150}
           cardWidth={100}
@@ -133,7 +165,11 @@ function CurvedLine() {
   );
 }
 
-function CarouselControls({ swipeRef }: { swipeRef: React.RefObject<CarouselDraggableSnapHandle> }) {
+function CarouselControls({ swipeRef, onToggleArcana, selectedElement }: { 
+  swipeRef: React.RefObject<CarouselDraggableSnapHandle>,
+  onToggleArcana: () => void,
+  selectedElement: Element | null
+}) {
   const leftArrowRef = useRef(null);
   const rightArrowRef = useRef(null);
 
@@ -151,9 +187,9 @@ function CarouselControls({ swipeRef }: { swipeRef: React.RefObject<CarouselDrag
         <img ref={leftArrowRef} src={arrow} alt="Left" />
       </button>
       <div className="text-spacer" />
-      <button className="switch-to-arcana-text-container">
+      <button className="switch-to-arcana-text-container" onClick={onToggleArcana}>
         <p className="nav-bar-instruction">Tap here to Switch</p>
-        <p className="switch-arcana">to Minor arcana</p>
+        <p className="switch-arcana">to {selectedElement === null ? 'Minor' : 'Major'} arcana</p>
       </button>
       <div className="text-spacer" />
       <button className="right-button" onClick={() => { pulse(rightArrowRef); swipeRef.current?.next() }}>

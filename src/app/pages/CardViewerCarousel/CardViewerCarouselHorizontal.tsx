@@ -5,6 +5,13 @@ import arrow from 'url:../../../assets/images/arrow.webp';
 import type { CarouselDraggableSnapHandle } from '../../components/CardCarousel/CardCarouselDraggableSnapHandle';
 import { gsap } from 'gsap';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
+import { type ArcanaIdentityIndex } from '../../constants/arcana-identities';
+import {
+  MAJOR_ARCANA_IDS,
+  ELEMENT_ARCANA_IDS,
+  ELEMENT_TAGLINES,
+  type Element,
+} from '../../constants/data/arcana-elements';
 
 const CARD_GAP_IN_PX = 10;
 const CAROUSEL_ANIMATIONS = [
@@ -14,13 +21,21 @@ const CAROUSEL_ANIMATIONS = [
   { property: 'z', peak: 0, trough: -450, ease: "power1.in" },
 ];
 
-export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0, onIndexChange }: {
+export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0, onIndexChange, cardIDs: cardIDsProp = MAJOR_ARCANA_IDS }: {
   onBack?: () => void;
   startingIndex?: number;
   onIndexChange?: (index: number) => void;
+  cardIDs?: ArcanaIdentityIndex[];
 }) {
   const carouselRef = useRef<CarouselDraggableSnapHandle>(null!);
   const lastSyncedIndex = useRef(startingIndex);
+
+  // Currently selected minor-arcana element. Defaults to fire. While null, the
+  // major arcana list (cardIDsProp) is shown.
+  const [selectedElement, setSelectedElement] = useState<Element | null>(null);
+  const cardIDs = selectedElement ? ELEMENT_ARCANA_IDS[selectedElement] : cardIDsProp;
+
+  const onToggleArcana = () => setSelectedElement(prev => prev === null ? 'fire' : null);
 
   const onCarouselIndexChange = useCallback((index: number) => {
     if (lastSyncedIndex.current === index) return;
@@ -32,14 +47,20 @@ export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0,
   return (
     <div className="horizontal-carousel-page">
       <CardSequenceBackground />
-      <TopNavBarRegion onBack={onBack} />
-      <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselIndexChange} lastSyncedIndex={lastSyncedIndex} />
-      <CarouselControls carouselRef={carouselRef} />
+      <TopNavBarRegion onBack={onBack} selectedElement={selectedElement} />
+      <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselIndexChange} lastSyncedIndex={lastSyncedIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
+      <CarouselControls carouselRef={carouselRef} onToggleArcana={onToggleArcana} selectedElement={selectedElement} onSelectElement={setSelectedElement} />
     </div>
   )
 }
 
-function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
+function TopNavBarRegion({ onBack, selectedElement }: {
+  onBack?: () => void;
+  selectedElement: Element | null;
+}) {
+  const [firstLine, secondLine] = selectedElement !== null
+    ? ELEMENT_TAGLINES[selectedElement]
+    : ['The order of arcana,', 'tell of a fools journey.'];
   return (
     <div className="top-nav-bar-region">
       <button className="back-button" onClick={onBack}>
@@ -53,8 +74,8 @@ function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
 
         <div className="centre-spacer" />
         <div className="text">
-          <p className="first-child">The order of arcana,</p>
-          <p className="second-child">tell of a fools journey.</p>
+          <p className="first-child">{firstLine}</p>
+          <p className="second-child">{secondLine}</p>
         </div>
         <div className="text-spacer" />
       </div>
@@ -62,10 +83,12 @@ function TopNavBarRegion({ onBack }: { onBack?: () => void }) {
   );
 }
 
-function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex }: {
+function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex, cardIDs, selectedElement }: {
   carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
   onIndexChange: (index: number) => void,
-  lastSyncedIndex: React.RefObject<number>
+  lastSyncedIndex: React.RefObject<number>,
+  cardIDs: ArcanaIdentityIndex[],
+  selectedElement: Element | null
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
@@ -87,8 +110,9 @@ function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex }: {
         <div className="minimap-carousel-container" ref={containerRef}>
           {cardHeight !== undefined && (
             <CardCarousel
-              key={cardHeight}
+              key={`${selectedElement ?? 'major'}-${cardHeight}`}
               ref={carouselRef}
+              cardIDs={cardIDs}
               startingIndex={lastSyncedIndex.current}
               cardHeight={cardHeight}
               cardGapInPx={CARD_GAP_IN_PX}
@@ -122,7 +146,12 @@ function CurvedLine() {
   );
 }
 
-function CarouselControls({ carouselRef }: { carouselRef: React.RefObject<CarouselDraggableSnapHandle> }) {
+function CarouselControls({ carouselRef, onToggleArcana, selectedElement, onSelectElement }: {
+  carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
+  onToggleArcana: () => void,
+  selectedElement: Element | null,
+  onSelectElement: (element: Element) => void
+}) {
   const leftArrowRef = useRef(null);
   const rightArrowRef = useRef(null);
 
@@ -140,9 +169,24 @@ function CarouselControls({ carouselRef }: { carouselRef: React.RefObject<Carous
         <img ref={leftArrowRef} src={arrow} alt="Left" />
       </button>
       <div className="text-spacer" />
-      <button className="switch-to-arcana-text-container">
-        <p className="nav-bar-instruction">- Switch to Minor Arcana - </p>
-      </button>
+      {selectedElement === null ? (
+        <button className="switch-to-arcana-text-container" onClick={onToggleArcana}>
+          <p className="nav-bar-instruction">- Switch to Minor Arcana - </p>
+        </button>
+      ) : (
+        <div className="minor-arcana-controls">
+          <button className="switch-to-arcana-text-container-small" onClick={onToggleArcana}>
+            <p className="nav-bar-instruction">Major</p>
+            <p className="switch-arcana">Arcana</p>
+          </button>
+          <div className="elements-container">
+            <button className={`element-button fire-button${selectedElement === 'fire' ? ' selected' : ''}`} onClick={() => onSelectElement('fire')} />
+            <button className={`element-button water-button${selectedElement === 'water' ? ' selected' : ''}`} onClick={() => onSelectElement('water')} />
+            <button className={`element-button air-button${selectedElement === 'air' ? ' selected' : ''}`} onClick={() => onSelectElement('air')} />
+            <button className={`element-button earth-button${selectedElement === 'earth' ? ' selected' : ''}`} onClick={() => onSelectElement('earth')} />
+          </div>
+        </div>
+      )}
       <div className="text-spacer" />
       <button className="right-button" onClick={() => { pulse(rightArrowRef); carouselRef.current?.next(); }}>
         <img ref={rightArrowRef} src={arrow} alt="Right" />

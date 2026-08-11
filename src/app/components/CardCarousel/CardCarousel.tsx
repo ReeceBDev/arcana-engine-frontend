@@ -4,7 +4,7 @@ import { Draggable } from 'gsap/Draggable';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
 import { useGSAP } from '@gsap/react';
 import CardFace from '../ArcanaCard/CardFace';
-import { ArcanaIdentities, type ArcanaIdentity } from '../../constants/arcana-identities';
+import { type ArcanaIdentityIndex } from '../../constants/arcana-identities';
 import './CardCarousel.css';
 import type { CarouselDraggableSnapHandle } from './CardCarouselDraggableSnapHandle';
 import { reverseCustomEasePath } from '../../utilities/reverse-ease';
@@ -12,10 +12,10 @@ import { CustomEase } from 'gsap/CustomEase';
 
 gsap.registerPlugin(Draggable, InertiaPlugin, CustomEase);
 
-const cardIds: ArcanaIdentity[] = Object.keys(ArcanaIdentities).filter(id => id !== 'BACK') as ArcanaIdentity[];
 const CARD_SIZE_RATIO = 1.5; // height = width * 1.5
 
 interface CardCarouselProps {
+    cardIDs: ArcanaIdentityIndex[];
     cardGapInPx: number;
     startingIndex: number;
     onIndexChange?: (index: number) => void;
@@ -33,7 +33,7 @@ interface CardCarouselProps {
 }
 
 const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
-    function CarouselDraggableSnapTest({ onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, startingIndex, 
+    function CarouselDraggableSnapTest({ cardIDs, onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, startingIndex, 
         animations = [], disable3d = false, compressImages = false, deadzoneEnabled = true}, ref) {
 
         if (cardWidth === undefined && cardHeight === undefined) {
@@ -252,10 +252,10 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
         return (
             <div style={{ perspective: '800px', perspectiveOrigin: '50vw 50%', width: '100%' }}>
                 <div ref={wrapperRef} className="wrapper" data-preserve-3d={!disable3d ? "true" : undefined}>
-                    {cardIds.map((cardId, index) => (
+                    {cardIDs.map((cardId, index) => (
                         <div key={index} className="card" style={{ marginRight: cardGapInPx }}>
                             <CardFace
-                                cardId={ArcanaIdentities[cardId]}
+                                cardId={cardId}
                                 cardWidth={resolvedCardWidth}
                                 cardHeight={resolvedCardHeight}
                                 isOptimised={compressImages}
