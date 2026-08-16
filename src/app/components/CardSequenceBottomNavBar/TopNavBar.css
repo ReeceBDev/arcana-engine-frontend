@@ -1,4 +1,9 @@
-.top-nav-bar {
+/* Scoped to .vertical/.horizontal (the only variants TopNavBar.tsx renders).
+   DO NOT widen to a bare .top-nav-bar: this rule is pointer-events:none +
+   position:absolute, and any other component reusing the class name would
+   silently get an unclickable, out-of-flow nav bar (see Inspect screens). */
+.top-nav-bar.vertical,
+.top-nav-bar.horizontal {
     position: absolute;
     top: 0;
     left: 0;
@@ -6,10 +11,30 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 2vw;
     width: 100%;
     padding: 1vh 2vw;
     padding-left: 0.4vw;
     pointer-events: none;
+
+    & .back-button {
+        background: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        pointer-events: auto;
+
+        & .back-title {
+            color: white;
+            margin: 0;
+            padding-bottom: 3%;
+            opacity: 0.6;
+            letter-spacing: 0.05em;
+        }
+    }
 
     & .home-button {
         background: none;
@@ -38,6 +63,16 @@
     }
 
     &.horizontal .home-title {
+        font-size: 1.8vw;
+        margin-left: 0.4vw;
+    }
+
+    &.vertical .back-title {
+        font-size: 2vh;
+        margin-left: 2.8vw;
+    }
+
+    &.horizontal .back-title {
         font-size: 1.8vw;
         margin-left: 0.4vw;
     }
