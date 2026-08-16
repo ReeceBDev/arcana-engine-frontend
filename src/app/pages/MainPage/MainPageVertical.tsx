@@ -32,7 +32,7 @@ export default function MainMenuVertical({ navigate, resetWorkflow, hasNewPracti
             <FallingCards maxCards={7} spawnChance={0.2} spawnRate={0.5} fallDuration={4} />
             <div className="header-text-container">
                 <div className="crowley-container">
-                    <p className="text-crowley">Alastair Crowley's</p>
+                    <p className="text-crowley">Aleister Crowley's</p>
                     <div className="right-spacer" />
                 </div>
                 <p className="text-title">Thoth Tarot</p>
@@ -51,9 +51,9 @@ export default function MainMenuVertical({ navigate, resetWorkflow, hasNewPracti
                     <ColouredSplit colour={'blue'} />
                     <button onClick={() => navigate('card-finder-introduction-part-1')}>Find your Cards</button>
                     <ColouredSplit colour={'yellow'} />
-                    <button className={`practitioners-button${hasNewPractitioners ? ' practitioners-pulse' : ''}`} onClick={() => navigate('practitioners-list')}>Practitioners</button>
+                    <button className="live-astrology-button" onClick={() => navigate('live-astrology')}>Live Astrology</button>
                     <ColouredSplit colour={'green'} />
-                    <button className="faq-button" onClick={() => navigate('card-stack')}>FAQ</button>
+                    <button className={`practitioners-button${hasNewPractitioners ? ' practitioners-pulse' : ''}`} onClick={() => navigate('practitioners-list')}>Practitioners</button>
                 </div>
             </div>
         </div>

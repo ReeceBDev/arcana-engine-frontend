@@ -15,10 +15,10 @@ export default function MainMenuHorizontal({ navigate, resetWorkflow, hasNewPrac
     return (
         <div className="main-page-horizontal">
             <CardSequenceBackground zIndex={0} />
-            <FallingCards fallDuration={3}/>
+            <FallingCards maxCards={12} spawnChance={0.8} fallDuration={3} />
             <div className="header-text-container">
                 <div className="crowley-container">
-                    <p className="text-crowley">Alastair Crowley's</p>
+                    <p className="text-crowley">Aleister Crowley's</p>
                     <div className="right-spacer" />
                 </div>
                 <p className="text-title">Thoth Tarot</p>
@@ -32,9 +32,9 @@ export default function MainMenuHorizontal({ navigate, resetWorkflow, hasNewPrac
                     <ColouredSplit colour={'blue'} />
                     <button onClick={() => navigate('card-finder-introduction-part-1')}>Find your Cards</button>
                     <ColouredSplit colour={'yellow'} />
-                    <button className={`practitioners-button${hasNewPractitioners ? ' practitioners-pulse' : ''}`} onClick={() => navigate('practitioners-list')}>Practitioners</button>
+                    <button className="live-astrology-button" onClick={() => navigate('live-astrology')}>Live Astrology</button>
                     <ColouredSplit colour={'green'} />
-                    <button className="faq-button" onClick={() => navigate('card-stack')}>FAQ</button>
+                    <button className={`practitioners-button${hasNewPractitioners ? ' practitioners-pulse' : ''}`} onClick={() => navigate('practitioners-list')}>Practitioners</button>
                 </div>
             </div>
         </div>

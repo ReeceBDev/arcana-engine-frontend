@@ -1,0 +1,16 @@
+/* LiveAstrology — portrait-only rules, scoped under the unique root class.
+   Everything shared lives in LiveAstrologyShared.css. */
+
+.live-astrology-vertical {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* Portrait: the timeline gets a bit more height to breathe — three node
+   tracks + the day strip need the room (track step must stay >= node size). */
+.live-astrology-vertical .live-astro-timeline {
+    height: clamp(250px, 29vh, 320px);
+}
