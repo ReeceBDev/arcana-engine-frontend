@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Arcana Engine',
   webDir: 'dist',
   server: {
-    url: "http://192.168.0.16:5173",
+    url: "http://192.168.0.145:5173",
     cleartext: true
   }
 };

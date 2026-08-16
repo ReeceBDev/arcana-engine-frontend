@@ -2,16 +2,14 @@
 setlocal enabledelayedexpansion
 
 :: Android Configuration !! IMPORTANT - SET AS REQUIRED FOR TESTING DEV VS PRODUCTION:
-:: NOTE: True is for dev. False is production-ready and faster. 
-set USE_GRADLE_DEBUG=FALSE
 :: NOTE: False is for dev. True is production-ready, and smaller, but might break things, and might be just unnecessary, anyway.
 set USE_GRADLE_MINIFY=TRUE
 
 :: User Configuration !! IMPORTANT - MAKE SURE YOU SET THIS EVERY TIME YOU TURN ON THE DEVICE!
 set USE_MOBILE_DEVICE=FALSE
 set USEUSB=FALSE
-set DEVICE_IP=192.168.0.20
-set DEVICE_PORT=38587
+set DEVICE_IP=192.168.0.144
+set DEVICE_PORT=38923
 
 :: Variables
 for /f %%a in ('powershell -command "(Get-NetIPAddress -InterfaceAlias 'Wi-Fi' -AddressFamily IPv4).IPAddress"') do set PC_IP=%%a
@@ -349,19 +347,10 @@ echo.
 echo Building and deploying app...
 call npx cap sync
 
-:: Build gradle flags based on configuration
-set "CAP_BUILD_TYPE="
-set "GRADLE_EXTRA="
-if /I "!USE_GRADLE_DEBUG!"=="FALSE" (
-    set "CAP_BUILD_TYPE=--build-type release"
-)
-if /I "!USE_GRADLE_MINIFY!"=="TRUE" (
-    set "GRADLE_EXTRA=-- -PminifyEnabled=true"
-)
-
 :: call npx cap run android --target %DEVICE_IP%:%DEVICE_PORT% -l --host=%DEVICE_IP% --port %WEBSERVER_PORT%
 :: call npx cap run android --target=%DEVICE_IP%:%DEVICE_PORT%
-call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --port %PC_PORT% !CAP_BUILD_TYPE! !GRADLE_EXTRA!
+:: NOTE: cap run android always builds assembleDebug (Capacitor CLI has no --build-type/--release option).
+call npx cap run android --target !ADB_TARGET! --live-reload --host %PC_IP% --port %PC_PORT%
 
 if errorlevel 1 (
     powershell -command "Write-Host 'Deployment failed.' -ForegroundColor Red"
