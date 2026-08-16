@@ -1,0 +1,61 @@
+/* CorrespondenceGrid — shared component (global CSS; class names are unique to it). */
+
+.correspondence-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+}
+
+.corr-chip {
+    --corr-accent: #c8cfd8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 64px;
+    max-width: 120px;
+    flex: 1 1 72px;
+    padding: 9px 6px;
+    border-radius: 12px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%),
+        rgba(8, 14, 34, 0.55);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35),
+        inset 0 -10px 18px rgba(0, 0, 0, 0.14);
+}
+
+.corr-glyph {
+    font-size: clamp(20px, 3.4vh, 30px);
+    line-height: 1;
+    color: var(--corr-accent);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+.corr-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    text-align: center;
+}
+
+.corr-label {
+    font-family: 'Caudex', serif;
+    font-weight: 700;
+    font-size: clamp(10px, 1.5vh, 13px);
+    color: rgb(232, 236, 242);
+    line-height: 1.1;
+}
+
+.corr-sublabel {
+    font-size: clamp(8px, 1.2vh, 10.5px);
+    color: rgb(157, 164, 173);
+    line-height: 1.05;
+    letter-spacing: 0.2px;
+}
