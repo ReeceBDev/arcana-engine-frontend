@@ -1,0 +1,184 @@
+/* InspectHorizontal — scoped under .inspect-horizontal (see css-orientation-split-pattern.md). */
+
+.inspect-horizontal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    font-family: 'Caudex', serif;
+}
+
+/* Scoped as .inspect-top-bar (NOT .top-nav-bar): the shared TopNavBar.css
+   declares a global .top-nav-bar with pointer-events:none + position:absolute,
+   which made these buttons unclickable and pulled the bar out of flow. */
+.inspect-horizontal .inspect-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 18px;
+    z-index: 2;
+}
+
+.inspect-horizontal .back-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+.inspect-horizontal .back-button img {
+    width: 28px;
+    height: auto;
+    transform: rotate(189deg);
+    opacity: 0.9;
+}
+
+.inspect-horizontal .home-link {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Caudex', serif;
+    font-size: 14px;
+    color: rgb(200, 207, 216);
+    opacity: 0.8;
+}
+.inspect-horizontal .home-link:hover { opacity: 1; }
+
+.inspect-horizontal .content {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(20px, 3vw, 48px);
+    padding: 0 clamp(24px, 4vw, 64px) 18px;
+    min-height: 0;
+}
+
+.inspect-horizontal .portrait-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(6px, 1.2vw, 18px);
+}
+
+.inspect-horizontal .portrait-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inspect-horizontal .prev-card-button,
+.inspect-horizontal .next-card-button {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 12px 4px;
+    opacity: 0.9;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.inspect-horizontal .prev-card-button:active,
+.inspect-horizontal .next-card-button:active {
+    transform: scale(0.88);
+    opacity: 1;
+}
+.inspect-horizontal .prev-card-button img,
+.inspect-horizontal .next-card-button img {
+    display: block;
+    width: clamp(26px, 4.5vh, 42px);
+    height: auto;
+}
+.inspect-horizontal .prev-card-button img { transform: rotate(189deg); }
+
+.inspect-horizontal .portrait-card {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: zoom-in;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.inspect-horizontal .portrait-card:active { transform: scale(0.98); }
+.inspect-horizontal .portrait-card img { display: block; }
+
+.inspect-horizontal .info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    max-height: 100%;
+}
+
+.inspect-horizontal .inspect-title {
+    margin: 0;
+    text-align: center;
+    font-size: clamp(18px, 2.8vh, 30px);
+    font-weight: 700;
+    background: linear-gradient(90deg, #c9a84c, #f6e27a, #c9a84c);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gold-wave 6s linear infinite;
+}
+
+.inspect-horizontal .correspondences-region {
+    flex: 0 0 auto;
+}
+
+.inspect-horizontal .description-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 20px;
+    border-radius: 18px;
+    /* Liquid Glass recipe (see repo memory liquid-glass-recipe.md) */
+    background:
+        linear-gradient(135deg,
+            rgba(255, 255, 255, 0.14) 0%,
+            rgba(255, 255, 255, 0.03) 38%,
+            rgba(255, 255, 255, 0.07) 100%),
+        rgba(8, 14, 34, 0.58);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    box-shadow:
+        0 12px 36px rgba(0, 0, 0, 0.5),
+        inset 0 1.5px 1px rgba(255, 255, 255, 0.55),
+        inset 0 8px 22px rgba(255, 255, 255, 0.08),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.14),
+        inset 0 -14px 26px rgba(0, 0, 0, 0.16);
+}
+
+.inspect-horizontal .description-body {
+    margin: 0;
+    font-size: clamp(13px, 1.9vh, 17px);
+    line-height: 1.55;
+    color: rgb(210, 215, 222);
+    white-space: pre-wrap;
+}
+
+/* Fullscreen overlay */
+.inspect-horizontal .fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.86);
+    cursor: zoom-out;
+    animation: fade-in 0.2s ease-out;
+}
+
+.inspect-horizontal .fullscreen-card {
+    width: min(82vh, 60vw);
+    height: calc(min(82vh, 60vw) * 1.5);
+    max-height: 94vh;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+}

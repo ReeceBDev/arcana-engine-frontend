@@ -1,0 +1,179 @@
+/* InspectVertical — scoped under .inspect-vertical (see css-orientation-split-pattern.md). */
+
+.inspect-vertical {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    font-family: 'Caudex', serif;
+}
+
+/* Scoped as .inspect-top-bar (NOT .top-nav-bar): the shared TopNavBar.css
+   declares a global .top-nav-bar with pointer-events:none + position:absolute,
+   which made these buttons unclickable and pulled the bar out of flow. */
+.inspect-vertical .inspect-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    z-index: 2;
+}
+
+.inspect-vertical .back-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+.inspect-vertical .back-button img {
+    width: 30px;
+    height: auto;
+    transform: rotate(189deg);
+    opacity: 0.9;
+}
+
+.inspect-vertical .home-link {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Caudex', serif;
+    font-size: 14px;
+    color: rgb(200, 207, 216);
+    opacity: 0.8;
+}
+.inspect-vertical .home-link:hover { opacity: 1; }
+
+.inspect-vertical .portrait-region {
+    flex: 0 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 1;
+    min-height: 0;
+    padding: 0 8px;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.inspect-vertical .portrait-slot {
+    flex: 1 1 auto;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.inspect-vertical .prev-card-button,
+.inspect-vertical .next-card-button {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 12px 4px;
+    opacity: 0.9;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.inspect-vertical .prev-card-button:active,
+.inspect-vertical .next-card-button:active {
+    transform: scale(0.88);
+    opacity: 1;
+}
+.inspect-vertical .prev-card-button img,
+.inspect-vertical .next-card-button img {
+    display: block;
+    width: clamp(24px, 4vh, 38px);
+    height: auto;
+}
+.inspect-vertical .prev-card-button img { transform: rotate(189deg); }
+
+.inspect-vertical .portrait-card {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: zoom-in;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.inspect-vertical .portrait-card:active { transform: scale(0.98); }
+.inspect-vertical .portrait-card img { display: block; }
+
+.inspect-vertical .correspondences-region {
+    flex: 0 0 auto;
+    padding: 10px 12px 4px;
+}
+
+.inspect-vertical .description-region {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 4px 14px 18px;
+}
+
+.inspect-vertical .inspect-title {
+    margin: 4px 0 8px;
+    text-align: center;
+    font-size: clamp(17px, 2.6vh, 24px);
+    font-weight: 700;
+    background: linear-gradient(90deg, #c9a84c, #f6e27a, #c9a84c);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gold-wave 6s linear infinite;
+}
+
+.inspect-vertical .description-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 100%),
+        rgba(8, 14, 34, 0.52);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.45),
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        inset 0 -10px 18px rgba(0, 0, 0, 0.14);
+}
+
+.inspect-vertical .description-body {
+    margin: 0;
+    font-size: clamp(13px, 1.9vh, 17px);
+    line-height: 1.55;
+    color: rgb(210, 215, 222);
+    white-space: pre-wrap;
+}
+
+/* Fullscreen overlay */
+.inspect-vertical .fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.86);
+    cursor: zoom-out;
+    animation: fade-in 0.2s ease-out;
+}
+
+.inspect-vertical .fullscreen-card {
+    width: min(72vh, 92vw);
+    height: calc(min(72vh, 92vw) * 1.5);
+    max-height: 94vh;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+}

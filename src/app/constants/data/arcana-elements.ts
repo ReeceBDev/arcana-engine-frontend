@@ -1,4 +1,4 @@
-import { type ArcanaIdentityIndex } from '../arcana-identities';
+import { ArcanaIdentities, type ArcanaIdentityIndex } from '../arcana-identities';
 import { SUIT_OFFSETS } from './arcana-numbers';
 
 /**
@@ -58,3 +58,23 @@ export const ELEMENT_TAGLINES: Record<Element, [string, string]> = {
     air: ['Cutting perception,', 'in motion, fluctuation.'],
     earth: ['Divine light made', 'resolutely manifest!'],
 };
+/** The full deck chain walked by the Inspect screen's prev/next arrows:
+ *  Major Arcana (0–21), then each minor suit in canonical numeric order
+ *  (Cups 101–114, Disks 201–214, Swords 301–314, Wands 401–414), then
+ *  THELEMA (500). The card back (-1) is not part of the chain. */
+export const ALL_ARCANA_IDS: ArcanaIdentityIndex[] = [
+    ...MAJOR_ARCANA_IDS,
+    ...WATER_ARCANA_IDS,
+    ...EARTH_ARCANA_IDS,
+    ...AIR_ARCANA_IDS,
+    ...FIRE_ARCANA_IDS,
+    ArcanaIdentities.THELEMA,
+];
+
+/** Step from a card to its neighbour (±1) along ALL_ARCANA_IDS, wrapping
+ *  around at either end. Unknown ids are treated as the chain start. */
+export function stepArcanaId(cardId: number, delta: 1 | -1): ArcanaIdentityIndex {
+    const length = ALL_ARCANA_IDS.length;
+    const index = Math.max(0, ALL_ARCANA_IDS.indexOf(cardId as ArcanaIdentityIndex));
+    return ALL_ARCANA_IDS[(index + delta + length) % length] ?? ArcanaIdentities.THE_FOOL;
+}
