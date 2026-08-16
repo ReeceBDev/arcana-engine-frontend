@@ -160,6 +160,7 @@
     z-index: 10;
     display: flex;
     align-items: center;
+    gap: 1vh;
     transition: opacity 0.24s ease-out;
 }
 
@@ -216,6 +217,33 @@
 .archetype-toggle-button.is-open::before {
     background: rgba(180, 130, 240, 0.9);
     opacity: 0.9;
+}
+
+/* Inspect button — sits beside the Archetype pill, styled to match it.
+   Scoped under the vertical root because the horizontal variant defines its
+   own .card-stack-inspect-link under .card-stack-horizontal. */
+.card-stack-vertical .card-stack-inspect-link {
+    border: 1.5px solid rgba(216, 216, 216, 0.55);
+    border-radius: 999px;
+    color: white;
+    padding: 0.5vh 1.5vh;
+    font-size: clamp(12px, 1.55vh, 17px);
+    background: rgba(255, 255, 255, 0.06);
+    letter-spacing: 0.03em;
+    font-family: 'Caudex', serif;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.75;
+    white-space: nowrap;
+}
+
+.card-stack-vertical .card-stack-inspect-link:active {
+    opacity: 1;
+}
+
+.card-stack-vertical .card-stack-inspect-link.is-disabled {
+    opacity: 0.3;
+    pointer-events: none;
 }
 
 .archetype-body {

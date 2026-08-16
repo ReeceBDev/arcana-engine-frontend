@@ -6,18 +6,22 @@ import cerebus from 'url:../../../assets/images/cerebus.webp';
 import arrow from 'url:../../../assets/images/arrow.webp';
 import { TopNavBarVertical } from '../../components/CardSequenceBottomNavBar/TopNavBar';
 import CardStack from '../../components/CardStack/CardStack';
+import { CompletionRing } from '../../components/CompletionRing/CompletionRing';
 import type { CardData } from '../../../types/card-data';
+import type { ArcanaIdentity } from '../../constants/arcana-identities';
 import { ROLE_DESCRIPTORS, type RoleDescriptor } from '../../constants/data/role-descriptors';
 import { ARCHETYPE_DATA } from '../../constants/data/archetype-data';
 import { textfill } from '../../utilities/textfill';
 
-export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBack = undefined }: {
+export default function CardStackVertical({ cards, onHome, onNext, onInspect }: {
     cards: CardData[];
     onHome: () => void;
     onNext: () => void;
     onBack?: () => void;
+    onInspect?: (arcana: ArcanaIdentity) => void;
 }) {
-    const FINISH_FADE_MS = 240;
+    const RING_DRAW_MS = 1200;
+    const RING_HOLD_MS = 300;
     const arcana = cards.map(c => c.card);
     console.debug('CardStackVertical: cards received', cards.length, cards);
     const [cardIndex, setCardIndex] = useState(0);
@@ -25,6 +29,7 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
     const [isPillTextOpen, setIsPillTextOpen] = useState(false);
     const [dismissTopCardTrigger, setDismissTopCardTrigger] = useState(0);
     const [isFinishing, setIsFinishing] = useState(false);
+    const finishTimeoutRef = useRef<number | null>(null);
     const topCardFlipped = flippedCards.includes(cardIndex);
     const hasNextCard = cardIndex < arcana.length - 1;
 
@@ -55,6 +60,22 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
         ro.observe(region);
         return () => ro.disconnect();
     }, []);
+
+    // If the user navigates away (e.g. Home) while the completion ring is
+    // playing, cancel the pending screen switch so it can't fire post-unmount.
+    useEffect(() => () => {
+        if (finishTimeoutRef.current !== null) window.clearTimeout(finishTimeoutRef.current);
+    }, []);
+
+    // Start the finish sequence: play the completion ring, then switch screens
+    // once it has fully drawn. Guarded by the ref so the early off-screen
+    // callback and the later dismiss callback can't both schedule navigation
+    // (their closures may each see stale state).
+    const beginFinish = () => {
+        if (finishTimeoutRef.current !== null) return;
+        setIsFinishing(true);
+        finishTimeoutRef.current = window.setTimeout(() => onNext(), RING_DRAW_MS + RING_HOLD_MS);
+    };
 
     const cardWidth = cardSize.width;
     const cardHeight = cardSize.height;
@@ -92,14 +113,6 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
         }
     }, [cardIndex]);
 
-    // When topCardFlipped becomes true, run the pill animation
-    useEffect(() => {
-        if (topCardFlipped && !prevFlipped.current) {
-            prevFlipped.current = true;
-            runRevealAnimation();
-        }
-    }, [topCardFlipped]);
-
     function runRevealAnimation() {
         const text = archetypeRef.current;
         const archetypeButton = archetypeButtonRef.current;
@@ -129,6 +142,14 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
             ease: 'power2.out',
         }, '-=0.1');
     }
+
+    // When topCardFlipped becomes true, run the pill animation
+    useEffect(() => {
+        if (topCardFlipped && !prevFlipped.current) {
+            prevFlipped.current = true;
+            runRevealAnimation();
+        }
+    }, [topCardFlipped]);
 
     // Descriptor lines unfold FROM pill — useLayoutEffect runs before paint, no flash
     useLayoutEffect(() => {
@@ -200,6 +221,7 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
     return (
         <div className={`card-stack-vertical${isFinishing ? ' is-finishing' : ''}`}>
             <CardSequenceBackground />
+            {isFinishing && <CompletionRing durationMs={RING_DRAW_MS} />}
             <div className="top-wrapper">
                 <TopNavBarVertical onHome={onHome} />
                 <div className="top-right-action-row">
@@ -232,6 +254,16 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
                     >
                         Archetype
                     </button>
+                    <button
+                        className={`card-stack-inspect-link${topCardFlipped ? '' : ' is-disabled'}`}
+                        onClick={() => {
+                            if (!topCardFlipped || isFinishing) return;
+                            const topCard = arcana[cardIndex];
+                            if (topCard) onInspect?.(topCard);
+                        }}
+                    >
+                        Inspect
+                    </button>
                 </div>
 
                 <div className="content">
@@ -247,10 +279,12 @@ export default function CardStackVertical({ cards, onHome, onNext, onBack: _onBa
                                 cardHeight={cardHeight}
                                 dismissTopCardTrigger={dismissTopCardTrigger}
                                 onTopCardTap={handleNextCard}
+                                onTopCardOffScreen={() => {
+                                    if (isLastCard) beginFinish();
+                                }}
                                 onTopCardSwipeDismiss={() => {
                                     if (isLastCard) {
-                                        setIsFinishing(true);
-                                        window.setTimeout(() => onNext(), FINISH_FADE_MS);
+                                        beginFinish();
                                     } else if (hasNextCard) {
                                         setCardIndex(cardIndex + 1);
                                     }

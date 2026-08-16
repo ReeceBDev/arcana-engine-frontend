@@ -14,6 +14,7 @@ type CardStackProps = {
     animationConfig?: CardAnimationConfig;
     onTopCardTap?: () => void;
     onTopCardSwipeDismiss?: (direction: { x: number; y: number }) => void;
+    onTopCardOffScreen?: () => void;
     dismissTopCardTrigger?: number;
 };
 
@@ -25,6 +26,9 @@ const RELAXED_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const TOSS_EASE = 'cubic-bezier(0.2, 0.85, 0.22, 1)';
 const RELAXED_STACK_DURATION_MS = 820;
 const TOSS_DURATION_MS = 760;
+// The completion animation starts the instant the card is tossed (0ms) —
+// no waiting for the card to clear the viewport.
+const TOSS_OFF_SCREEN_MS = 0;
 
 // Natural hand-shuffled look for cards resting behind the top card.
 const STACK_STAGGER_STEP = 5;    // px each card peeks down behind the top card
@@ -41,6 +45,7 @@ export default function CardStack({
     animationConfig = FlickSnap,
     onTopCardTap,
     onTopCardSwipeDismiss,
+    onTopCardOffScreen,
     dismissTopCardTrigger = 0,
 }: CardStackProps) {
     const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
@@ -71,6 +76,8 @@ export default function CardStack({
             ...prev,
             [selectedArcanaIndex]: { x: unitX, y: unitY },
         }));
+
+        window.setTimeout(() => onTopCardOffScreen?.(), TOSS_OFF_SCREEN_MS);
 
         window.setTimeout(() => {
             onTopCardSwipeDismiss?.({ x: unitX, y: unitY });

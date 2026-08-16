@@ -1,0 +1,39 @@
+/* Full-screen overlay shown while a card stack "completes". The white ring
+   draws closed with a quick take-off / smooth landing (Goldilocks) curve:
+   cubic-bezier(0.4, 0, 0.2, 1). Draw duration is driven by the
+   --ring-duration custom property so callers can tune it per usage.
+   Nothing is dimmed, shadowed, or otherwise darkened — pure white ring
+   over the untouched page. */
+
+.completion-ring-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.completion-ring {
+    width: clamp(72px, 16vmin, 128px);
+    height: clamp(72px, 16vmin, 128px);
+    transform: rotate(-90deg);
+}
+
+/* 283 ~= 2 * PI * 45 (viewBox circle circumference) */
+.completion-ring-path {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    animation: completion-ring-draw var(--ring-duration, 1200ms) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes completion-ring-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}

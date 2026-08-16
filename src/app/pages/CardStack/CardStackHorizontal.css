@@ -203,6 +203,25 @@
                 visibility: hidden;
                 pointer-events: none;
             }
+
+            & .card-stack-inspect-link {
+                border: 2px solid rgba(255, 255, 255, 0.7);
+                border-radius: 999px;
+                color: white;
+                padding: 0.8vh 1.6vw;
+                font-size: 1.4vw;
+                background: rgba(255, 255, 255, 0.06);
+                letter-spacing: 0.03em;
+                font-family: 'Caudex', serif;
+                font-weight: bold;
+                cursor: pointer;
+                align-self: center;
+            }
+
+            & .card-stack-inspect-link.is-disabled {
+                opacity: 0.3;
+                pointer-events: none;
+            }
         }
     }
 }
