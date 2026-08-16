@@ -170,20 +170,13 @@
                                 }
                             }
 
-                            & .empty-card-placeholder {
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
-                                border: 1.5px solid rgba(255, 255, 255, 0.15);
-
-                                & span {
-                                    color: rgba(255, 255, 255, 0.35);
-                                    font-size: clamp(11px, 1.5vh, 16px);
-                                    font-family: 'Caudex', serif;
-                                    font-style: italic;
-                                }
-                        }
+                            /* Unfilled panel (fronts the Thelemic placeholder):
+                               pulse a white border glow to flag missing data.
+                               Keyframes are global in index.css — the same
+                               recipe LiveAstroTimeline uses. */
+                            &.needs-data {
+                                animation: white-border-pulsating-glow 2.4s ease-in-out infinite;
+                            }
                     }
                 }
 

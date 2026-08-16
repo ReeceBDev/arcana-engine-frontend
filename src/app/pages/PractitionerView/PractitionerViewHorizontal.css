@@ -4,6 +4,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* Anchor for the absolutely-positioned Growth Cards corner button. */
+    position: relative;
 
     & .top-wrapper {
         flex: 1;
@@ -51,21 +53,27 @@
                     gap: 1.2vh;
                     cursor: pointer;
 
-                    /* Hover lives on the whole .card-option (the outermost
-                       per-card box) so the glass overlay banner on the card
-                       can't swallow the hit-test. Fanning + lifting are driven
-                       from here into the wrap/children below. */
-                    &:hover .card-preview-wrap {
+                    /* Hover (desktop) AND .splayed (touch tap) live on the whole
+                       .card-option (the outermost per-card box) so the glass
+                       overlay banner on the card can't swallow the hit-test.
+                       Fanning + lifting are driven from here into the wrap /
+                       children below. The .splayed class mirrors :hover so a
+                       mobile tap fans the cards before navigation (driven by
+                       PractitionerViewHorizontal.tsx state, not :hover). */
+                    &:hover .card-preview-wrap,
+                    &.splayed .card-preview-wrap {
                         --splay-spread: 8;
                         --splay-lift: -5%;
                     }
 
-                    &:hover .splay-card {
+                    &:hover .splay-card,
+                    &.splayed .splay-card {
                         opacity: 1;
                         filter: brightness(0.6) saturate(0.9);
                     }
 
-                    &:hover .card-preview {
+                    &:hover .card-preview,
+                    &.splayed .card-preview {
                         transform: scale(1.04);
                         box-shadow: 0 6px 32px rgba(201, 168, 76, 0.35);
                     }
@@ -143,19 +151,12 @@
                                 }
                             }
 
-                            & .empty-card-placeholder {
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
-                                border: 1.5px solid rgba(255, 255, 255, 0.15);
-
-                                & span {
-                                    color: rgba(255, 255, 255, 0.35);
-                                    font-size: 1.1vw;
-                                    font-family: 'Caudex', serif;
-                                    font-style: italic;
-                                }
+                            /* Unfilled panel (fronts the Thelemic placeholder):
+                               pulse a white border glow to flag missing data.
+                               Keyframes are global in index.css — the same
+                               recipe LiveAstroTimeline uses. */
+                            &.needs-data {
+                                animation: white-border-pulsating-glow 2.4s ease-in-out infinite;
                             }
                         }
                     }
@@ -178,6 +179,94 @@
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /* Bottom-right shortcut into the Growth Cards carousel. Growth derives
+       from the birth date alone (no time/location), so unlike the panels
+       above there is no workflow gating — always open the carousel. The mini
+       card above the button is the current year's growth card, a peek at what
+       the carousel holds (without a birth date it fronts the Thelemic
+       placeholder and pulses for data). */
+    & .growth-cards-corner {
+        position: absolute;
+        bottom: 3vh;
+        right: 2vw;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1vh;
+
+        & .growth-mini-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5vh;
+            cursor: pointer;
+            transition: transform 0.25s ease;
+
+            &:hover {
+                transform: scale(1.06);
+            }
+
+            & .growth-mini-card-face {
+                border-radius: 6px;
+                overflow: hidden;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+                transition: box-shadow 0.25s ease;
+
+                /* No birth date → Thelemic placeholder: pulse for data. */
+                &.needs-data {
+                    animation: white-border-pulsating-glow 2.4s ease-in-out infinite;
+                }
+            }
+
+            &:hover .growth-mini-card-face {
+                box-shadow: 0 6px 32px rgba(201, 168, 76, 0.35);
+            }
+
+            & .growth-mini-year {
+                color: rgba(255, 255, 255, 0.75);
+                font-size: 0.9vw;
+                font-family: 'Caudex', serif;
+                font-weight: bold;
+                letter-spacing: 0.04em;
+                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+            }
+        }
+
+        & .growth-cards-corner-button {
+            cursor: pointer;
+            border: none;
+            border-radius: 999px;
+            padding: 1.2vh 1.6vw;
+            color: white;
+            font-family: 'Caudex', serif;
+            font-weight: bold;
+            font-size: 1.15vw;
+            letter-spacing: 0.04em;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+            /* Liquid glass (navy tint) — same recipe as the card banner strips. */
+            background:
+                linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.14) 0%,
+                    rgba(255, 255, 255, 0.03) 38%,
+                    rgba(255, 255, 255, 0.07) 100%),
+                rgba(8, 14, 34, 0.58);
+            backdrop-filter: blur(30px) saturate(190%);
+            -webkit-backdrop-filter: blur(30px) saturate(190%);
+            box-shadow:
+                inset 0 1.5px 1px rgba(255, 255, 255, 0.55),
+                inset 0 4px 12px rgba(255, 255, 255, 0.08),
+                inset 0 -1px 1px rgba(255, 255, 255, 0.14),
+                inset 0 -7px 14px rgba(0, 0, 0, 0.16);
+            transition: color 0.2s ease, transform 0.2s ease;
+
+            &:hover {
+                color: rgba(246, 226, 122, 0.95);
+                transform: scale(1.04);
             }
         }
     }

@@ -6,6 +6,7 @@ import { TopNavBarVertical } from '../../components/CardSequenceBottomNavBar/Top
 import CardFace from '../../components/ArcanaCard/CardFace';
 import CardSplay from '../../components/CardSplay/CardSplay';
 import { ArcanaIdentities } from '../../constants/arcana-identities';
+import { ASTROLOGICAL_HOUSE_CARDS } from '../../constants/data/astrological-houses';
 import type { CardData } from '../../../types/card-data';
 import type { PageIdentity } from '../../../types/page-identity';
 
@@ -60,20 +61,31 @@ export default function PractitionerViewVertical({
             editPage: 'name-entry',
         },
         {
-            label: 'Growth Cards',
+            label: 'Astrological Houses',
             editLabel: 'Edit Time',
-            cards: growthCards,
-            stackPage: 'growth-card-carousel',
+            // Only front the house cards once the full natal details are in —
+            // the houses reading needs BOTH birth time and birth location.
+            // Until then the panel shows the placeholder face (no fan), and
+            // resolveTarget below routes the tap to the missing workflow step.
+            cards: birthTime && birthLocation ? ASTROLOGICAL_HOUSE_CARDS : [],
+            stackPage: 'astrological-houses',
             editPage: 'nativety-time-entry',
             // Resume the workflow at the step after the last completed one:
-            //   birthLocation set  -> growth-card carousel
+            //   birthLocation set  -> astrological houses
             //   birthTime set      -> birth-location-entry
             //   neither            -> nativety-time-entry
             resolveTarget: () => birthLocation
-                ? 'growth-card-carousel'
+                ? 'astrological-houses'
                 : birthTime
                     ? 'birth-location-entry'
                     : 'nativety-time-entry',
+        },
+        {
+            label: 'Growth Cards',
+            editLabel: 'Edit Date',
+            cards: growthCards,
+            stackPage: 'growth-card-carousel',
+            editPage: 'date-selector',
         },
     ], [birthdateCards, nameCards, growthCards, birthTime, birthLocation]);
 
@@ -158,7 +170,7 @@ export default function PractitionerViewVertical({
                                                     cardWidth={cardWidth}
                                                     cardHeight={cardHeight}
                                                 />
-                                                <div className="card-preview">
+                                                <div className={`card-preview${hasCards ? '' : ' needs-data'}`}>
                                                     <div className="card-overlay-label">
                                                         <span>{cat.label}</span>
                                                     </div>
