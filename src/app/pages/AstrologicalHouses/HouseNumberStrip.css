@@ -1,0 +1,73 @@
+/* HouseNumberStrip — shared by both orientation variants of the
+   Astrological Houses page. Class names are unique to this component, so
+   global CSS leakage is not a concern. Sizing scales with vh per repo
+   convention (a horizontal strip is still height-constrained in landscape). */
+
+.house-number-strip {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2px, 0.6vw, 8px);
+    width: 100%;
+    padding: 0.6vh 2vw max(1.2vh, env(safe-area-inset-bottom));
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+
+    & .house-number-cell {
+        flex: 1 1 0;
+        max-width: 7.5vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5vh;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        padding: 0.6vh 0;
+        cursor: pointer;
+        transition: background 0.25s ease;
+
+        & .house-number-glyph {
+            font-family: 'Caudex', serif;
+            font-weight: bold;
+            font-size: clamp(13px, 2.1vh, 19px);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255, 255, 255, 0.45);
+            transition: color 0.25s ease, text-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        /* The selector: a short gold bar beneath the numeral. Only the
+           selected cell renders it; the strip itself never moves. */
+        &::after {
+            content: '';
+            width: 0;
+            height: 2px;
+            border-radius: 2px;
+            background: rgba(246, 226, 122, 0.9);
+            box-shadow: 0 0 8px rgba(245, 230, 184, 0.6);
+            transition: width 0.25s ease;
+        }
+
+        &.selected {
+            background: rgba(255, 255, 255, 0.05);
+
+            & .house-number-glyph {
+                color: #f5e6b8;
+                text-shadow: 0 0 12px rgba(245, 230, 184, 0.6);
+                transform: scale(1.15);
+            }
+
+            &::after {
+                width: min(60%, 22px);
+            }
+        }
+
+        &:hover:not(.selected) .house-number-glyph {
+            color: rgba(255, 255, 255, 0.75);
+        }
+    }
+}

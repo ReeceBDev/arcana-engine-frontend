@@ -1,0 +1,172 @@
+/* AstrologicalHousesHorizontal — landscape variant. Every rule is scoped
+   under .astrological-houses-horizontal (unique class names; Vite loads CSS
+   globally, so no selector may be shared with the vertical stylesheet).
+   Landscape layout: name header on top, card carousel left, correspondence
+   grid + description right, fixed 1–12 navigator along the bottom. */
+
+.astrological-houses-horizontal {
+    width: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & .top-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        align-items: center;
+
+        & .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-height: 0;
+            text-align: center;
+            width: 100%;
+            padding-top: 1vh;
+            animation: fade-in 0.55s ease-out forwards;
+
+            & .house-name {
+                margin: 0 0 0.8vh;
+                max-width: 80%;
+                color: white;
+                font-size: clamp(18px, 3vh, 28px);
+                font-family: 'Caudex', serif;
+                font-weight: bold;
+                letter-spacing: 0.04em;
+                background: linear-gradient(90deg, #c9a84c, #f6e27a, #c9a84c, #f6e27a);
+                background-size: 300% 100%;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                animation: fade-in 0.45s ease-out forwards, gold-wave 6s infinite linear;
+            }
+
+            & .houses-main-row {
+                flex: 1;
+                min-height: 0;
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 3vw;
+                padding-inline: 2vw;
+            }
+
+            & .houses-carousel-region {
+                position: relative;
+                flex: 0 1 auto;
+                max-width: 55%;
+                height: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                touch-action: pan-y;
+            }
+
+            & .houses-carousel-viewport {
+                position: relative;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+
+            /* The snap: all 12 cards render up front; the track centres the
+               active one via inline translateX and eases between entries. */
+            & .houses-track {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 3vw;
+                transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+
+            & .house-card {
+                flex-shrink: 0;
+                cursor: pointer;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+                transition: transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease;
+
+                &.active {
+                    transform: scale(1);
+                    opacity: 1;
+                    filter: brightness(1);
+                }
+
+                &.inactive {
+                    transform: scale(0.82);
+                    opacity: 0.45;
+                    filter: brightness(0.85);
+                }
+            }
+
+            & .house-arrow {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 20;
+                background: none;
+                border: none;
+                padding: 1vh 0.8vw;
+                cursor: pointer;
+
+                & img {
+                    width: 9vh;
+                    height: 4.5vh;
+                    transform: rotateZ(-5deg);
+                    opacity: 0.85;
+                }
+
+                &.house-arrow-left {
+                    left: 0;
+
+                    & img {
+                        transform: rotateZ(185deg);
+                    }
+                }
+
+                &.house-arrow-right {
+                    right: 0;
+
+                    & img {
+                        margin-right: -12px;
+                    }
+                }
+            }
+
+            & .house-info {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1.2vh;
+                width: min(38vw, 480px);
+                animation: fade-in 0.55s ease-out forwards;
+
+                & .house-description {
+                    margin: 0;
+                    max-width: 100%;
+                    color: rgba(255, 255, 255, 0.85);
+                    font-size: clamp(12px, 2vh, 17px);
+                    font-family: 'Caudex', serif;
+                    line-height: 1.45;
+                    letter-spacing: 0.02em;
+                    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+                }
+            }
+        }
+    }
+}
