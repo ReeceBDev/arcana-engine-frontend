@@ -21,18 +21,23 @@ const CAROUSEL_ANIMATIONS = [
   { property: 'z', peak: 0, trough: -450, ease: "power1.in" },
 ];
 
-export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0, onIndexChange, cardIDs: cardIDsProp = MAJOR_ARCANA_IDS }: {
+export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0, onIndexChange, cardIDs: cardIDsProp = MAJOR_ARCANA_IDS, onInspect }: {
   onBack?: () => void;
   startingIndex?: number;
   onIndexChange?: (index: number) => void;
   cardIDs?: ArcanaIdentityIndex[];
+  onInspect?: (cardId: ArcanaIdentityIndex, index: number, cardIDs?: ArcanaIdentityIndex[]) => void;
 }) {
   const carouselRef = useRef<CarouselDraggableSnapHandle>(null!);
   const lastSyncedIndex = useRef(startingIndex);
 
   // Currently selected minor-arcana element. Defaults to fire. While null, the
-  // major arcana list (cardIDsProp) is shown.
-  const [selectedElement, setSelectedElement] = useState<Element | null>(null);
+  // major arcana list (cardIDsProp) is shown. When remounting with an element
+  // list (e.g. returning from Inspect), restore the matching element so the
+  // tagline + element buttons stay consistent with the shown cards.
+  const [selectedElement, setSelectedElement] = useState<Element | null>(
+    (Object.keys(ELEMENT_ARCANA_IDS) as Element[]).find(el => ELEMENT_ARCANA_IDS[el] === cardIDsProp) ?? null
+  );
   const cardIDs = selectedElement ? ELEMENT_ARCANA_IDS[selectedElement] : cardIDsProp;
 
   const onToggleArcana = () => setSelectedElement(prev => prev === null ? 'fire' : null);
@@ -44,11 +49,21 @@ export default function CardViewerCarouselHorizonal({ onBack, startingIndex = 0,
     onIndexChange?.(index);
   }, [onIndexChange]);
 
+  // Cards are inspected by clicking them (see the "Tap the card to Inspect it"
+  // banner). Sync the index first so the return trip restores the clicked card.
+  const handleInspect = useCallback((index: number) => {
+    const id = cardIDs[index];
+    if (id === undefined) return;
+    lastSyncedIndex.current = index;
+    onIndexChange?.(index);
+    onInspect?.(id, index, cardIDs);
+  }, [cardIDs, onIndexChange, onInspect]);
+
   return (
     <div className="horizontal-carousel-page">
       <CardSequenceBackground />
       <TopNavBarRegion onBack={onBack} selectedElement={selectedElement} />
-      <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselIndexChange} lastSyncedIndex={lastSyncedIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
+      <CarouselRegion carouselRef={carouselRef} onIndexChange={onCarouselIndexChange} lastSyncedIndex={lastSyncedIndex} cardIDs={cardIDs} selectedElement={selectedElement} onCardClick={handleInspect} />
       <CarouselControls carouselRef={carouselRef} onToggleArcana={onToggleArcana} selectedElement={selectedElement} onSelectElement={setSelectedElement} />
     </div>
   )
@@ -83,12 +98,13 @@ function TopNavBarRegion({ onBack, selectedElement }: {
   );
 }
 
-function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex, cardIDs, selectedElement }: {
+function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex, cardIDs, selectedElement, onCardClick }: {
   carouselRef: React.RefObject<CarouselDraggableSnapHandle>,
   onIndexChange: (index: number) => void,
   lastSyncedIndex: React.RefObject<number>,
   cardIDs: ArcanaIdentityIndex[],
-  selectedElement: Element | null
+  selectedElement: Element | null,
+  onCardClick: (index: number) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
@@ -117,6 +133,7 @@ function CarouselRegion({ carouselRef, onIndexChange, lastSyncedIndex, cardIDs, 
               cardHeight={cardHeight}
               cardGapInPx={CARD_GAP_IN_PX}
               onIndexChange={onIndexChange}
+              onCardClick={onCardClick}
               onDragStart={undefined}
               onDragComplete={onIndexChange}
               animations={CAROUSEL_ANIMATIONS}

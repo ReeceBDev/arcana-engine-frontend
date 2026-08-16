@@ -20,19 +20,24 @@ const CAROUSEL_ANIMATIONS = [
     { property: 'y', peak: 0, trough: -60, ease: "M0,0 C0.011,0.138 0.34,0.247 0.532,0.4 0.689,0.525 0.716,0.709 0.716,0.709 0.716,0.709 0.757,1.012 1,1.025 " },
 ];
 
-export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, onIndexChange, cardIDs: cardIDsProp = MAJOR_ARCANA_IDS }: {
+export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, onIndexChange, cardIDs: cardIDsProp = MAJOR_ARCANA_IDS, onInspect }: {
   onBack?: () => void;
   startingIndex?: number;
   onIndexChange?: (index: number) => void;
   cardIDs?: ArcanaIdentityIndex[];
+  onInspect?: (cardId: ArcanaIdentityIndex, index: number, cardIDs?: ArcanaIdentityIndex[]) => void;
 }) {
   const swipeRef = useRef<CarouselDraggableSnapHandle>(null!);
   const smallRef = useRef<CarouselDraggableSnapHandle>(null!);
   const lastSyncedIndex = useRef(startingIndex);
 
   // Currently selected minor-arcana element. Defaults to fire. While null, the
-  // major arcana list (cardIDsProp) is shown.
-  const [selectedElement, setSelectedElement] = useState<Element | null>(null);
+  // major arcana list (cardIDsProp) is shown. When remounting with an element
+  // list (e.g. returning from Inspect), restore the matching element so the
+  // element buttons stay consistent with the shown cards.
+  const [selectedElement, setSelectedElement] = useState<Element | null>(
+    (Object.keys(ELEMENT_ARCANA_IDS) as Element[]).find(el => ELEMENT_ARCANA_IDS[el] === cardIDsProp) ?? null
+  );
   const cardIDs = selectedElement ? ELEMENT_ARCANA_IDS[selectedElement] : cardIDsProp;
 
   const onToggleArcana = () => setSelectedElement(prev => prev === null ? 'fire' : null);
@@ -61,11 +66,21 @@ export default function CardViewerCarouselVertical({ onBack, startingIndex = 0, 
     swipeRef.current?.toIndex(index);
   }, []);
 
+  // Cards are inspected by tapping them (see the "Tap the card to Inspect it"
+  // banner). Sync the index first so the return trip restores the tapped card.
+  const handleInspect = useCallback((index: number) => {
+    const id = cardIDs[index];
+    if (id === undefined) return;
+    lastSyncedIndex.current = index;
+    onIndexChange?.(index);
+    onInspect?.(id, index, cardIDs);
+  }, [cardIDs, onIndexChange, onInspect]);
+
   return (
     <div className="vertical-carousel-page">
       <CardSequenceBackground />
       <TopNavBarRegion onBack={onBack} selectedElement={selectedElement} onSelectElement={setSelectedElement} />
-      <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} startingIndex={startingIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
+      <CardDisplayRegion swipeRef={swipeRef} onIndexChange={onSwipeIndexChange} onCardTap={handleInspect} startingIndex={startingIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
       <MinimapCarouselRegion carouselRef={smallRef} onIndexChange={onSmallIndexChange} onDragStart={onSmallDragStart} onDragComplete={onSmallDragComplete} startingIndex={startingIndex} cardIDs={cardIDs} selectedElement={selectedElement} />
       <CarouselControls swipeRef={swipeRef} onToggleArcana={onToggleArcana} selectedElement={selectedElement} />
     </div>
@@ -94,9 +109,10 @@ function TopNavBarRegion({ onBack, selectedElement, onSelectElement }: {
   );
 }
 
-function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex, cardIDs, selectedElement }: { 
+function CardDisplayRegion({ swipeRef, onIndexChange, onCardTap, startingIndex, cardIDs, selectedElement }: { 
   swipeRef: React.RefObject<CarouselDraggableSnapHandle>, 
   onIndexChange: (index: number) => void,
+  onCardTap: (index: number) => void,
   startingIndex: number,
   cardIDs: ArcanaIdentityIndex[],
   selectedElement: Element | null
@@ -107,7 +123,7 @@ function CardDisplayRegion({ swipeRef, onIndexChange, startingIndex, cardIDs, se
         <p className="card-display-banner">Tap the card to Inspect it...</p>
         <div className="card-display-container">
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
-          <CardSwipeable key={`${selectedElement ?? 'major'}`} ref={swipeRef} cardIDs={cardIDs} startingIndex={startingIndex} onIndexChange={onIndexChange} />
+          <CardSwipeable key={`${selectedElement ?? 'major'}`} ref={swipeRef} cardIDs={cardIDs} startingIndex={startingIndex} onIndexChange={onIndexChange} onCardTap={onCardTap} />
           <SmallVerticalTabLine horizontalPadding={7} colour={'white'} />
         </div>
       </div>

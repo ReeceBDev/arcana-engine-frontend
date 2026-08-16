@@ -16,15 +16,19 @@ interface CardSwipeableProps {
     cardIDs: ArcanaIdentityIndex[];
     startingIndex: number;
     onIndexChange?: (index: number) => void;
+    /** Fires when the front card is tapped (press without a drag). */
+    onCardTap?: (index: number) => void;
 }
 
-const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ cardIDs, onIndexChange, startingIndex }, ref) {
+const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps>(function CardCarouselSwipeable({ cardIDs, onIndexChange, onCardTap, startingIndex }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [curIndex, setCurIndex] = useState(startingIndex);
     const indexRef = useRef(startingIndex);
     const isAnimating = useRef(false);
     const onIndexChangeRef = useRef(onIndexChange);
+    const onCardTapRef = useRef(onCardTap);
+    onCardTapRef.current = onCardTap;
     const exitDirectionRef = useRef<1 | -1>(1);
     const wrap = gsap.utils.wrap(0, cardIDs.length);
     const pendingIndexRef = useRef<number | null>(null);
@@ -248,6 +252,17 @@ const CardSwipeable = forwardRef<CarouselDraggableSnapHandle, CardSwipeableProps
                         ease: 'elastic.out(1, 0.5)'
                     });
                 }
+            },
+            onClick() {
+                // GSAP only fires this when the press didn't become a drag,
+                // so this is a genuine tap rather than the end of a swipe.
+                if (isAnimating.current) return;
+                // Ignore taps that landed outside the card itself (e.g. on the
+                // decorative side rails inside the shared trigger element).
+                const target = (this as any).event?.target as Node | undefined;
+                const card = cardRef.current;
+                if (card && target && !card.contains(target)) return;
+                onCardTapRef.current?.(indexRef.current);
             }
         });
     }, { scope: containerRef });

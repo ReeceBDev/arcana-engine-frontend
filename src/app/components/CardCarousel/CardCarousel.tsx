@@ -23,6 +23,8 @@ interface CardCarouselProps {
     cardHeight?: number;
     onDragStart?: (direction: 1 | -1) => void;
     onDragComplete?: (index: number) => void;
+    /** Fires when a card is clicked (after the snap-to-index behaviour). */
+    onCardClick?: (index: number) => void;
     animations?: (
         | { property: string; type?: 'bell'; peak: number; trough: number; ease?: string }
         | { property: string; type: 'linear'; left: number; right: number; ease?: string }
@@ -33,7 +35,7 @@ interface CardCarouselProps {
 }
 
 const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
-    function CarouselDraggableSnapTest({ cardIDs, onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, startingIndex, 
+    function CarouselDraggableSnapTest({ cardIDs, onIndexChange, cardHeight, cardWidth, cardGapInPx, onDragStart, onDragComplete, onCardClick, startingIndex, 
         animations = [], disable3d = false, compressImages = false, deadzoneEnabled = true}, ref) {
 
         if (cardWidth === undefined && cardHeight === undefined) {
@@ -53,6 +55,9 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
 
         const onDragCompleteRef = useRef(onDragComplete);
         onDragCompleteRef.current = onDragComplete;
+
+        const onCardClickRef = useRef(onCardClick);
+        onCardClickRef.current = onCardClick;
 
         const next = useCallback(() => {
             loopRef.current?.next({ duration: 0.4, ease: "power1.inOut" });
@@ -226,15 +231,11 @@ const CardCarousel = forwardRef<CarouselDraggableSnapHandle, CardCarouselProps>(
                 syncScales();
             }
 
-            cards.forEach((card, i) =>
-                card.addEventListener("click", () => {
-                    //console.log(`Carousel was Clicked by user - Heading to card ${i}`);
-                    loop.toIndex(i, { duration: 0.8, ease: 'power1.inOut' });
-                })
-            );
-
             const clickHandlers = cards.map((card, i) => {
-                const handler = () => loop.toIndex(i, { duration: 0.8, ease: 'power1.inOut' });
+                const handler = () => {
+                    loop.toIndex(i, { duration: 0.8, ease: 'power1.inOut' });
+                    onCardClickRef.current?.(i);
+                };
                 card.addEventListener("click", handler);
                 return { card, handler };
             });
