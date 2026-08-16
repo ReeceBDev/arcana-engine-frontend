@@ -30,12 +30,18 @@ export async function fetchNameReading(birthDate: string, name: string) {
     return { ...data, cards: normalizedCards };
 }
 
-export async function fetchFullReading(birthDate: string, name: string, birthTime: string, latitude: number, longitude: number) {
-    console.debug("API: fetchFullReading request:", { birthDate, name, birthTime, latitude, longitude });
+/**
+ * Full reading: date, time and timezoneOffset are folded into a single
+ * ISO-8601 `birthIso` string at the API boundary (e.g. `2000-05-15T13:30:00+01:00`),
+ * which the C# backend parses via `DateTimeOffset.Parse`. Latitude/longitude
+ * are the birthplace coordinates (resolved client-side from the selected city).
+ */
+export async function fetchFullReading(birthIso: string, name: string, latitude: number, longitude: number) {
+    console.debug("API: fetchFullReading request:", { birthIso, name, latitude, longitude });
     const response = await fetch(`${THOTH_BACKEND_API}/reading/full`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ birthDate, name, birthTime, latitude, longitude })
+        body: JSON.stringify({ birthIso, name, latitude, longitude })
     });
     const data = await response.json();
     console.debug("API: Full reading:", data);
@@ -74,6 +80,21 @@ export async function fetchGrowthReading(birthDate: string, year: number, before
         targetYear: typeof data.targetYear === "number" ? data.targetYear : year,
         cards,
     };
+}
+
+/**
+ * Live Astrology timeline: current placements, upcoming/past ingresses and
+ * stations within [from, to], and aspects currently within orb. Computed by
+ * the backend via Swiss Ephemeris. Both params are ISO-8601 strings.
+ */
+export async function fetchLiveAstro(from: string, to: string) {
+    console.debug("API: fetchLiveAstro request:", { from, to });
+    const params = new URLSearchParams({ from, to });
+    const response = await fetch(`${THOTH_BACKEND_API}/astro/live?${params.toString()}`);
+    if (!response.ok) throw new Error(`Live astro request failed: ${response.status}`);
+    const data = await response.json();
+    console.debug("API: Live astro:", data);
+    return data;
 }
 
 function mapBirthdateReading(data: any) {

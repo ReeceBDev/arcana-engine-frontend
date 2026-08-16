@@ -1,5 +1,5 @@
 import './NativetyTimeEntryVertical.css';
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { BottomNavBarVertical } from '../../../components/CardSequenceBottomNavBar/CardSequenceBottomNavBar';
 import { CardSequenceBackground } from '../../../components/CardSequenceBackground/CardSequenceBackground';
 import ouroboros from 'url:../../../../assets/images/ouroboros.webp';
@@ -7,16 +7,23 @@ import { handleKeyDown, handleTimeInput } from '../../../utilities/dateInputHand
 import { TopNavBarVertical } from '../../../components/CardSequenceBottomNavBar/TopNavBar';
 
 
-export default function NativetyTimeEntryVertical({ onHome, onSkip, onNext, onBack = undefined, showNext = false, showSkip = false }: {
+export default function NativetyTimeEntryVertical({ onHome, onSkip, onNext, onBack = undefined, showNext = false, showSkip = false, onSubmit }: {
     onHome: () => void;
     onSkip: () => void;
     onNext: () => void;
     onBack?: () => void;
     showNext?: boolean;
     showSkip?: boolean;
+    onSubmit?: (time: string) => void;
 }) {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleSubmit = () => {
+        onSubmit?.(inputRef.current?.value ?? '');
+        onNext();
+    };
 
     return (
         <div className="nativety-time-entry-vertical">
@@ -26,6 +33,7 @@ export default function NativetyTimeEntryVertical({ onHome, onSkip, onNext, onBa
                 <div className="content">
                     <p className="time-prompt">What time were you born?</p>
                     <input
+                        ref={inputRef}
                         type="text"
                         className="time-input"
                         inputMode="numeric"
@@ -39,7 +47,7 @@ export default function NativetyTimeEntryVertical({ onHome, onSkip, onNext, onBa
                     )}
 
                     {showConfirmation && (
-                        <button className="continue-button" onClick={onNext}>
+                        <button className="continue-button" onClick={handleSubmit}>
                             ~ Click to Submit ~
                         </button>
                     )}

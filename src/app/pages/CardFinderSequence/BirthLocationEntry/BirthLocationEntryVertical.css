@@ -17,13 +17,15 @@
 
         & .bottom-image {
             position: absolute;
-            padding-top: 10vh;
-            margin-left: -5%;
+                bottom: 0;
+            left: 0;
+            right: 0;
+            margin-inline: auto;
             z-index: -1;
             width: 105vw;
             height: auto;
-            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 90%);
-            mask-image: linear-gradient(to bottom, black 70%, transparent 90%);
+            -webkit-mask-image: linear-gradient(to top, black 70%, transparent 90%);
+            mask-image: linear-gradient(to top, black 70%, transparent 90%);
 
             animation: fade-in 1.2s ease-in forwards;
         }
@@ -36,7 +38,7 @@
             flex: 1;
             text-align: center;
             width: 100%;
-            overflow: hidden;
+            overflow: visible;
             margin-top: 40vh;
 
             & p {
@@ -49,10 +51,18 @@
                 font-weight: bold;
             }
 
-             & .birth-input {
+            & .autocomplete {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
+            & .birth-input {
                 font-size: 3.0vh;
                 height: 5vh;
-                width: 18vh;
+                width: 42vh;
                 outline: none;
                 border: 3px solid white;
                 border-radius: 20vh;
@@ -62,6 +72,80 @@
                 margin: 1vh;
                 font-family: 'CloisterBlack', serif;
                 padding-left: 3vh;
+                padding-right: 3vh;
+                text-align: center;
+            }
+
+            & .suggestions {
+                /* .content isn't positioned, so this absolute is anchored to
+                   .top-wrapper (position: relative). Fill the band between the
+                   overlaid top nav and the input prompt (which sits at 40vh via
+                   .content margin-top). Fluid height → visible entries adapt to
+                   the available space; overflow-y:auto scrolls the rest. */
+                position: absolute;
+                top: 6vh;
+                bottom: calc(100% - 39vh);
+                left: 0;
+                right: 0;
+                margin-inline: auto;
+                width: 42vh;
+                overflow-x: hidden;
+                overflow-y: auto;
+                list-style: none;
+                padding: 0.6vh 0;
+                z-index: 5;
+
+                /* No background — suggestions float transparent over the scene. */
+                border-radius: 2vh;
+
+                /* White thin scrollbar (replaces default grey). */
+                scrollbar-width: thin;
+                scrollbar-color: white transparent;
+
+                animation: fade-in 0.15s ease-in forwards;
+
+                &::-webkit-scrollbar {
+                    width: 3px;
+                }
+
+                &::-webkit-scrollbar-thumb {
+                    background: white;
+                    border-radius: 2px;
+                }
+
+                &::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                & li {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                & button {
+                    width: 100%;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    text-align: center;
+                    color: white;
+                    padding: 1.1vh 2vh;
+                    font-size: 2.2vh;
+                    font-family: 'Caudex', serif;
+                    line-height: 1.2;
+
+                    /* Gold wave on hover — reuses the continue-button palette. */
+                    &:hover {
+                        background: linear-gradient(90deg,
+                                rgba(232,201,122,0.10) 0%,
+                                rgba(245,230,184,0.18) 44%,
+                                rgba(253,243,208,0.22) 50%,
+                                rgba(245,230,184,0.18) 56%,
+                                rgba(232,201,122,0.10) 100%);
+                        -webkit-background-clip: text;
+                        background-clip: text;
+                    }
+                }
             }
 
             & .instructions {

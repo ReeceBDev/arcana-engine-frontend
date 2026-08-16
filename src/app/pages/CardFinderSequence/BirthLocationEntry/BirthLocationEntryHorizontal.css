@@ -4,6 +4,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 
     & .top-wrapper {
         flex: 1;
@@ -36,7 +37,7 @@
             flex: 1;
             text-align: center;
             width: 100%;
-            overflow: hidden;
+            overflow: visible;
             margin-top: 35vh;
 
             animation: fade-in 0.8s ease-in forwards;
@@ -51,10 +52,18 @@
                 font-weight: bold;
             }
 
+            & .autocomplete {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
             & .birth-input {
                 font-size: 4.2vh;
                 height: 8vh;
-                width: 24vh;
+                width: 52vh;
                 outline: none;
                 border: 3px solid white;
                 border-radius: 20vh;
@@ -64,6 +73,8 @@
                 margin: 0.8vh;
                 font-family: 'CloisterBlack', serif;
                 padding-left: 6vh;
+                padding-right: 6vh;
+                text-align: center;
             }
 
             & .instructions {
@@ -109,6 +120,76 @@
                 -webkit-background-clip: text;
                 background-clip: text;
                 -webkit-text-fill-color: transparent;
+            }
+        }
+    }
+
+    /* Suggestions panel — hoisted to a direct child of the root in JSX so it
+       escapes the transformed .content ancestor (which would otherwise become
+       its containing block). Right-side, vertically centered (equal top/bottom,
+       NO transform so the fade-in animation can't clobber centering), no glass. */
+    & > .suggestions {
+        position: absolute;
+        top: 8vh;
+        bottom: 8vh;
+        /* Flex horizontally: left edge anchored just right of the input box
+           (input is 52vh wide, centered → its right edge sits at 50% + 26vh),
+           right edge flush to the screen edge. Width is implied (≈ 50vw − 27.5vh),
+           so the panel flexes with the viewport while tracking the input. */
+        left: calc(50% + 26vh + 1.5vh);
+        right: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        list-style: none;
+        margin: 0;
+        padding: 0.8vh 0;
+        z-index: 20;
+        border-radius: 2vh;
+
+        /* White thin scrollbar (replaces default grey). */
+        scrollbar-width: thin;
+        scrollbar-color: white transparent;
+
+        animation: fade-in 0.15s ease-in forwards;
+
+        &::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: white;
+            border-radius: 2px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        & li {
+            margin: 0;
+            padding: 0;
+        }
+
+        & button {
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+            padding: 1.6vh 2vh;
+            font-size: 1.6vw;
+            font-family: 'Caudex', serif;
+            line-height: 1.2;
+
+            &:hover {
+                background: linear-gradient(90deg,
+                        rgba(232,201,122,0.10) 0%,
+                        rgba(245,230,184,0.18) 44%,
+                        rgba(253,243,208,0.22) 50%,
+                        rgba(245,230,184,0.18) 56%,
+                        rgba(232,201,122,0.10) 100%);
             }
         }
     }

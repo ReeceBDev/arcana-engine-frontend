@@ -33,7 +33,7 @@ export function createPractitioner(): Practitioner {
     return practitioner;
 }
 
-export function updatePractitioner(id: string, updates: Partial<Pick<Practitioner, 'birthDate' | 'name' | 'birthTime' | 'birthLocation'>>) {
+export function updatePractitioner(id: string, updates: Partial<Pick<Practitioner, 'birthDate' | 'name' | 'birthTime' | 'birthLocation' | 'birthLatitude' | 'birthLongitude' | 'birthTimezone'>>) {
     console.debug('[Practitioners] Updating practitioner', id, 'with:', updates);
     const list = loadPractitioners();
     const idx = list.findIndex(p => p.id === id);

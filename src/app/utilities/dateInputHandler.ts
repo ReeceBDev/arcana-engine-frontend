@@ -38,7 +38,7 @@ export function handleTimeInput(
     const raw = e.currentTarget.value.replace(/\D/g, '').slice(0, 4);
 
     let value = raw;
-    if (raw.length >= 3) {
+    if (raw.length >= 2) {
         value = `${raw.slice(0, 2)} : ${raw.slice(2, 4)}`;
     }
 
@@ -79,7 +79,7 @@ export function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         }
         if (v.endsWith(' : ')) {
             e.preventDefault();
-            input.value = v.slice(0, -3);
+            input.value = v.slice(0, -4);
         }
     }
     console.debug("User is entering into text entry:", e.key);
