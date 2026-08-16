@@ -1,9 +1,10 @@
 export type PageIdentity = 
 | 'main-menu' 
 | 'deck-viewer' 
+| 'astrological-houses'
 | 'calendar' 
 | 'practitioners-list'
-| 'faq'
+| 'live-astrology'
 | 'card-finder-introduction-part-1'
 | 'card-finder-introduction-part-2'
 | 'date-selector'
@@ -13,7 +14,7 @@ export type PageIdentity =
 | 'card-stack'
 | 'birthdate-card-stack'
 | 'name-card-stack'
-| 'growth-card-stack'
 | 'growth-card-carousel'
 | 'practitioner-view'
+| 'inspect'
 ;
