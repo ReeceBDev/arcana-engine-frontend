@@ -1,8 +1,10 @@
-/* GrowthCardStackHorizontal — scoped under .growth-card-stack-horizontal so it
+/* GrowthCardStackVertical — scoped under .growth-card-stack-vertical so it
    can't collide with other pages' global CSS (repo css-orientation-split
-   convention). Uses vh units per the repo orientation convention. */
+   convention; sibling Horizontal file scopes under .growth-card-stack-horizontal).
+   The top bar rules mirror the Horizontal file (just the root class differs);
+   the snap-carousel region is new and modelled on PractitionerViewVertical. */
 
-.growth-card-stack-horizontal {
+.growth-card-stack-vertical {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -149,11 +151,78 @@
         margin-bottom: 1vh;
     }
 
-    & .growth-carousel-region {
+    /* ---- discrete swipe-and-snap carousel region (new) ----
+       Three fixed-width slots in a centered flex track keep the active card
+       dead-center at all times; prev/next slots are reserved (empty when out of
+       the life span) so the layout never shifts. Drag on the region steps one
+       year; the active card pops via GSAP (see .tsx). */
+    & .growth-snap-region {
         flex: 1;
         min-height: 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        position: relative;
+        /* allow vertical page scroll but capture horizontal swipes as steps */
+        touch-action: pan-y;
+        user-select: none;
+    }
+
+    & .growth-snap-track {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 3vw;
+    }
+
+    & .growth-snap-slot {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Reserve a stable footprint so the centered (active) slot never moves
+           even when a neighbour slot is empty at a life-span boundary. */
+        width: var(--growth-card-w, 300px);
+        height: var(--growth-card-h, 450px);
+    }
+
+    & .growth-card-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2vh;
+        transition: transform 0.35s ease, opacity 0.35s ease;
+
+        &.active {
+            transform: scale(1);
+            opacity: 1;
+            cursor: grab;
+        }
+
+        &.inactive {
+            transform: scale(0.82);
+            opacity: 0.45;
+            cursor: pointer;
+        }
+
+        & .growth-year-label {
+            margin: 0;
+            /* Match the title serif — numbers need legibility, not blackletter. */
+            font-family: 'Caudex', serif;
+            color: hsl(0, 0%, 70%);
+            font-size: clamp(14px, 2.4vh, 26px);
+            letter-spacing: 0.02em;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            transition: color 120ms ease, text-shadow 120ms ease, transform 120ms ease;
+        }
+    }
+
+    & .growth-card-option.active .growth-year-label {
+        color: #f5e6b8;
+        text-shadow: 0 0 12px rgba(245, 230, 184, 0.6);
+        transform: scale(1.12);
     }
 }

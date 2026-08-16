@@ -57,6 +57,8 @@
 }
 
 .growth-year-label {
+    /* Match the GrowthCardStack title serif — numbers need legibility, not blackletter. */
+    font-family: 'Caudex', serif;
     color: hsl(0, 0%, 70%);
     font-size: clamp(14px, 2.4vh, 26px);
     letter-spacing: 0.02em;
@@ -69,4 +71,20 @@
     color: #f5e6b8;
     text-shadow: 0 0 12px rgba(245, 230, 184, 0.6);
     transform: scale(1.12);
+}
+
+.growth-edge-marker {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    font-size: min(20px, 4vh);
+    font-style: italic;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.7;
+    white-space: nowrap;
 }

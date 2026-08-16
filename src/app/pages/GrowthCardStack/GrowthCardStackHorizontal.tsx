@@ -1,12 +1,15 @@
 import './GrowthCardStackHorizontal.css';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import arrow from 'url:../../../assets/images/arrow.webp';
-import GrowthCarousel from '../../components/GrowthCarousel/GrowthCarousel';
+import GrowthCarousel, { type GrowthCarouselHandle } from '../../components/GrowthCarousel/GrowthCarousel';
 import { fetchGrowthReading } from '../../api';
 import { growthArcanaIdentity } from '../../utilities/growth-cards';
 import { ARCANA_BY_NUMBER } from '../../constants/data/arcana-numbers';
 import type { ArcanaIdentityIndex } from '../../constants/arcana-identities';
+
+/** Hard cap on how far into the future growth cards are shown (years after birth). */
+const MAX_LIFESPAN = 125;
 
 /**
  * Growth-card "stack" — a non-looping, infinitely-growbable carousel of growth
@@ -15,23 +18,32 @@ import type { ArcanaIdentityIndex } from '../../constants/arcana-identities';
  * formula). Every other year is computed client-side via `growthArcanaIdentity`,
  * so sliding never costs another network call.
  *
- * This is the next workflow step after the nativety-time-entry page, and is also
- * reachable from PractitionerView under "Growth Cards".
+ * The top-bar arrows step the centered year (−1 / +1, clamped to the life
+ * range); the "Home" pill exits to the main menu. Also reachable from
+ * PractitionerView under "Growth Cards".
  */
 export default function GrowthCardStackHorizontal({
     birthDate,
-    onBack,
     onHome,
-    onNext,
+    onBackToPractitioner,
 }: {
     birthDate: string;
-    onBack: () => void;
     onHome: () => void;
-    onNext?: () => void;
+    onBackToPractitioner: () => void;
 }) {
     // The current real-world calendar year is the natural seed/center.
     const centerYear = new Date().getFullYear();
     const [seedError, setSeedError] = useState(false);
+
+    // Clamp scrollable years to a plausible life span: birth year (year 0 of
+    // life) through birth year + MAX_LIFESPAN.
+    const birthYear = useMemo(() => {
+        if (!birthDate) return null;
+        const y = Number(birthDate.split('-')[0]);
+        return Number.isFinite(y) ? y : null;
+    }, [birthDate]);
+    const minYear = birthYear ?? undefined;
+    const maxYear = birthYear != null ? birthYear + MAX_LIFESPAN : undefined;
 
     // ONE seed query: confirm backend + that our local formula matches it.
     useEffect(() => {
@@ -62,6 +74,34 @@ export default function GrowthCardStackHorizontal({
     }, [birthDate]);
 
     const [currentYear, setCurrentYear] = useState(centerYear);
+    const carouselRef = useRef<GrowthCarouselHandle>(null);
+
+    // Tap target for the arrow buttons. Kept in a ref (synced from onYearChange)
+    // because `currentYear` state only settles when the scroll tween completes —
+    // reading it mid-animation would re-target a stale year and swallow rapid taps.
+    const targetYearRef = useRef(centerYear);
+
+    /** Animate the carousel to `year` (clamped to the life range), tracking it as
+     *  the new tap target so consecutive arrow taps accumulate correctly. */
+    const animateToYear = useCallback((year: number) => {
+        let y = year;
+        if (minYear != null && y < minYear) y = minYear;
+        if (maxYear != null && y > maxYear) y = maxYear;
+        targetYearRef.current = y;
+        carouselRef.current?.scrollToYear(y);
+    }, [minYear, maxYear]);
+
+    /** Step the centered year by `delta` (±1 from the top-bar arrows). */
+    const stepYear = useCallback((delta: number) => {
+        animateToYear(targetYearRef.current + delta);
+    }, [animateToYear]);
+
+    // Year-change sink for drags/inertia/snap-backs: re-syncs the tap target so
+    // arrows always step from wherever the carousel actually is.
+    const handleYearChange = useCallback((year: number) => {
+        targetYearRef.current = year;
+        setCurrentYear(year);
+    }, []);
 
     // Sizing — scale with viewport height (per repo vh convention).
     const cardHeight = useMemo(() => Math.min(window.innerHeight * 0.6, 520), []);
@@ -80,8 +120,8 @@ export default function GrowthCardStackHorizontal({
             <CardSequenceBackground objectPosition="center" />
 
             <div className="growth-top-bar">
-                <button className="growth-arrow-button" onClick={onBack} aria-label="Back">
-                    <img src={arrow} alt="Back" />
+                <button className="growth-arrow-button growth-back-button" onClick={() => stepYear(-1)} aria-label="Previous year">
+                    <img src={arrow} alt="Previous year" />
                 </button>
 
                 <div className="growth-title">
@@ -91,38 +131,51 @@ export default function GrowthCardStackHorizontal({
                             ? `${currentYear} — ${currentNumber != null ? currentNumber : ''} ${currentArcana.replace(/_/g, ' ')}`
                             : `${currentYear}`}
                     </p>
-                    <button
-                        className="growth-set-range-button"
-                        onClick={onHome}
-                        title="Adjust the date range (coming soon)"
-                    >
-                        Set Date Range
-                    </button>
+                    <div className="growth-title-buttons">
+                        <div className="growth-title-buttons-row">
+                            <button className="growth-home-button" onClick={onHome}>
+                                Home
+                            </button>
+                            <button className="growth-home-button" onClick={onBackToPractitioner}>
+                                Back to Practitioner View
+                            </button>
+                        </div>
+                        <button
+                            className="growth-set-range-button"
+                            onClick={() => animateToYear(centerYear)}
+                            disabled={currentYear === centerYear}
+                            title={currentYear === centerYear ? 'Already on this year' : 'Snap back to this year'}
+                        >
+                            Back to this Year
+                        </button>
+                    </div>
                 </div>
 
                 <button
                     className="growth-arrow-button growth-forward-button"
-                    onClick={onNext}
-                    aria-label="Continue"
-                    style={{ visibility: onNext ? 'visible' : 'hidden' }}
+                    onClick={() => stepYear(1)}
+                    aria-label="Next year"
                 >
-                    <img src={arrow} alt="Continue" />
+                    <img src={arrow} alt="Next year" />
                 </button>
             </div>
 
             {seedError && (
                 <div className="growth-seed-warning">
-                    Couldn't reach the backend — showing locally computed cards.
+                    Couldn't reach the backend — showing locally computed cards. - SO WHAT BRO? This doesn't even matter, ALL cards should be computed locally!!
                 </div>
             )}
 
             <div className="growth-carousel-region">
                 <GrowthCarousel
+                    ref={carouselRef}
                     getArcanaForYear={getArcanaForYear}
                     centerYear={centerYear}
+                    minYear={minYear}
+                    maxYear={maxYear}
                     cardWidth={cardWidth}
                     cardHeight={cardHeight}
-                    onYearChange={setCurrentYear}
+                    onYearChange={handleYearChange}
                 />
             </div>
         </div>

@@ -23,6 +23,7 @@
 
 import { ARCANA_BY_NUMBER } from '../constants/data/arcana-numbers';
 import type { ArcanaIdentity, ArcanaIdentityIndex } from '../constants/arcana-identities';
+import type { CardData } from '../../types/card-data';
 
 /** Sum the decimal digits of a non-negative integer once. e.g. 2047 → 13. */
 function sumDigits(n: number): number {
@@ -79,4 +80,28 @@ export function growthArcanaIndex(birthDate: string, year: number): ArcanaIdenti
 export function growthArcanaIdentity(birthDate: string, year: number): ArcanaIdentity | null {
     const idx = growthArcanaIndex(birthDate, year);
     return idx != null ? (ARCANA_BY_NUMBER[idx] ?? null) : null;
+}
+
+/** Number of prior-year growth cards fanned behind the current year's card. */
+const PREVIEW_FILLER_YEARS = 4;
+
+/**
+ * Build a growth-card preview set for the PractitionerView: the current
+ * calendar year's growth card as the face, plus a few prior-year growth cards
+ * behind it to drive the CardSplay fan. Growth cards are unlimited (one per
+ * year), so the fillers are simply the immediately preceding years — rendered
+ * face-down by CardSplay, they exist only to make the splay animation fire.
+ *
+ * The current year is placed LAST (it is the face card; PractitionerView shows
+ * the last card). Returns [] when birthDate is empty or unparseable.
+ */
+export function buildGrowthPreviewCards(birthDate: string): CardData[] {
+    if (!birthDate) return [];
+    const currentYear = new Date().getFullYear();
+    const cards: CardData[] = [];
+    for (let year = currentYear - PREVIEW_FILLER_YEARS; year <= currentYear; year++) {
+        const card = growthArcanaIdentity(birthDate, year);
+        if (card) cards.push({ role: 'GrowthCard', card });
+    }
+    return cards;
 }
