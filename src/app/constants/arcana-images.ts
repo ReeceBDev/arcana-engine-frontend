@@ -62,10 +62,7 @@ export const ARCANA_IMAGE_URI: ArcanaImageConfig = {
     ],
     [ArcanaIdentities.ADJUSTMENT]: [
         {
-            uri: 'https://www.esotericmeanings.com/wp-content/uploads/2016/06/adjustment-thothtarotcard.jpg',    
-        },
-        {
-            uri: 'https://www.esotericmeanings.com/wp-content/uploads/2016/06/adjustment-thothtarotcard.jpg',    
+            uri: 'https://www.esotericmeanings.com/wp-content/uploads/2016/06/adjustment-thothtarotcard.jpg',
         },
     ],
     [ArcanaIdentities.THE_HERMIT]: [
@@ -102,6 +99,9 @@ export const ARCANA_IMAGE_URI: ArcanaImageConfig = {
     [ArcanaIdentities.ART]: [
         {
             uri: 'https://www.esotericmeanings.com/wp-content/uploads/2017/01/thoth-artcard-hd.jpg',
+        },
+        {
+            uri: 'https://custom-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_9000,w_1200,f_auto,q_auto/867803/836148_364141.jpg',
         }
     ],
     [ArcanaIdentities.THE_DEVIL]: [
