@@ -47,3 +47,6 @@ ios/App/*.xcodeproj/xcuserdata/
 .aider*
 .aider.input.history
 .aider-desk/
+
+# Local build/verification temp output (screenshots, dist-verify, etc.)
+.build-tmp/
