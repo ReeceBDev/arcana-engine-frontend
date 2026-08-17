@@ -170,7 +170,7 @@ export default function PractitionerViewVertical({
                                                     cardWidth={cardWidth}
                                                     cardHeight={cardHeight}
                                                 />
-                                                <div className="card-preview">
+                                                <div className={`card-preview${hasCards ? '' : ' needs-data'}`}>
                                                     <div className="card-overlay-label">
                                                         <span>{cat.label}</span>
                                                     </div>

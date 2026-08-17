@@ -45,7 +45,8 @@ export default function PractitionerViewHorizontal({
 
     // The current calendar year's growth card. buildGrowthPreviewCards places
     // it LAST (the panel convention fronts the last card). Null when there's
-    // no birth date → the mini card is hidden entirely.
+    // no birth date → the mini card fronts the Thelemic placeholder and
+    // pulses for data (see .needs-data in the stylesheet).
     const currentGrowthCard = growthCards.length > 0
         ? growthCards[growthCards.length - 1]
         : null;
@@ -132,6 +133,7 @@ export default function PractitionerViewHorizontal({
                             const lastCard = cat.cards.length > 0
                                 ? cat.cards[cat.cards.length - 1]
                                 : null;
+                            const hasCards = cat.cards.length > 0;
 
                             return (
                                 <div
@@ -152,7 +154,7 @@ export default function PractitionerViewHorizontal({
                                             cardWidth={cardWidth}
                                             cardHeight={cardHeight}
                                         />
-                                        <div className="card-preview">
+                                        <div className={`card-preview${hasCards ? '' : ' needs-data'}`}>
                                             <div className="card-overlay-label">
                                                 <span>{cat.label}</span>
                                             </div>
@@ -179,22 +181,22 @@ export default function PractitionerViewHorizontal({
             </div>
 
             <div className="growth-cards-corner">
-                {currentGrowthCard && (
-                    <div
-                        className="growth-mini-card"
-                        onClick={() => navigate('growth-card-carousel')}
-                    >
-                        <div className="growth-mini-card-face">
-                            <CardFace
-                                cardId={ArcanaIdentities[currentGrowthCard.card]}
-                                cardWidth={miniCardWidth}
-                                cardHeight={miniCardHeight}
-                                isOptimised
-                            />
-                        </div>
-                        <span className="growth-mini-year">{new Date().getFullYear()}</span>
+                <div
+                    className="growth-mini-card"
+                    onClick={() => navigate('growth-card-carousel')}
+                >
+                    <div className={`growth-mini-card-face${currentGrowthCard ? '' : ' needs-data'}`}>
+                        <CardFace
+                            cardId={currentGrowthCard
+                                ? ArcanaIdentities[currentGrowthCard.card]
+                                : ArcanaIdentities.THELEMA}
+                            cardWidth={miniCardWidth}
+                            cardHeight={miniCardHeight}
+                            isOptimised
+                        />
                     </div>
-                )}
+                    <span className="growth-mini-year">{new Date().getFullYear()}</span>
+                </div>
                 <button
                     className="growth-cards-corner-button"
                     onClick={() => navigate('growth-card-carousel')}
