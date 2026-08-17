@@ -9,7 +9,7 @@ import { CompletionRing } from '../../components/CompletionRing/CompletionRing';
 import type { CardData } from '../../../types/card-data';
 import type { ArcanaIdentity } from '../../constants/arcana-identities';
 import { ROLE_DESCRIPTORS } from '../../constants/data/role-descriptors';
-import { ARCHETYPE_DATA } from '../../constants/data/archetype-data';
+import { getArcanaDescription } from '../../constants/data/arcana-descriptions';
 import { textfill } from '../../utilities/textfill';
 
 export default function CardStackHorizontal({ cards, onHome, onNext, onInspect }: {
@@ -63,7 +63,7 @@ export default function CardStackHorizontal({ cards, onHome, onNext, onInspect }
     const currentRole = cards[cardIndex]?.role;
     const currentCardIdentity = cards[cardIndex]?.card;
     const currentDescriptor = currentRole ? ROLE_DESCRIPTORS[currentRole] : { label: 'Card Stack', lines: [] as string[] };
-    const currentArchetype = currentCardIdentity ? ARCHETYPE_DATA[currentCardIdentity] : undefined;
+    const currentArchetype = currentCardIdentity ? getArcanaDescription(currentCardIdentity) : undefined;
     const compactRoleLabel = currentDescriptor.label.replace(/^Your\s+/i, '');
 
     // Fit each panel's title and body text within its box. Re-run whenever the

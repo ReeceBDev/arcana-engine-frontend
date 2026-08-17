@@ -10,7 +10,7 @@ import { CompletionRing } from '../../components/CompletionRing/CompletionRing';
 import type { CardData } from '../../../types/card-data';
 import type { ArcanaIdentity } from '../../constants/arcana-identities';
 import { ROLE_DESCRIPTORS, type RoleDescriptor } from '../../constants/data/role-descriptors';
-import { ARCHETYPE_DATA } from '../../constants/data/archetype-data';
+import { getArcanaDescription } from '../../constants/data/arcana-descriptions';
 import { textfill } from '../../utilities/textfill';
 
 export default function CardStackVertical({ cards, onHome, onNext, onInspect }: {
@@ -202,7 +202,7 @@ export default function CardStackVertical({ cards, onHome, onNext, onInspect }: 
     const currentCardIdentity = cards[cardIndex]?.card;
     const fallbackDescriptor: RoleDescriptor = { label: 'Card Stack', lines: [] };
     const currentAstro = currentRole ? ROLE_DESCRIPTORS[currentRole] : fallbackDescriptor;
-    const currentArchetype = currentCardIdentity ? ARCHETYPE_DATA[currentCardIdentity] : undefined;
+    const currentArchetype = currentCardIdentity ? getArcanaDescription(currentCardIdentity) : undefined;
     const showingAstroText = !topCardFlipped || isPillTextOpen;
     const compactRoleLabel = currentAstro.label.replace(/^Your\s+/i, '');
 
