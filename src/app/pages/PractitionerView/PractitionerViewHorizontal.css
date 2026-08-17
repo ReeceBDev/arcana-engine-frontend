@@ -151,12 +151,19 @@
                                 }
                             }
 
-                            /* Unfilled panel (fronts the Thelemic placeholder):
-                               pulse a white border glow to flag missing data.
-                               Keyframes are global in index.css — the same
-                               recipe LiveAstroTimeline uses. */
-                            &.needs-data {
-                                animation: white-border-pulsating-glow 2.4s ease-in-out infinite;
+                            & .empty-card-placeholder {
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
+                                border: 1.5px solid rgba(255, 255, 255, 0.15);
+
+                                & span {
+                                    color: rgba(255, 255, 255, 0.35);
+                                    font-size: 1.1vw;
+                                    font-family: 'Caudex', serif;
+                                    font-style: italic;
+                                }
                             }
                         }
                     }
@@ -187,8 +194,7 @@
        from the birth date alone (no time/location), so unlike the panels
        above there is no workflow gating — always open the carousel. The mini
        card above the button is the current year's growth card, a peek at what
-       the carousel holds (without a birth date it fronts the Thelemic
-       placeholder and pulses for data). */
+       the carousel holds (hidden entirely without a birth date). */
     & .growth-cards-corner {
         position: absolute;
         bottom: 3vh;
@@ -216,11 +222,6 @@
                 overflow: hidden;
                 box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
                 transition: box-shadow 0.25s ease;
-
-                /* No birth date → Thelemic placeholder: pulse for data. */
-                &.needs-data {
-                    animation: white-border-pulsating-glow 2.4s ease-in-out infinite;
-                }
             }
 
             &:hover .growth-mini-card-face {
