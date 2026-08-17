@@ -40,7 +40,9 @@ export const ARCANA_CORRESPONDENCES: Partial<Record<ArcanaIdentity, Corresponden
         hebrew('Daleth'), planet('Venus'), path(14), godform('Hathor'), color('Emerald Green'), keyword('Fertile creation'),
     ],
     THE_EMPEROR: [
-        hebrew('Heh'), zodiac('Aries'), path(15), godform('Amoun'), color('Red'), keyword('Sovereign order'),
+        // Thoth attribution: Tzaddi, not the Golden Dawn's Heh ("Tzaddi is not
+        // the Star" — Liber AL I:57). Path 28 travels with the letter.
+        hebrew('Tzaddi'), zodiac('Aries'), path(28), godform('Amoun'), color('Red'), keyword('Sovereign order'),
     ],
     THE_HIEROPHANT: [
         hebrew('Vau'), zodiac('Taurus'), path(16), godform('Osiris'), color('Russet'), keyword('Sacred doctrine'),
@@ -79,7 +81,8 @@ export const ARCANA_CORRESPONDENCES: Partial<Record<ArcanaIdentity, Corresponden
         hebrew('Peh'), planet('Mars'), path(27), godform('Horus'), color('Scarlet'), keyword('Shattering revelation'),
     ],
     THE_STAR: [
-        hebrew('Tzaddi'), zodiac('Aquarius'), path(28), godform('Nuit'), color('Violet'), keyword('Inspired hope'),
+        // Thoth swap: Heh (see THE_EMPEROR note); path 15 travels with Heh.
+        hebrew('Heh'), zodiac('Aquarius'), path(15), godform('Nuit'), color('Violet'), keyword('Inspired hope'),
     ],
     THE_MOON: [
         hebrew('Qoph'), zodiac('Pisces'), path(29), godform('Hecate'), color('Crimson'), keyword('Liminal illusion'),
@@ -91,7 +94,7 @@ export const ARCANA_CORRESPONDENCES: Partial<Record<ArcanaIdentity, Corresponden
         hebrew('Shin'), element('fire'), path(31), godform('Horus'), color('Glowing Orange'), keyword('New dispensation'),
     ],
     THE_UNIVERSE: [
-        hebrew('Tau'), planet('Saturn'), element('earth'), path(32), color('Blue-Black'), keyword('Total synthesis'),
+        hebrew('Tau'), planet('Saturn'), element('earth'), path(32), godform('Pan'), color('Blue-Black'), keyword('Total synthesis'),
     ],
 
     /* ===================== ACES (4) ===================== */

@@ -18,6 +18,43 @@ export type ArcanaDescription = {
     body: string;
 };
 
+/**
+ * The Atu mnemonics from Crowley's Book of Thoth — one two-line verse per
+ * Major Arcana, listed in Atu order (0–XXI). Prepended to the Inspect body
+ * by `arch()` below; line breaks survive because the Inspect description
+ * styles the body with `white-space: pre-wrap`. Transcribed verbatim from
+ * the client's source list — including the Hebrew letter as a comment per row.
+ *
+ * NOTE: this const must stay ABOVE `ARCANA_DESCRIPTIONS` — that object's
+ * initializer calls `arch()`, which reads this table at module-init time.
+ * Moving it below re-triggers "Cannot access 'ARCANA_MNEMONICS' before
+ * initialization" and white-screens the whole app.
+ */
+export const ARCANA_MNEMONICS: Partial<Record<ArcanaIdentity, string>> = {
+    THE_FOOL: /* א */ 'Truth, laughter, lust: Wine\'s Holy Fool! Veil rent,\nLewd madness is sublime enlightenment.',
+    THE_MAGUS: /* ב */ 'The Word of Wisdom weaves the web of lies,\nWeds irreducible Infinities.',
+    THE_PRIESTESS: /* ג */ 'Mother, moon-maiden, playmate, bride of Pan;\nGod\'s Angel-Minister to every man.',
+    THE_EMPRESS: /* ד */ 'Beauty, display thine Empire! Truth above\nThought\'s reach: the wholeness of the world is Love.',
+    THE_EMPEROR: /* צ */ 'Sire and inceptor, Emperor and King\nOf all things mortal, hail Him lord of Spring!',
+    THE_HIEROPHANT: /* ו */ 'Wisdom to each apportioned to his want\nBy modes of Light, shed forth, great Hierophant!',
+    THE_LOVERS: /* ז */ 'To each his Understanding sooth discovers\nWordless: your mode, immortal Twins and Lovers!',
+    THE_CHARIOT: /* ח */ 'Behold, the Chariot! Through the water floods\nThe Sangraal, life and rapture, Wine\'s and Blood\'s!',
+    ADJUSTMENT: /* ל */ 'Adjustment! Rhythm writhes through every act.\nWild is the dance; its balance is exact.',
+    THE_HERMIT: /* י */ 'Most secret seed of all Live\'s serpent plan,\nVirgin, the Hermit goes, dumb Guardian.',
+    FORTUNE: /* כ */ 'Sped by its energies triune, the Wheel\nOf Fortune spins: its Axle\'s immobile.',
+    LUST: /* ט */ 'The Lion-Serpent begets Gods! Thy throne\nThe rampant Beast, our Lady Babalon!',
+    THE_HANGED_MAN: /* מ */ 'In Mother-Deeps of Ocean the God-Man\nHangs, Lamp of the Abyss Aeonian.',
+    DEATH: /* נ */ 'Eagle, and Snake, and Scorpion! the Dance\nOf Death whirls Life from Trance to Trance to Trance.',
+    ART: /* ס */ 'O Solve, coagula! By V.I.T.R.I.O.L. shewn,\nThe Tincture, the Elixir, and the Stone!',
+    THE_DEVIL: /* ע */ 'Ιο Pan! upon the summits the God-goat\nLeaps in wild lust of ecstasy afloat.',
+    THE_TOWER: /* פ */ 'Bellona, scream! Unhood the Hawks! the roar\nOf Universes crashing into War!',
+    THE_STAR: /* ה */ 'Nuit, our Lady of the Stars! Event\nIs all Thy play, sublime Experiment!',
+    THE_MOON: /* ק */ 'Witch-moon, upon thy beck of blood afloat\nThe Midnight Beetle\'s brave prophetic Boat!',
+    THE_SUN: /* ר */ 'The Sun, our Father! Soul of Life and Light,\nLove and play freely, sacred in Thy sight!',
+    THE_AEON: /* ש */ 'Nuit, Hadit, Ra-Hoor-Khuit! The Aeon\nOf the Twin Child! Exult, o Empyrean!',
+    THE_UNIVERSE: /* ת */ 'Naught becomes All to realise the span\nOf naught, O perfect Universe of Pan.',
+};
+
 export const ARCANA_DESCRIPTIONS: Partial<Record<ArcanaIdentity, ArcanaDescription>> = {
     /* Majors — reuse existing archetype copy. */
     THE_FOOL: arch('THE_FOOL'),
@@ -182,9 +219,14 @@ export function getArcanaDescription(identity: ArcanaIdentity): ArcanaDescriptio
 /* ---- builders (keep the table terse) ---- */
 
 function arch(identity: ArcanaIdentity): ArcanaDescription {
-    // Majors reuse the archetype title + body verbatim.
+    // Majors reuse the archetype title + body verbatim, prefixed with the
+    // Book of Thoth mnemonic verse when one exists. Minors never pass through
+    // here, so the verses stay exclusive to the Inspect screen, and
+    // ARCHETYPE_DATA itself stays clean for the CardStack screens.
     const data = ARCHETYPE_DATA[identity];
-    return { title: data?.title ?? identity, body: data?.body ?? PLACEHOLDER_DESCRIPTION.body };
+    const body = data?.body ?? PLACEHOLDER_DESCRIPTION.body;
+    const mnemonic = ARCANA_MNEMONICS[identity];
+    return { title: data?.title ?? identity, body: mnemonic ? `${mnemonic}\n\n${body}` : body };
 }
 function d(title: string, body: string): ArcanaDescription {
     return { title, body };
