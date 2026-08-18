@@ -167,6 +167,33 @@
                     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
                 }
             }
+
+            /* Notice + retry shown in place of the carousel while the natal
+               houses are pending/failed/unavailable (never a static fallback). */
+            & .house-notice {
+                margin: auto;
+                max-width: 70%;
+                color: rgba(255, 255, 255, 0.85);
+                font-family: 'Caudex', serif;
+                font-size: clamp(15px, 2.4vh, 21px);
+                letter-spacing: 0.03em;
+                line-height: 1.5;
+                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+                animation: fade-in 0.55s ease-out forwards;
+            }
+
+            & .house-retry {
+                margin-top: 2vh;
+                padding: 1vh 4vw;
+                border: 1px solid rgba(201, 168, 76, 0.8);
+                border-radius: 999px;
+                background: rgba(201, 168, 76, 0.12);
+                color: #f6e27a;
+                font-family: 'Caudex', serif;
+                font-size: clamp(13px, 2vh, 16px);
+                letter-spacing: 0.06em;
+                cursor: pointer;
+            }
         }
     }
 }

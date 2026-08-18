@@ -1,5 +1,5 @@
 import './App.css'
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fullscreen } from '@boengli/capacitor-fullscreen';
 import { Capacitor } from '@capacitor/core';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
@@ -9,7 +9,8 @@ import type { PageIdentity } from '../../types/page-identity';
 import type { Orientation } from '../../types/orientation';
 import type { WorkflowConfig } from '../../types/workflow-config';
 import type { CardData } from '../../types/card-data';
-import { fetchBirthdateReading, fetchNameReading, NameRejectionError } from '../api';
+import { fetchBirthdateReading, fetchFullReading, fetchNameReading, NameRejectionError } from '../api';
+import type { FullReading, FullReadingStatus } from '../utilities/astro/natal';
 import { buildGrowthPreviewCards } from '../utilities/growth-cards';
 import type { City } from '../utilities/citySearch';
 import { formatCityLabel, offsetMinutesAt, parseBirthInputs, toIso8601 } from '../utilities/citySearch';
@@ -40,6 +41,12 @@ function App() {
   const [birthIso, setBirthIso] = useState<string | null>(null);
   const [birthdateCards, setBirthdateCards] = useState<CardData[]>([]);
   const [nameCards, setNameCards] = useState<CardData[]>([]);
+  /** Natal houses + planet correspondences from POST /reading/full (whole-sign,
+   *  from the Ascendant). Null until the full nativity has been fetched. */
+  const [fullReading, setFullReading] = useState<FullReading | null>(null);
+  const [fullReadingStatus, setFullReadingStatus] = useState<FullReadingStatus>('idle');
+  /** Backend guidance (invalidNameError) or transport error, shown verbatim. */
+  const [fullReadingError, setFullReadingError] = useState<string | null>(null);
   /** True while the name-rejection guidance popup is shown on the name-entry page
    *  (the backend rejected the name as unconvertible to Hebrew gematria). */
   const [nameRejected, setNameRejected] = useState(false);
@@ -179,6 +186,7 @@ function App() {
     setBirthTimezone(null);
     setBirthIso(null);
     setNameRejected(false);
+    resetFullReading();
     setCuspWarning(false);
     setCuspWarningMessage(null);
     setCuspReturnTarget(null);
@@ -269,6 +277,54 @@ function App() {
     navigateNext(dest);
   };
 
+  /* Full natal reading (houses + planet correspondences). Fetched once per
+   * completed nativity — at the end of the card-finder workflow and again on
+   * practitioner re-select — and held in App state (deterministic per record,
+   * so it is never persisted). The ref guards duplicate fetches of the same
+   * birthIso+name+coords key while one is in flight or already loaded; it is
+   * cleared on failure so the retry path can run the same request again. */
+  const fullReadingFetchRef = useRef<{ key: string; pending: boolean } | null>(null);
+  const lastFullReadingParamsRef = useRef<{ birthDate: string; iso: string; name: string; lat: number; lng: number } | null>(null);
+
+  const resetFullReading = () => {
+    fullReadingFetchRef.current = null;
+    lastFullReadingParamsRef.current = null;
+    setFullReading(null);
+    setFullReadingStatus('idle');
+    setFullReadingError(null);
+  };
+
+  const runFullReading = async (birthDate: string, iso: string, name: string, lat: number, lng: number) => {
+    const key = `${birthDate}|${iso}|${name}|${lat}|${lng}`;
+    if (fullReadingFetchRef.current?.key === key) return; // in flight or loaded
+    fullReadingFetchRef.current = { key, pending: true };
+    lastFullReadingParamsRef.current = { birthDate, iso, name, lat, lng };
+    setFullReadingStatus('loading');
+    setFullReadingError(null);
+    try {
+      const reading = await fetchFullReading(birthDate, iso, name, lat, lng);
+      setFullReading(reading);
+      setFullReadingStatus('ready');
+      fullReadingFetchRef.current = { key, pending: false };
+    } catch (e) {
+      // Backend rejection (unresolved 'C' in the name) carries K/Z guidance;
+      // show it verbatim. Other failures surface their transport message.
+      fullReadingFetchRef.current = null;
+      setFullReading(null);
+      setFullReadingStatus('error');
+      const message = e instanceof NameRejectionError
+        ? e.backendMessage
+        : e instanceof Error ? e.message : String(e);
+      setFullReadingError(message);
+      console.warn('Full reading failed:', e);
+    }
+  };
+
+  const retryFullReading = () => {
+    const p = lastFullReadingParamsRef.current;
+    if (p) void runFullReading(p.birthDate, p.iso, p.name, p.lat, p.lng);
+  };
+
   const handleLocationSubmit = (city: City) => {
     const label = formatCityLabel(city);
     setBirthLocation(label);
@@ -293,11 +349,14 @@ function App() {
       const iso = toIso8601(birthDate, birthTime, offset);
       setBirthIso(iso);
       console.debug('Birth location resolved:', { label, coords: { lat: city.lat, lng: city.lng }, timezone: city.timezone, offsetMinutes: offset, iso });
+      // The nativity is complete — fetch the natal houses + correspondences
+      // for the Astrological Houses screen and the PractitionerView panel.
+      // (Name may be '' when name-entry was skipped; the backend's rejection
+      // guidance then surfaces on the houses screen.)
+      void runFullReading(birthDate, iso, userName, city.lat, city.lng);
     } else {
       console.debug('Birth location resolved but birthDate missing/unparseable; ISO deferred.');
     }
-
-    // TODO(out of scope for now): call fetchFullReading(birthIso, userName, city.lat, city.lng) once the backend endpoint is live.
   };
 
   const handlePractitionerSelect = async (practitioner: Practitioner) => {
@@ -315,6 +374,7 @@ function App() {
     setBirthdateCards([]);
     setNameCards([]);
     setNameRejected(false);
+    resetFullReading();
     // Rehydrate the cusp flag so the practitioner-view gate re-applies the
     // time-entry deviation for dates that were flagged but never given a time.
     setCuspWarning(practitioner.cuspWarning ?? false);
@@ -344,6 +404,23 @@ function App() {
         } catch (e) {
           console.error('[Practitioners] Failed to fetch name reading:', e);
         }
+      }
+    }
+
+    // Rehydrate the full natal reading: rebuild the ISO the same way the
+    // workflow does (birthIso is not persisted, so it is recomputed from the
+    // stored date/time/timezone), then fetch houses + correspondences when
+    // the record carries the complete nativity the reading requires.
+    if (practitioner.name && practitioner.birthDate && practitioner.birthTime
+      && practitioner.birthTimezone
+      && practitioner.birthLatitude != null && practitioner.birthLongitude != null) {
+      const inputs = parseBirthInputs(practitioner.birthDate, practitioner.birthTime);
+      if (inputs) {
+        const offset = offsetMinutesAt(practitioner.birthTimezone, inputs.y, inputs.m, inputs.d, inputs.h, inputs.min);
+        const iso = toIso8601(practitioner.birthDate, practitioner.birthTime, offset);
+        setBirthIso(iso);
+        console.debug('[Practitioners] Rebuilt birthIso from record:', iso);
+        void runFullReading(practitioner.birthDate, iso, practitioner.name, practitioner.birthLatitude, practitioner.birthLongitude);
       }
     }
 
@@ -382,6 +459,10 @@ function App() {
     birthdateCards,
     nameCards,
     growthCards,
+    fullReading,
+    fullReadingStatus,
+    fullReadingError,
+    onRetryFullReading: retryFullReading,
     onBirthDateSubmit: handleBirthDateSubmit,
     onNameSubmit: handleNameSubmit,
     onTimeSubmit: handleTimeSubmit,

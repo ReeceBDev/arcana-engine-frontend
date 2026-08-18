@@ -6,22 +6,33 @@ import { CardSequenceBackground } from '../../components/CardSequenceBackground/
 import { TopNavBarVertical } from '../../components/CardSequenceBottomNavBar/TopNavBar';
 import CardFace from '../../components/ArcanaCard/CardFace';
 import CorrespondenceGrid from '../../components/CorrespondenceGrid/CorrespondenceGrid';
-import { ASTROLOGICAL_HOUSES } from '../../constants/data/astrological-houses';
+import { buildNatalHouses } from '../../constants/data/astrological-houses';
 import type { ArcanaIdentityIndex } from '../../constants/arcana-identities';
+import type { FullReadingStatus, NatalHouse } from '../../utilities/astro/natal';
 import HouseNumberStrip from '../../components/HouseNumberStrip/HouseNumberStrip';
 
 /** Minimum horizontal travel before a swipe counts as a step (see PractitionerViewVertical). */
 const SWIPE_THRESHOLD_PX = 50;
 
-export default function AstrologicalHousesVertical({ onHome, onInspect, onBackToPractitioner }: {
+export default function AstrologicalHousesVertical({ onHome, onInspect, onBackToPractitioner, natalHouses, fullReadingStatus, fullReadingError, onRetryFullReading }: {
     onHome: () => void;
     onInspect: (cardId: ArcanaIdentityIndex) => void;
     /** Optional "Back to Practitioner View" action for the top bar. */
     onBackToPractitioner?: () => void;
+    /** The practitioner's natal houses (POST /reading/full); empty until ready. */
+    natalHouses: NatalHouse[];
+    /** Lifecycle of the App-level full-reading fetch. */
+    fullReadingStatus: FullReadingStatus;
+    /** Backend guidance (invalidNameError) or transport error, shown verbatim. */
+    fullReadingError: string | null;
+    /** Re-runs the last full-reading request after a failure. */
+    onRetryFullReading: () => void;
 }) {
-    const houseCount = ASTROLOGICAL_HOUSES.length;
+    // Whole-sign natal houses from the Ascendant; chips follow each CUSP SIGN.
+    const houses = useMemo(() => buildNatalHouses(natalHouses), [natalHouses]);
+    const houseCount = houses.length;
     const [activeIndex, setActiveIndex] = useState(0);
-    const house = ASTROLOGICAL_HOUSES[activeIndex];
+    const house = houses[activeIndex];
 
     const dragStartX = useRef(0);
     const isDragging = useRef(false);
@@ -95,6 +106,31 @@ export default function AstrologicalHousesVertical({ onHome, onInspect, onBackTo
             { scale: 0.85, duration: 0.08, yoyo: true, repeat: 1, ease: 'none' });
     };
 
+    // No natal data yet — keep the page chrome and show a notice instead of
+    // the natural-house fallback (the same cards for everyone was the bug
+    // this screen shipped with). Loading: casting; idle: nativity incomplete;
+    // error: backend guidance verbatim + retry.
+    if (!house) {
+        return (
+            <div className="astrological-houses-vertical">
+                <CardSequenceBackground />
+                <div className="top-wrapper">
+                    <TopNavBarVertical onHome={onHome} onBack={onBackToPractitioner} backLabel="Back to Practitioner View" />
+                    <div className="content">
+                        <p className="house-notice">
+                            {fullReadingStatus === 'loading' ? 'Casting the houses…'
+                                : fullReadingStatus === 'error' ? (fullReadingError ?? 'The full reading could not be fetched.')
+                                    : 'The houses are cast from the full nativity — birth date, time, and place are needed.'}
+                        </p>
+                        {fullReadingStatus === 'error' && (
+                            <button className="house-retry" onClick={onRetryFullReading}>Retry</button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="astrological-houses-vertical">
             <CardSequenceBackground />
@@ -127,7 +163,7 @@ export default function AstrologicalHousesVertical({ onHome, onInspect, onBackTo
                                     transform: `translateX(${((houseCount - 1) / 2 - activeIndex) * (cardSize.width + cardGapPx)}px)`,
                                 }}
                             >
-                                {ASTROLOGICAL_HOUSES.map((h, i) => {
+                                {houses.map((h, i) => {
                                     const isActive = i === activeIndex;
                                     return (
                                         <div

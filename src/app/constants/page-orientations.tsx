@@ -36,6 +36,7 @@ import InspectVertical from "../pages/Inspect/InspectVertical";
 import InspectHorizontal from "../pages/Inspect/InspectHorizontal";
 import type { Practitioner } from "../../types/practitioner";
 import type { City } from "../utilities/citySearch";
+import type { FullReading, FullReadingStatus } from "../utilities/astro/natal";
 
 export function getOrientationType(type: string): Orientation {
   return type.startsWith('landscape') ? 'landscape' : 'portrait';
@@ -80,6 +81,14 @@ export type PageProps = {
   birthdateCards: CardData[];
   nameCards: CardData[];
   growthCards: CardData[];
+  /** Natal houses + planet correspondences from POST /reading/full. */
+  fullReading: FullReading | null;
+  /** Lifecycle of the App-level full-reading fetch. */
+  fullReadingStatus: FullReadingStatus;
+  /** Backend guidance (invalidNameError) or transport error, shown verbatim. */
+  fullReadingError: string | null;
+  /** Re-runs the last full-reading request after a failure. */
+  onRetryFullReading: () => void;
   onBirthDateSubmit: (date: string) => void;
   onNameSubmit: (name: string) => void;
   onTimeSubmit: (time: string) => void;
@@ -114,8 +123,8 @@ const orientedPage: Record<PageIdentity, { portrait: (props: PageProps) => JSX.E
     landscape: (props) => <CardViewerCarouselHorizontal {...props.deckConfig} onBack={() => props.navigate('main-menu')} />,
   },
   'astrological-houses': {
-    portrait: (props) => <AstrologicalHousesVertical onHome={() => props.navigate('main-menu')} onBackToPractitioner={() => props.handleBackWithReturn('practitioner-view')} onInspect={(id) => props.onInspect(id, 'astrological-houses')} />,
-    landscape: (props) => <AstrologicalHousesHorizontal onHome={() => props.navigate('main-menu')} onBackToPractitioner={() => props.handleBackWithReturn('practitioner-view')} onInspect={(id) => props.onInspect(id, 'astrological-houses')} />,
+    portrait: (props) => <AstrologicalHousesVertical onHome={() => props.navigate('main-menu')} onBackToPractitioner={() => props.handleBackWithReturn('practitioner-view')} onInspect={(id) => props.onInspect(id, 'astrological-houses')} natalHouses={props.fullReadingStatus === 'ready' && props.fullReading ? props.fullReading.houses : []} fullReadingStatus={props.fullReadingStatus} fullReadingError={props.fullReadingError} onRetryFullReading={props.onRetryFullReading} />,
+    landscape: (props) => <AstrologicalHousesHorizontal onHome={() => props.navigate('main-menu')} onBackToPractitioner={() => props.handleBackWithReturn('practitioner-view')} onInspect={(id) => props.onInspect(id, 'astrological-houses')} natalHouses={props.fullReadingStatus === 'ready' && props.fullReading ? props.fullReading.houses : []} fullReadingStatus={props.fullReadingStatus} fullReadingError={props.fullReadingError} onRetryFullReading={props.onRetryFullReading} />,
   },
   'practitioners-list': {
     portrait: (props) => <PractitionersListVertical practitioners={props.practitioners} onClose={() => props.navigate('main-menu')} onSelect={props.onPractitionerSelect} onClearAll={props.onClearAllPractitioners} />,
@@ -166,8 +175,8 @@ const orientedPage: Record<PageIdentity, { portrait: (props: PageProps) => JSX.E
     landscape: (props) => <GrowthCardStackHorizontal birthDate={props.birthDate} onHome={() => props.navigate('main-menu')} onBackToPractitioner={() => props.handleBackWithReturn('practitioner-view')} />,
   },
   'practitioner-view': {
-    portrait: (props) => <PractitionerViewVertical birthTime={props.birthTime} birthLocation={props.birthLocation} birthdateCards={props.birthdateCards} nameCards={props.nameCards} growthCards={props.growthCards} onHome={() => props.navigate('main-menu')} navigate={(page) => props.navigateFromPractitioner(page)} />,
-    landscape: (props) => <PractitionerViewHorizontal birthTime={props.birthTime} birthLocation={props.birthLocation} birthdateCards={props.birthdateCards} nameCards={props.nameCards} growthCards={props.growthCards} onHome={() => props.navigate('main-menu')} navigate={(page) => props.navigateFromPractitioner(page)} />,
+    portrait: (props) => <PractitionerViewVertical birthTime={props.birthTime} birthLocation={props.birthLocation} birthdateCards={props.birthdateCards} nameCards={props.nameCards} growthCards={props.growthCards} fullReading={props.fullReading} fullReadingStatus={props.fullReadingStatus} onHome={() => props.navigate('main-menu')} navigate={(page) => props.navigateFromPractitioner(page)} />,
+    landscape: (props) => <PractitionerViewHorizontal birthTime={props.birthTime} birthLocation={props.birthLocation} birthdateCards={props.birthdateCards} nameCards={props.nameCards} growthCards={props.growthCards} fullReading={props.fullReading} fullReadingStatus={props.fullReadingStatus} onHome={() => props.navigate('main-menu')} navigate={(page) => props.navigateFromPractitioner(page)} />,
   },
   'inspect': {
     portrait: (props) => <InspectVertical cardId={props.inspectCardId ?? 0} onClose={props.closeInspect} onHome={() => props.navigate('main-menu')} onCardChange={props.onInspectCardChange} />,

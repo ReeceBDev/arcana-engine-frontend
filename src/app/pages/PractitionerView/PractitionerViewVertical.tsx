@@ -6,7 +6,8 @@ import { TopNavBarVertical } from '../../components/CardSequenceBottomNavBar/Top
 import CardFace from '../../components/ArcanaCard/CardFace';
 import CardSplay from '../../components/CardSplay/CardSplay';
 import { ArcanaIdentities } from '../../constants/arcana-identities';
-import { ASTROLOGICAL_HOUSE_CARDS } from '../../constants/data/astrological-houses';
+import { buildNatalHouseCards } from '../../constants/data/astrological-houses';
+import type { FullReading, FullReadingStatus } from '../../utilities/astro/natal';
 import type { CardData } from '../../../types/card-data';
 import type { PageIdentity } from '../../../types/page-identity';
 
@@ -26,6 +27,8 @@ export default function PractitionerViewVertical({
     birthdateCards,
     nameCards,
     growthCards,
+    fullReading,
+    fullReadingStatus,
     onHome,
     navigate,
 }: {
@@ -34,6 +37,10 @@ export default function PractitionerViewVertical({
     birthdateCards: CardData[];
     nameCards: CardData[];
     growthCards: CardData[];
+    /** Natal houses + correspondences from POST /reading/full (null until fetched). */
+    fullReading: FullReading | null;
+    /** Lifecycle of the App-level full-reading fetch. */
+    fullReadingStatus: FullReadingStatus;
     onHome: () => void;
     navigate: (page: PageIdentity) => void;
 }) {
@@ -64,10 +71,13 @@ export default function PractitionerViewVertical({
             label: 'Astrological Houses',
             editLabel: 'Edit Time',
             // Only front the house cards once the full natal details are in —
-            // the houses reading needs BOTH birth time and birth location.
-            // Until then the panel shows the placeholder face (no fan), and
-            // resolveTarget below routes the tap to the missing workflow step.
-            cards: birthTime && birthLocation ? ASTROLOGICAL_HOUSE_CARDS : [],
+            // the houses reading needs BOTH birth time and birth location —
+            // AND the full reading itself has landed. Until then the panel
+            // shows the placeholder face (no fan), and resolveTarget below
+            // routes the tap to the missing workflow step.
+            cards: birthTime && birthLocation && fullReadingStatus === 'ready' && fullReading
+                ? buildNatalHouseCards(fullReading.houses)
+                : [],
             stackPage: 'astrological-houses',
             editPage: 'nativety-time-entry',
             // Resume the workflow at the step after the last completed one:
@@ -87,7 +97,7 @@ export default function PractitionerViewVertical({
             stackPage: 'growth-card-carousel',
             editPage: 'date-selector',
         },
-    ], [birthdateCards, nameCards, growthCards, birthTime, birthLocation]);
+    ], [birthdateCards, nameCards, growthCards, birthTime, birthLocation, fullReading, fullReadingStatus]);
 
     const goTo = useCallback((index: number) => {
         const clamped = Math.max(0, Math.min(index, categories.length - 1));

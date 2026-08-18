@@ -1,6 +1,7 @@
 import { THOTH_BACKEND_API } from "../../config";
 import { CARD_ROLES, type CardRole } from "./constants/card-roles";
 import type { CardData } from "../types/card-data";
+import { isPlanetRole, isZodiacSign, type FullReading, type NatalCorrespondence, type NatalHouse } from "./utilities/astro/natal";
 import { getArcanaByNumber, getArcanaBySuit, type SuitId } from "./constants/data/arcana-numbers";
 import { ArcanaIdentities, type ArcanaIdentity, type ArcanaIdentityIndex } from "./constants/arcana-identities";
 
@@ -52,21 +53,77 @@ export async function fetchNameReading(birthDate: string, name: string) {
 }
 
 /**
- * Full reading: date, time and timezoneOffset are folded into a single
- * ISO-8601 `birthIso` string at the API boundary (e.g. `2000-05-15T13:30:00+01:00`),
- * which the C# backend parses via `DateTimeOffset.Parse`. Latitude/longitude
- * are the birthplace coordinates (resolved client-side from the selected city).
+ * Full reading: the backend takes the birth DATE and the folded ISO-8601
+ * birth TIME-WITH-OFFSET as separate fields, plus the name and the
+ * birthplace coordinates (resolved client-side from the selected city):
+ *   { birthDate: "2000-05-15", birthTime: "2000-05-15T13:30:00+01:00", name, latitude, longitude }
  */
-export async function fetchFullReading(birthIso: string, name: string, latitude: number, longitude: number) {
-    console.debug("API: fetchFullReading request:", { birthIso, name, latitude, longitude });
+export async function fetchFullReading(birthDate: string, birthTimeIso: string, name: string, latitude: number, longitude: number): Promise<FullReading> {
+    console.debug("API: fetchFullReading request:", { birthDate, birthTimeIso, name, latitude, longitude });
     const response = await fetch(`${THOTH_BACKEND_API}/reading/full`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ birthIso, name, latitude, longitude })
+        body: JSON.stringify({ birthDate, birthTime: birthTimeIso, name, latitude, longitude })
     });
     const data = await response.json();
     console.debug("API: Full reading:", data);
-    return data;
+    // Rejection (e.g. a name containing an unresolved letter 'C'): the backend
+    // answers 422 with null collections + invalidNameError guidance — surface
+    // it via the same error type as the name reading so the UI can show the
+    // K/Z guidance verbatim instead of an empty reading.
+    if (data.invalidNameError || response.status === 422) {
+        throw new NameRejectionError(String(data.invalidNameError ?? `Full reading rejected: ${response.status}`));
+    }
+    if (!response.ok) {
+        throw new Error(`Full reading failed: ${response.status}${data?.detail ? ` — ${data.detail}` : ''}`);
+    }
+    return mapFullReading(data);
+}
+
+/** Normalize one zodiac/decan/court card payload; throws when unresolvable. */
+function requireNatalCard(raw: any, context: string): CardData {
+    const card = normalizeCardData(raw);
+    if (!card) throw new Error(`Full reading: unresolvable ${context} card payload`);
+    return card;
+}
+
+/**
+ * Map the natal collections of a /reading/full response: exactly 12 houses
+ * sorted by the `house` field (never trust array position), cards resolved
+ * via the shared suit-aware normalizer, correspondences filtered by `role`
+ * (never indexed by position — an 8th role appeared after Venus once).
+ * The backend's whole-sign `degree` is always 0 and is dropped here.
+ */
+function mapFullReading(data: any): FullReading {
+    const rawHouses: any[] = Array.isArray(data?.houses) ? data.houses : [];
+    if (rawHouses.length !== 12) {
+        throw new Error(`Full reading: expected 12 houses, got ${rawHouses.length}`);
+    }
+    const houses: NatalHouse[] = [...rawHouses]
+        .sort((a, b) => (a?.house ?? 0) - (b?.house ?? 0))
+        .map((h) => {
+            if (!isZodiacSign(h?.sign)) {
+                throw new Error(`Full reading: house ${h?.house} has unknown sign '${h?.sign}'`);
+            }
+            return {
+                house: h.house,
+                sign: h.sign,
+                zodiac: requireNatalCard(h?.zodiac, `house ${h.house} zodiac`),
+                decan: requireNatalCard(h?.decan, `house ${h.house} decan`),
+                court: requireNatalCard(h?.court, `house ${h.house} court`),
+            };
+        });
+
+    const correspondences: NatalCorrespondence[] = (Array.isArray(data?.correspondences) ? data.correspondences : [])
+        .filter((c: any) => isPlanetRole(c?.role))
+        .map((c: any) => ({
+            role: c.role,
+            zodiac: requireNatalCard(c?.zodiac, `${c.role} zodiac`),
+            decan: requireNatalCard(c?.decan, `${c.role} decan`),
+            court: requireNatalCard(c?.court, `${c.role} court`),
+        }));
+
+    return { houses, correspondences };
 }
 
 /** A single growth-card entry: the calendar year it applies to + its card. */
