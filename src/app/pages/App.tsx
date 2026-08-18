@@ -9,7 +9,7 @@ import type { PageIdentity } from '../../types/page-identity';
 import type { Orientation } from '../../types/orientation';
 import type { WorkflowConfig } from '../../types/workflow-config';
 import type { CardData } from '../../types/card-data';
-import { fetchBirthdateReading, fetchNameReading } from '../api';
+import { fetchBirthdateReading, fetchNameReading, NameRejectionError } from '../api';
 import { buildGrowthPreviewCards } from '../utilities/growth-cards';
 import type { City } from '../utilities/citySearch';
 import { formatCityLabel, offsetMinutesAt, parseBirthInputs, toIso8601 } from '../utilities/citySearch';
@@ -40,6 +40,18 @@ function App() {
   const [birthIso, setBirthIso] = useState<string | null>(null);
   const [birthdateCards, setBirthdateCards] = useState<CardData[]>([]);
   const [nameCards, setNameCards] = useState<CardData[]>([]);
+  /** True while the name-rejection guidance popup is shown on the name-entry page
+   *  (the backend rejected the name as unconvertible to Hebrew gematria). */
+  const [nameRejected, setNameRejected] = useState(false);
+  /** Cusp flag mirrored from the practitioner record (like birthTime etc.): the
+   *  birth date falls near a zodiacal change, so an exact birth time is required
+   *  before zodiacal readings are accurate. */
+  const [cuspWarning, setCuspWarning] = useState(false);
+  const [cuspWarningMessage, setCuspWarningMessage] = useState<string | null>(null);
+  /** Where the workflow should resume after the required birth time is supplied
+   *  (the screen the cusp deviation interrupted). Transient navigation memory,
+   *  same nature as returnDestination. */
+  const [cuspReturnTarget, setCuspReturnTarget] = useState<PageIdentity | null>(null);
   // Growth cards are a pure function of birthDate (one per calendar year, via
   // the numerology rule in growth-cards.ts), so derive them rather than store
   // them. PractitionerView shows the current year's card with a few prior-year
@@ -93,7 +105,23 @@ function App() {
   // Navigate away from the practitioner dashboard into an edit/stack page,
   // remembering the dashboard so the destination page's back button can
   // return to it instead of jumping into the card-finder workflow.
+  //
+  // Cusp gate: when the active practitioner's birth date was flagged as near a
+  // zodiacal cusp and no birth time exists yet, reading destinations are
+  // diverted through the time-entry screen first (with the destination
+  // remembered) — including after closing the app and re-entering, since the
+  // flag is persisted on the practitioner record.
   const navigateFromPractitioner = (page: PageIdentity) => {
+    const requiresBirthTime = page === 'astrological-houses'
+      || page === 'growth-card-carousel'
+      || page === 'birthdate-card-stack'
+      || page === 'name-card-stack';
+    if (requiresBirthTime && cuspWarning && !birthTime) {
+      setCuspReturnTarget(page);
+      navigate('nativety-time-entry');
+      setReturnDestination('practitioner-view');
+      return;
+    }
     navigate(page);
     setReturnDestination('practitioner-view');
   };
@@ -150,6 +178,10 @@ function App() {
     setBirthCoords(null);
     setBirthTimezone(null);
     setBirthIso(null);
+    setNameRejected(false);
+    setCuspWarning(false);
+    setCuspWarningMessage(null);
+    setCuspReturnTarget(null);
     const p = createPractitioner();
     setCurrentPractitionerId(p.id);
     setPractitioners(loadPractitioners());
@@ -158,10 +190,6 @@ function App() {
 
   const handleBirthDateSubmit = async (date: string) => {
     setBirthDate(date);
-    if (currentPractitionerId) {
-      updatePractitioner(currentPractitionerId, { birthDate: date });
-      setPractitioners(loadPractitioners());
-    }
     try {
       const data = await fetchBirthdateReading(date);
       console.debug('Birthdate reading response:', data);
@@ -172,14 +200,35 @@ function App() {
         data.personalDecanCard,
         data.personalZodiacalCard
       ].filter((c): c is CardData => c != null));
+      // Persist + mirror the cusp flag: near a zodiacal change the reading is
+      // inaccurate without a birth time, so the workflow deviates through the
+      // time-entry screen (blocking) before showing the cards.
+      setCuspWarning(data.cuspWarning);
+      setCuspWarningMessage(data.cuspWarningMessage);
+      if (currentPractitionerId) {
+        updatePractitioner(currentPractitionerId, {
+          birthDate: date,
+          cuspWarning: data.cuspWarning,
+          cuspWarningMessage: data.cuspWarningMessage,
+        });
+        setPractitioners(loadPractitioners());
+      }
+      if (data.cuspWarning) {
+        setCuspReturnTarget('birthdate-card-stack');
+        navigateNext('nativety-time-entry');
+      } else {
+        setCuspReturnTarget(null);
+        navigateNext('birthdate-card-stack');
+      }
     } catch (e) {
       console.error('Failed to fetch birthdate reading:', e);
+      navigateNext('birthdate-card-stack');
     }
-    navigateNext('birthdate-card-stack');
   };
 
   const handleNameSubmit = async (name: string) => {
     setUserName(name);
+    setNameRejected(false);
     if (currentPractitionerId) {
       updatePractitioner(currentPractitionerId, { name });
       setPractitioners(loadPractitioners());
@@ -189,6 +238,14 @@ function App() {
       console.debug('Name reading response:', data);
       setNameCards(data.cards ?? []);
     } catch (e) {
+      // The backend rejected the name as unconvertible to Hebrew gematria:
+      // stay on the name-entry page and show the guidance popup instead of
+      // navigating onto an empty name-card stack.
+      if (e instanceof NameRejectionError) {
+        console.warn('Name reading rejected:', e.backendMessage);
+        setNameRejected(true);
+        return;
+      }
       console.error('Failed to fetch name reading:', e);
     }
     navigateNext('name-card-stack');
@@ -200,6 +257,16 @@ function App() {
       updatePractitioner(currentPractitionerId, { birthTime: time });
       setPractitioners(loadPractitioners());
     }
+  };
+
+  // Called after a valid birth time is submitted while the cusp deviation is
+  // active: resume the workflow at the screen the deviation interrupted.
+  // navigateNext clears returnDestination, which is correct — each destination
+  // page's own back handling already leads somewhere sensible.
+  const handleCuspTimeFulfilled = () => {
+    const dest = cuspReturnTarget ?? 'birthdate-card-stack';
+    setCuspReturnTarget(null);
+    navigateNext(dest);
   };
 
   const handleLocationSubmit = (city: City) => {
@@ -247,6 +314,12 @@ function App() {
     setBirthIso(null);
     setBirthdateCards([]);
     setNameCards([]);
+    setNameRejected(false);
+    // Rehydrate the cusp flag so the practitioner-view gate re-applies the
+    // time-entry deviation for dates that were flagged but never given a time.
+    setCuspWarning(practitioner.cuspWarning ?? false);
+    setCuspWarningMessage(practitioner.cuspWarningMessage ?? null);
+    setCuspReturnTarget(null);
 
     if (practitioner.birthDate) {
       try {
@@ -313,6 +386,11 @@ function App() {
     onNameSubmit: handleNameSubmit,
     onTimeSubmit: handleTimeSubmit,
     onLocationSubmit: handleLocationSubmit,
+    nameRejected,
+    onNameRejectionDismiss: () => setNameRejected(false),
+    cuspWarning,
+    cuspWarningMessage,
+    onCuspTimeFulfilled: handleCuspTimeFulfilled,
     practitioners,
     hasNewPractitioners: newPractitioners,
     onPractitionerSelect: handlePractitionerSelect,

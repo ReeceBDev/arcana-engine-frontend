@@ -1,5 +1,5 @@
 import './GrowthCardStackVertical.css';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import arrow from 'url:../../../assets/images/arrow.webp';
@@ -121,9 +121,41 @@ export default function GrowthCardStackVertical({
         else if (dx > SWIPE_THRESHOLD) goToYear(currentYear - 1);
     }, [currentYear, goToYear]);
 
-    // GSAP pop on the centered card whenever the year changes.
+    // --- Year-transition animation -----------------------------------------
+    // ±1 year steps (arrows + swipes) SLIDE the whole track, mirroring the
+    // horizontal carousel's gsap feel: after the re-render the old current
+    // card sits in the adjacent slot, so starting the track offset by one
+    // stride recreates the previous layout, and tweening back to x:0 slides
+    // the cards into their new places. Multi-year jumps ("Back to this Year")
+    // keep the original scale/opacity pop instead.
+    const trackRef = useRef<HTMLDivElement | null>(null);
+    const prevYearRef = useRef(centerYear);
+    const lastDeltaRef = useRef(0);
+
+    useLayoutEffect(() => {
+        const delta = currentYear - prevYearRef.current;
+        prevYearRef.current = currentYear;
+        lastDeltaRef.current = delta;
+        if (delta === 0) return;
+        const track = trackRef.current;
+        if (!track || Math.abs(delta) !== 1) return;
+        const slots = track.querySelectorAll<HTMLDivElement>('.growth-snap-slot');
+        if (slots.length < 3) return;
+        // Slots are always reserved (even when empty at a life-span boundary),
+        // so the centre-to-edge offset difference is a stable stride.
+        const stride = slots[2].offsetLeft - slots[1].offsetLeft;
+        if (stride <= 0) return;
+        gsap.killTweensOf(track);
+        gsap.fromTo(track,
+            { x: delta * stride },
+            { x: 0, duration: 0.6, ease: 'power3.out' },
+        );
+    }, [currentYear]);
+
+    // Pop on the centered card for multi-year jumps only (±1 gets the slide).
     const activeCardRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
+        if (Math.abs(lastDeltaRef.current) === 1) return;
         const el = activeCardRef.current;
         if (!el) return;
         gsap.killTweensOf(el);
@@ -207,6 +239,7 @@ export default function GrowthCardStackVertical({
             >
                 <div
                     className="growth-snap-track"
+                    ref={trackRef}
                     style={{
                         ['--growth-card-w' as string]: `${cardWidth}px`,
                         ['--growth-card-h' as string]: `${cardHeight}px`,

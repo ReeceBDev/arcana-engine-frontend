@@ -175,6 +175,9 @@
         align-items: center;
         justify-content: center;
         gap: 3vw;
+        /* Year-step slide is driven by GSAP x on this track (see .tsx);
+         * keep it on its own compositor layer for a smooth 60fps tween. */
+        will-change: transform;
     }
 
     & .growth-snap-slot {

@@ -15,6 +15,20 @@ export async function fetchBirthdateReading(birthDate: string) {
     return mapBirthdateReading(data);
 }
 
+/** Thrown when the backend rejects a name as unconvertible to Hebrew gematria
+ *  (HTTP 422 + `invalidNameError`). The backend's text is developer-facing API
+ *  guidance — the UI shows its own practitioner-facing instructions instead. */
+export class NameRejectionError extends Error {
+    /** The backend's developer-facing guidance (logged, never shown to practitioners). */
+    readonly backendMessage: string;
+
+    constructor(backendMessage: string) {
+        super(backendMessage);
+        this.name = 'NameRejectionError';
+        this.backendMessage = backendMessage;
+    }
+}
+
 export async function fetchNameReading(birthDate: string, name: string) {
     console.debug("API: fetchNameReading request:", { birthDate, name });
     const response = await fetch(`${THOTH_BACKEND_API}/reading/name`, {
@@ -23,6 +37,13 @@ export async function fetchNameReading(birthDate: string, name: string) {
         body: JSON.stringify({ birthDate, name })
     });
     const data = await response.json();
+    // Rejection (e.g. a name containing an unresolved letter 'C'): the backend
+    // answers 422 with null cards + invalidNameError guidance. Without this
+    // check the null cards flow through as an empty reading and the user is
+    // navigated onto an empty name-card stack.
+    if (!response.ok || data.invalidNameError) {
+        throw new NameRejectionError(String(data.invalidNameError ?? `Name reading failed: ${response.status}`));
+    }
     const normalizedCards: CardData[] = (data.nameCards ?? [])
         .map(normalizeCardData)
         .filter((card: CardData | null): card is CardData => card != null);

@@ -8,7 +8,7 @@ import CardFace from '../../components/ArcanaCard/CardFace';
 import CorrespondenceGrid from '../../components/CorrespondenceGrid/CorrespondenceGrid';
 import { ASTROLOGICAL_HOUSES } from '../../constants/data/astrological-houses';
 import type { ArcanaIdentityIndex } from '../../constants/arcana-identities';
-import HouseNumberStrip from './HouseNumberStrip';
+import HouseNumberStrip from '../../components/HouseNumberStrip/HouseNumberStrip';
 
 /** Minimum horizontal travel before a swipe counts as a step (see PractitionerViewVertical). */
 const SWIPE_THRESHOLD_PX = 50;

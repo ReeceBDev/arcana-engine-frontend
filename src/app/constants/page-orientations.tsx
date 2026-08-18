@@ -84,6 +84,16 @@ export type PageProps = {
   onNameSubmit: (name: string) => void;
   onTimeSubmit: (time: string) => void;
   onLocationSubmit: (city: City) => void;
+  /** True while the name-rejection guidance popup should show on the name-entry page. */
+  nameRejected: boolean;
+  /** Dismisses the name-rejection popup. */
+  onNameRejectionDismiss: () => void;
+  /** Cusp flag for the active practitioner (birth date near a zodiacal change). */
+  cuspWarning: boolean;
+  /** Backend-supplied explanation shown when the cusp time-entry deviation is active. */
+  cuspWarningMessage: string | null;
+  /** Resumes the workflow at the interrupted destination after a cusp-required time is submitted. */
+  onCuspTimeFulfilled: () => void;
   practitioners: Practitioner[];
   hasNewPractitioners: boolean;
   onPractitionerSelect: (practitioner: Practitioner) => void;
@@ -128,12 +138,12 @@ const orientedPage: Record<PageIdentity, { portrait: (props: PageProps) => JSX.E
     landscape: (props) => <DateSelectorHorizontal onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('name-entry')} onNext={() => props.navigateNext('birthdate-card-stack')} onSubmit={props.onBirthDateSubmit} onBack={() => props.handleBackWithReturn('card-finder-introduction-part-2')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
   },
   'name-entry': {
-    portrait: (props) => <NameEntryVertical onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('nativety-time-entry')} onNext={() => props.navigateNext('name-card-stack')} onSubmit={props.onNameSubmit} onBack={() => props.handleBackWithReturn('birthdate-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
-    landscape: (props) => <NameEntryHorizontal onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('nativety-time-entry')} onNext={() => props.navigateNext('name-card-stack')} onSubmit={props.onNameSubmit} onBack={() => props.handleBackWithReturn('birthdate-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    portrait: (props) => <NameEntryVertical onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('nativety-time-entry')} onNext={() => props.navigateNext('name-card-stack')} onSubmit={props.onNameSubmit} onBack={() => props.handleBackWithReturn('birthdate-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} rejectionNotice={props.nameRejected} onRejectionDismiss={props.onNameRejectionDismiss} />,
+    landscape: (props) => <NameEntryHorizontal onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('nativety-time-entry')} onNext={() => props.navigateNext('name-card-stack')} onSubmit={props.onNameSubmit} onBack={() => props.handleBackWithReturn('birthdate-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} rejectionNotice={props.nameRejected} onRejectionDismiss={props.onNameRejectionDismiss} />,
   },
   'nativety-time-entry': {
-    portrait: (props) => <NativetyTimeEntryVertical onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('birth-location-entry')} onNext={() => props.navigateNext('birth-location-entry')} onSubmit={props.onTimeSubmit} onBack={() => props.handleBackWithReturn('name-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
-    landscape: (props) => <NativetyTimeEntryHorizontal onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('birth-location-entry')} onNext={() => props.navigateNext('birth-location-entry')} onSubmit={props.onTimeSubmit} onBack={() => props.handleBackWithReturn('name-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
+    portrait: (props) => <NativetyTimeEntryVertical onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('birth-location-entry')} onNext={props.cuspWarning && !props.birthTime ? props.onCuspTimeFulfilled : () => props.navigateNext('birth-location-entry')} onSubmit={props.onTimeSubmit} onBack={props.cuspWarning && !props.birthTime ? () => props.handleBackWithReturn('date-selector') : () => props.handleBackWithReturn('name-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} cuspMode={props.cuspWarning && !props.birthTime ? { message: props.cuspWarningMessage } : undefined} />,
+    landscape: (props) => <NativetyTimeEntryHorizontal onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('birth-location-entry')} onNext={props.cuspWarning && !props.birthTime ? props.onCuspTimeFulfilled : () => props.navigateNext('birth-location-entry')} onSubmit={props.onTimeSubmit} onBack={props.cuspWarning && !props.birthTime ? () => props.handleBackWithReturn('date-selector') : () => props.handleBackWithReturn('name-card-stack')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} cuspMode={props.cuspWarning && !props.birthTime ? { message: props.cuspWarningMessage } : undefined} />,
   },
   'birth-location-entry': {
     portrait: (props) => <BirthLocationEntryVertical onHome={() => props.navigate('main-menu')} onSkip={() => props.navigateNext('astrological-houses')} onNext={() => props.navigateNext('astrological-houses')} onSubmit={props.onLocationSubmit} onBack={() => props.navigateBack('nativety-time-entry')} showNext={props.workflowConfig.currentIteration < props.workflowConfig.lastIteration} />,
