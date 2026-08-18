@@ -1,10 +1,8 @@
 import './GrowthCardStackVertical.css';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CardSequenceBackground } from '../../components/CardSequenceBackground/CardSequenceBackground';
 import arrow from 'url:../../../assets/images/arrow.webp';
-import CardFace from '../../components/ArcanaCard/CardFace';
-import { ArcanaIdentities } from '../../constants/arcana-identities';
+import GrowthCarousel, { type GrowthCarouselHandle } from '../../components/GrowthCarousel/GrowthCarousel';
 import { fetchGrowthReading } from '../../api';
 import { growthArcanaIdentity } from '../../utilities/growth-cards';
 import { ARCANA_BY_NUMBER } from '../../constants/data/arcana-numbers';
@@ -13,23 +11,14 @@ import type { ArcanaIdentityIndex } from '../../constants/arcana-identities';
 /** Hard cap on how far into the future growth cards are shown (years after birth). */
 const MAX_LIFESPAN = 125;
 
-/** Drag distance (px) before a swipe registers as a one-year step. */
-const SWIPE_THRESHOLD = 50;
-
 /**
  * Portrait counterpart of GrowthCardStackHorizontal.
  *
- * Shares the same SHELL as the horizontal page (seed backend query, client-side
- * year → arcana math, live title + current year, year-stepping arrows /
- * Home / Back-to-this-Year top bar, seed warning) but swaps the fling+inertia
- * carousel for a
- * discrete swipe-and-snap interaction modelled on PractitionerViewVertical:
- * drag past a threshold → step EXACTLY one year → GSAP pop to settle.
- *
- * Crucially, only a TINY window of years is ever in the DOM — the centered
- * (current) card plus at most one peeking neighbor on each side (3 slots total,
- * reserved for layout stability). It never builds the ~125-card track that the
- * horizontal page's infinite-grow carousel does.
+ * Identical to the horizontal page (seed backend query, client-side year →
+ * arcana math, live title + current year, year-stepping arrows / Home /
+ * Back-to-this-Year top bar, seed warning, and the SAME GrowthCarousel with
+ * drag + inertia + snap) — only the card sizing differs: portrait is
+ * width-constrained, so cards scale off the viewport width instead of height.
  */
 export default function GrowthCardStackVertical({
     birthDate,
@@ -77,101 +66,48 @@ export default function GrowthCardStackVertical({
         return () => { cancelled = true; };
     }, [birthDate, centerYear]);
 
+    // Pure client-side year → arcana. Drives every spawned carousel card.
+    const getArcanaForYear = useCallback((year: number) => {
+        return growthArcanaIdentity(birthDate, year);
+    }, [birthDate]);
+
     const [currentYear, setCurrentYear] = useState(centerYear);
+    const carouselRef = useRef<GrowthCarouselHandle>(null);
 
-    // Sizing — scale with viewport WIDTH (portrait is width-constrained; per
-    // repo convention vertical variants size off the short axis so peeking
-    // neighbours have room alongside the centered card).
-    const cardWidth = useMemo(() => Math.min(window.innerWidth * 0.58, 300), []);
-    const cardHeight = useMemo(() => Math.round(cardWidth * 1.5), [cardWidth]);
+    // Tap target for the arrow buttons. Kept in a ref (synced from onYearChange)
+    // because `currentYear` state only settles when the scroll tween completes —
+    // reading it mid-animation would re-target a stale year and swallow rapid taps.
+    const targetYearRef = useRef(centerYear);
 
-    /** Step to `year`, clamped to the allowed life range [minYear, maxYear]. */
-    const goToYear = useCallback((year: number) => {
+    /** Animate the carousel to `year` (clamped to the life range), tracking it as
+     *  the new tap target so consecutive arrow taps accumulate correctly. */
+    const animateToYear = useCallback((year: number) => {
         let y = year;
         if (minYear != null && y < minYear) y = minYear;
         if (maxYear != null && y > maxYear) y = maxYear;
-        setCurrentYear(y);
+        targetYearRef.current = y;
+        carouselRef.current?.scrollToYear(y);
     }, [minYear, maxYear]);
 
-    /** Step the centered year by `delta` (±1 from the top-bar arrows). Functional
-     *  setState so rapid taps accumulate before React re-renders. */
+    /** Step the centered year by `delta` (±1 from the top-bar arrows). */
     const stepYear = useCallback((delta: number) => {
-        setCurrentYear((y) => {
-            let next = y + delta;
-            if (minYear != null && next < minYear) next = minYear;
-            if (maxYear != null && next > maxYear) next = maxYear;
-            return next;
-        });
-    }, [minYear, maxYear]);
+        animateToYear(targetYearRef.current + delta);
+    }, [animateToYear]);
 
-    // --- Swipe handling (no inertia: a single discrete step per gesture). ---
-    const dragStartX = useRef(0);
-    const isDragging = useRef(false);
-
-    const handlePointerDown = useCallback((e: React.PointerEvent) => {
-        dragStartX.current = e.clientX;
-        isDragging.current = true;
+    // Year-change sink for drags/inertia/snap-backs: re-syncs the tap target so
+    // arrows always step from wherever the carousel actually is.
+    const handleYearChange = useCallback((year: number) => {
+        targetYearRef.current = year;
+        setCurrentYear(year);
     }, []);
 
-    const handlePointerUp = useCallback((e: React.PointerEvent) => {
-        if (!isDragging.current) return;
-        isDragging.current = false;
-        const dx = e.clientX - dragStartX.current;
-        if (dx < -SWIPE_THRESHOLD) goToYear(currentYear + 1);
-        else if (dx > SWIPE_THRESHOLD) goToYear(currentYear - 1);
-    }, [currentYear, goToYear]);
+    // Sizing — scale with viewport WIDTH (portrait is width-constrained; the
+    // horizontal page scales off viewport height, which would overflow a
+    // portrait screen's narrow axis).
+    const cardWidth = useMemo(() => Math.min(window.innerWidth * 0.58, 300), []);
+    const cardHeight = useMemo(() => Math.round(cardWidth * 1.5), [cardWidth]);
 
-    // --- Year-transition animation -----------------------------------------
-    // ±1 year steps (arrows + swipes) SLIDE the whole track, mirroring the
-    // horizontal carousel's gsap feel: after the re-render the old current
-    // card sits in the adjacent slot, so starting the track offset by one
-    // stride recreates the previous layout, and tweening back to x:0 slides
-    // the cards into their new places. Multi-year jumps ("Back to this Year")
-    // keep the original scale/opacity pop instead.
-    const trackRef = useRef<HTMLDivElement | null>(null);
-    const prevYearRef = useRef(centerYear);
-    const lastDeltaRef = useRef(0);
-
-    useLayoutEffect(() => {
-        const delta = currentYear - prevYearRef.current;
-        prevYearRef.current = currentYear;
-        lastDeltaRef.current = delta;
-        if (delta === 0) return;
-        const track = trackRef.current;
-        if (!track || Math.abs(delta) !== 1) return;
-        const slots = track.querySelectorAll<HTMLDivElement>('.growth-snap-slot');
-        if (slots.length < 3) return;
-        // Slots are always reserved (even when empty at a life-span boundary),
-        // so the centre-to-edge offset difference is a stable stride.
-        const stride = slots[2].offsetLeft - slots[1].offsetLeft;
-        if (stride <= 0) return;
-        gsap.killTweensOf(track);
-        gsap.fromTo(track,
-            { x: delta * stride },
-            { x: 0, duration: 0.6, ease: 'power3.out' },
-        );
-    }, [currentYear]);
-
-    // Pop on the centered card for multi-year jumps only (±1 gets the slide).
-    const activeCardRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => {
-        if (Math.abs(lastDeltaRef.current) === 1) return;
-        const el = activeCardRef.current;
-        if (!el) return;
-        gsap.killTweensOf(el);
-        gsap.fromTo(el,
-            { scale: 0.92, opacity: 0.6 },
-            { scale: 1, opacity: 1, duration: 0.35, ease: 'power2.out' },
-        );
-    }, [currentYear]);
-
-    // Peek neighbours exist only when the adjacent year is within the life span.
-    const showPrev = minYear == null ? true : currentYear - 1 >= minYear;
-    const showNext = maxYear == null ? true : currentYear + 1 <= maxYear;
-
-    const prevArcana = growthArcanaIdentity(birthDate, currentYear - 1);
     const currentArcana = growthArcanaIdentity(birthDate, currentYear);
-    const nextArcana = growthArcanaIdentity(birthDate, currentYear + 1);
 
     // Pretty label for the currently-centered card.
     const currentNumber = useMemo(() => {
@@ -207,7 +143,7 @@ export default function GrowthCardStackVertical({
                         </div>
                         <button
                             className="growth-set-range-button"
-                            onClick={() => goToYear(centerYear)}
+                            onClick={() => animateToYear(centerYear)}
                             disabled={currentYear === centerYear}
                             title={currentYear === centerYear ? 'Already on this year' : 'Snap back to this year'}
                         >
@@ -231,71 +167,17 @@ export default function GrowthCardStackVertical({
                 </div>
             )}
 
-            <div
-                className="growth-snap-region"
-                onPointerDown={handlePointerDown}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={() => { isDragging.current = false; }}
-            >
-                <div
-                    className="growth-snap-track"
-                    ref={trackRef}
-                    style={{
-                        ['--growth-card-w' as string]: `${cardWidth}px`,
-                        ['--growth-card-h' as string]: `${cardHeight}px`,
-                    }}
-                >
-                    {/* prev slot — reserved for layout stability; card only when in range */}
-                    <div className="growth-snap-slot">
-                        {showPrev && prevArcana && (
-                            <div
-                                className="growth-card-option inactive"
-                                onClick={() => goToYear(currentYear - 1)}
-                            >
-                                <CardFace
-                                    cardId={ArcanaIdentities[prevArcana]}
-                                    cardWidth={cardWidth}
-                                    cardHeight={cardHeight}
-                                    isOptimised
-                                />
-                                <div className="growth-year-label">{currentYear - 1}</div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* current slot — always the centered, active card */}
-                    <div className="growth-snap-slot">
-                        {currentArcana && (
-                            <div className="growth-card-option active" ref={activeCardRef}>
-                                <CardFace
-                                    cardId={ArcanaIdentities[currentArcana]}
-                                    cardWidth={cardWidth}
-                                    cardHeight={cardHeight}
-                                    isOptimised
-                                />
-                                <div className="growth-year-label">{currentYear}</div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* next slot — reserved for layout stability; card only when in range */}
-                    <div className="growth-snap-slot">
-                        {showNext && nextArcana && (
-                            <div
-                                className="growth-card-option inactive"
-                                onClick={() => goToYear(currentYear + 1)}
-                            >
-                                <CardFace
-                                    cardId={ArcanaIdentities[nextArcana]}
-                                    cardWidth={cardWidth}
-                                    cardHeight={cardHeight}
-                                    isOptimised
-                                />
-                                <div className="growth-year-label">{currentYear + 1}</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+            <div className="growth-carousel-region">
+                <GrowthCarousel
+                    ref={carouselRef}
+                    getArcanaForYear={getArcanaForYear}
+                    centerYear={centerYear}
+                    minYear={minYear}
+                    maxYear={maxYear}
+                    cardWidth={cardWidth}
+                    cardHeight={cardHeight}
+                    onYearChange={handleYearChange}
+                />
             </div>
         </div>
     );
