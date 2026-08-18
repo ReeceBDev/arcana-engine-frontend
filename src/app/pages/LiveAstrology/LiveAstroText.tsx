@@ -62,7 +62,7 @@ function EventRow({ e, now, live }: { e: AstroEvent; now: number; live?: boolean
 }
 
 function PlacementRow({ p, now }: { p: Placement; now: number }) {
-    const live = isTimeLive(p.startedAt, now);
+    const live = p.startedAt != null && isTimeLive(p.startedAt, now);
     return (
         <div className={`lar-row${live ? ' live' : ''}`}>
             <div className="lar-row-main">

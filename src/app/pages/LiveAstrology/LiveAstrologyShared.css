@@ -44,21 +44,6 @@
     margin-top: 4px;
 }
 
-/* Inline pill in the header (kept out of the chart — the bottom strip is
-   now home to the day labels). */
-.la-demo-badge {
-    font-family: 'Caudex', serif;
-    font-size: clamp(8px, 1.2vh, 10px);
-    letter-spacing: 0.08em;
-    color: rgb(157, 164, 173);
-    background: rgba(8, 14, 34, 0.7);
-    border-radius: 8px;
-    padding: 2px 8px;
-    white-space: nowrap;
-    pointer-events: none;
-    margin-right: auto;
-}
-
 .la-scroll {
     flex: 1;
     min-height: 0;

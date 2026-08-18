@@ -2,9 +2,8 @@
  * Live Astrology data contract.
  *
  * These types describe the payload of `GET /astro/live?from=<ISO>&to=<ISO>`
- * on the Thoth backend (Swiss Ephemeris). The backend endpoint is owned
- * server-side; the frontend consumes this shape and falls back to demo data
- * (see ./demo-data.ts) until the endpoint is available.
+ * on the Thoth backend (Swiss Ephemeris) — the single data source. Load
+ * failures surface as the page error state; there is no fallback dataset.
  *
  * All timestamps are ISO-8601 strings with offset (e.g. `2026-08-14T13:30:00+01:00`).
  */
@@ -47,11 +46,16 @@ export type IconMode = 'planet' | 'zodiac' | 'super';
  * Semantics depend on the row kind:
  * - placement: peaks = crosses 15° (mid-sign), stops = leaves the sign, started = entered the sign.
  * - aspect:    peaks = exact perfection (may be null if it never perfects), stops = leaves orb, started = entered orb.
+ *
+ * stops/started are null only when a span reaches beyond the backend's
+ * decade-scale search horizon (e.g. long-lived outer-planet arcs).
  */
 export type Span = {
     peaksAt: string | null;
-    stopsAt: string;
-    startedAt: string;
+    /** Leaves the sign / orb; null beyond the backend's search horizon. */
+    stopsAt: string | null;
+    /** Entered the sign / orb; null beyond the backend's search horizon. */
+    startedAt: string | null;
 };
 
 /** Where a planet currently is, plus its full span through the sign. */
@@ -80,6 +84,8 @@ export type AstroEvent = Span & {
     direction?: 'retrograde' | 'direct';
     /** When the event happens (the moment plotted on the chart). */
     time: string;
+    /** Always present on events and equal to `time` (the event itself). */
+    startedAt: string;
 };
 
 export type AspectName = 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition';

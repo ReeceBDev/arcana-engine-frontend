@@ -22,7 +22,7 @@ const REFRESH_MS = 10 * 60_000;
 export default function LiveAstrologyHorizontal({ onHome }: { onHome: () => void }) {
     const [now, setNow] = useState(() => Date.now());
     const [data, setData] = useState<LiveAstroData | null>(null);
-    const [isDemo, setIsDemo] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [iconMode, setIconMode] = useState<IconMode>('super');
 
     // Local clock tick: drives the right-to-left drift and live-band detection.
@@ -34,10 +34,15 @@ export default function LiveAstrologyHorizontal({ onHome }: { onHome: () => void
     useEffect(() => {
         let cancelled = false;
         const load = async () => {
-            const { data, isDemo } = await loadLiveAstro(Date.now());
-            if (cancelled) return;
-            setData(data);
-            setIsDemo(isDemo);
+            try {
+                const data = await loadLiveAstro(Date.now());
+                if (cancelled) return;
+                setData(data);
+                setError(null);
+            } catch (err) {
+                console.error('Live Astrology: /astro/live failed.', err);
+                if (!cancelled) setError('The sky is unreachable right now.');
+            }
         };
         load();
         const refresh = setInterval(load, REFRESH_MS);
@@ -54,7 +59,6 @@ export default function LiveAstrologyHorizontal({ onHome }: { onHome: () => void
             <TopNavBarHorizontal onHome={onHome} />
             <div className="la-header la-header-horizontal">
                 <h1 className="la-title">Live Astrology</h1>
-                {isDemo && <div className="la-demo-badge">demo sky</div>}
                 <button className="la-icon-toggle" onClick={cycleIconMode}>
                     {ICON_MODE_LABEL[iconMode]}
                 </button>
@@ -65,7 +69,7 @@ export default function LiveAstrologyHorizontal({ onHome }: { onHome: () => void
             <div className="la-scroll la-scroll-horizontal">
                 {data
                     ? <LiveAstroText data={data} now={now} />
-                    : <p className="la-loading">Reading the sky&hellip;</p>}
+                    : <p className="la-loading">{error ?? 'Reading the sky&hellip;'}</p>}
             </div>
         </div>
     );

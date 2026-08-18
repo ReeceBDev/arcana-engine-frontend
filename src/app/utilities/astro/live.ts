@@ -1,5 +1,4 @@
 import { fetchLiveAstro } from '../../api';
-import { buildDemoLiveAstro } from './demo-data';
 import type { AspectInfo, AspectName, AstroEvent, LiveAstroData, Placement, Span, ZodiacSign } from './types';
 import { PLANET_GLYPH, ZODIAC_GLYPH } from '../../constants/data/correspondence-types';
 
@@ -15,24 +14,18 @@ export const AHEAD_MS = 5 * 86_400_000;
 export const LIVE_BAND_MS = 2 * 3_600_000;
 
 /* ------------------------------------------------------------------ */
-/* Loading (real endpoint first, demo fallback while it is pending)   */
+/* Loading (the backend is the single data source — failures surface  */
+/* to the page error state; there is no fallback dataset)            */
 /* ------------------------------------------------------------------ */
 
-export type LoadedLiveAstro = { data: LiveAstroData; isDemo: boolean };
-
-export async function loadLiveAstro(now = Date.now()): Promise<LoadedLiveAstro> {
+export async function loadLiveAstro(now = Date.now()): Promise<LiveAstroData> {
     const from = new Date(now - BEHIND_MS).toISOString();
     const to = new Date(now + AHEAD_MS).toISOString();
-    try {
-        const data = await fetchLiveAstro(from, to) as LiveAstroData;
-        if (!data || !Array.isArray(data.placements) || !Array.isArray(data.events) || !Array.isArray(data.aspects)) {
-            throw new Error('malformed /astro/live payload');
-        }
-        return { data, isDemo: false };
-    } catch (err) {
-        console.warn('Live Astrology: /astro/live unavailable, using demo data.', err);
-        return { data: buildDemoLiveAstro(now), isDemo: true };
+    const data = await fetchLiveAstro(from, to) as LiveAstroData;
+    if (!data || !Array.isArray(data.placements) || !Array.isArray(data.events) || !Array.isArray(data.aspects)) {
+        throw new Error('malformed /astro/live payload');
     }
+    return data;
 }
 
 /** A timestamp is LIVE while it sits inside the now band (either side of now). */
@@ -116,12 +109,17 @@ export function formatWhen(iso: string, now: number): string {
     return diffMs < 0 ? `${amount}${unit} ago` : `in ${amount}${unit}`;
 }
 
-/** Absolute date/time split for the stacked span columns, e.g. "15 Aug" + "14:00". */
-export function splitAbsolute(iso: string): { date: string; time: string } {
+/** Absolute date/time split for the stacked span columns, e.g. "15 Aug" + "14:00".
+ *  Dates outside the current year carry the year ("15 May 2021") so long-lived
+ *  spans state when they actually began/ended. */
+export function splitAbsolute(iso: string, now?: number): { date: string; time: string } {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return { date: '\u2014', time: '\u2014' };
+    const otherYear = now != null && d.getFullYear() !== new Date(now).getFullYear();
     return {
-        date: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+        date: d.toLocaleDateString('en-GB', otherYear
+            ? { day: 'numeric', month: 'short', year: 'numeric' }
+            : { day: 'numeric', month: 'short' }),
         time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
     };
 }
@@ -150,9 +148,10 @@ export type SpanEntry = {
     time?: string;
 };
 
-function spanPoint(key: SpanEntry['key'], present: string, past: string, iso: string, now: number): SpanEntry {
+function spanPoint(key: SpanEntry['key'], present: string, past: string, iso: string | null, now: number): SpanEntry {
+    if (iso == null) return { key, label: '\u2014' };
     const verb = Date.parse(iso) < now ? past : present;
-    const { date, time } = splitAbsolute(iso);
+    const { date, time } = splitAbsolute(iso, now);
     return { key, label: `${verb} ${formatWhen(iso, now)}`, date, time };
 }
 
@@ -160,7 +159,9 @@ function spanPoint(key: SpanEntry['key'], present: string, past: string, iso: st
  * The span triple shown by every text row, in the user's fixed order:
  * peaks → ends → begins. Verbs are tense-aware ("begins in 1h" for the
  * future, "began 2h ago" for the past). Null peaks (aspect never perfects)
- * degrade to an explicit "does not perfect" note without date/time.
+ * degrade to an explicit "does not perfect" note without date/time; null
+ * ends/begins (spans beyond the backend's search horizon) degrade to an
+ * em-dash entry.
  */
 export function spanEntries(span: Span, now: number): SpanEntry[] {
     return [

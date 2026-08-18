@@ -50,3 +50,5 @@ ios/App/*.xcodeproj/xcuserdata/
 
 # Local build/verification temp output (screenshots, dist-verify, etc.)
 .build-tmp/
+dist-verify/
+.parcel-cache-verify/
