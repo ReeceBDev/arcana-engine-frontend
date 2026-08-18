@@ -233,3 +233,15 @@
 .name-entry-horizontal .name-reject-ok:hover {
     background: rgba(245, 230, 184, 0.22);
 }
+
+/* "Letter C Rules" pill (shared ArcanaPill component) — scoped placement in
+   the top-right of the screen. Full opacity because this screen never runs
+   the GSAP reveal that manages the pill's opacity on CardStack. 2vw inset —
+   landscape has width to spare. */
+.name-entry-horizontal .letter-c-rules-pill {
+    position: absolute;
+    top: 1vh;
+    right: 2vw;
+    z-index: 10;
+    opacity: 1;
+}

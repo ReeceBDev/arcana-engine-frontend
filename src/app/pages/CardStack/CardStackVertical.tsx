@@ -7,6 +7,7 @@ import arrow from 'url:../../../assets/images/arrow.webp';
 import { TopNavBarVertical } from '../../components/CardSequenceBottomNavBar/TopNavBar';
 import CardStack from '../../components/CardStack/CardStack';
 import { CompletionRing } from '../../components/CompletionRing/CompletionRing';
+import { ArcanaPill } from '../../components/ArcanaPill/ArcanaPill';
 import type { CardData } from '../../../types/card-data';
 import type { ArcanaIdentity } from '../../constants/arcana-identities';
 import { ROLE_DESCRIPTORS, type RoleDescriptor } from '../../constants/data/role-descriptors';
@@ -225,8 +226,10 @@ export default function CardStackVertical({ cards, onHome, onNext, onInspect }: 
             <div className="top-wrapper">
                 <TopNavBarVertical onHome={onHome} />
                 <div className="top-right-action-row">
-                    <button
-                        className={`archetype-toggle-button${topCardFlipped ? ' is-active' : ''}${isPillTextOpen ? ' is-open' : ''}`}
+                    <ArcanaPill
+                        label="Archetype"
+                        isActive={topCardFlipped}
+                        isOpen={isPillTextOpen}
                         ref={archetypeButtonRef}
                         onClick={() => {
                             if (!topCardFlipped || isAnimatingPillRef.current) return;
@@ -251,9 +254,7 @@ export default function CardStackVertical({ cards, onHome, onNext, onInspect }: 
                                 setIsPillTextOpen(true);
                             }
                         }}
-                    >
-                        Archetype
-                    </button>
+                    />
                     <button
                         className={`card-stack-inspect-link${topCardFlipped ? '' : ' is-disabled'}`}
                         onClick={() => {

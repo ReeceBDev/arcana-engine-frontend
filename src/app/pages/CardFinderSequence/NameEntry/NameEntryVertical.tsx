@@ -4,6 +4,7 @@ import { BottomNavBarVertical } from '../../../components/CardSequenceBottomNavB
 import { CardSequenceBackground } from '../../../components/CardSequenceBackground/CardSequenceBackground';
 import mercury from 'url:../../../../assets/images/mercury.webp';
 import { TopNavBarVertical } from '../../../components/CardSequenceBottomNavBar/TopNavBar';
+import { ArcanaPill } from '../../../components/ArcanaPill/ArcanaPill';
 
 
 /** Practitioner-facing instructions shown when the backend rejects a name as
@@ -34,7 +35,16 @@ export default function NameEntryVertical({ onHome, onSkip, onNext, onBack = und
 }) {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showRules, setShowRules] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    /** The guidance dialog is shown either proactively (pill click) or after a
+     *  backend rejection; both paths share one dismiss handler. */
+    const dialogOpen = rejectionNotice || showRules;
+    const handleDismissRules = () => {
+        setShowRules(false);
+        onRejectionDismiss?.();
+    };
 
     const handleSubmit = () => {
         const name = inputRef.current?.value.trim() ?? '';
@@ -50,6 +60,12 @@ export default function NameEntryVertical({ onHome, onSkip, onNext, onBack = und
             <CardSequenceBackground />
             <div className="top-wrapper">
                 <TopNavBarVertical onHome={onHome} />
+                <ArcanaPill
+                    label="Letter C Rules"
+                    isOpen={dialogOpen}
+                    className="letter-c-rules-pill"
+                    onClick={() => setShowRules(true)}
+                />
                 <div className="content">
                     <p className="name-prompt">Enter your Full Name.</p>
                     <input
@@ -77,9 +93,9 @@ export default function NameEntryVertical({ onHome, onSkip, onNext, onBack = und
                 <img src={mercury} className="bottom-image" />
             </div>
             <BottomNavBarVertical onBack={onBack} onSkip={onSkip} onNext={onNext} showNext={showNext} showSkip={showSkip} skipLabel="Skip for now..." />
-            {rejectionNotice && (
+            {dialogOpen && (
                 <>
-                    <div className="name-reject-backdrop" onClick={onRejectionDismiss} />
+                    <div className="name-reject-backdrop" onClick={handleDismissRules} />
                     <div className="name-reject-dialog">
                         <p className="name-reject-title">{NAME_REJECTION_TITLE}</p>
                         <div className="name-reject-divider" />
@@ -93,7 +109,7 @@ export default function NameEntryVertical({ onHome, onSkip, onNext, onBack = und
                             <p className="name-reject-line">{NAME_REJECTION_BODY[4]}</p>
                             <p className="name-reject-line">{NAME_REJECTION_BODY[5]}</p>
                         </div>
-                        <button className="name-reject-ok" onClick={onRejectionDismiss}>OK</button>
+                        <button className="name-reject-ok" onClick={handleDismissRules}>OK</button>
                     </div>
                 </>
             )}
